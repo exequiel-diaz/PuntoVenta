@@ -143,5 +143,157 @@ namespace SistemaVenta.Domain.Tests.Entities
                     5m,
                     null!));
         }
+
+        [Fact]
+        public void AumentarStock_ConCantidadValida_DebeIncrementarStock()
+        {
+            var categoria = new Categoria("Monitores");
+
+            var producto = new Producto(
+                "MON-001",
+                "Monitor",
+                250000m,
+                180000m,
+                5m,
+                categoria);
+
+            producto.AumentarStock(10m);
+
+            Assert.Equal(10m, producto.StockActual);
+        }
+
+        [Fact]
+        public void AumentarStock_ConCantidadNegativa_DebeLanzarExcepcion()
+        {
+            var categoria = new Categoria("Monitores");
+
+            var producto = new Producto(
+                "MON-001",
+                "Monitor",
+                250000m,
+                180000m,
+                5m,
+                categoria);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                producto.AumentarStock(-10m));
+        }
+
+        [Fact]
+        public void AumentarStock_ConCantidadCero_DebeLanzarExcepcion()
+        {
+            var categoria = new Categoria("Monitores");
+
+            var producto = new Producto(
+                "MON-001",
+                "Monitor",
+                250000m,
+                180000m,
+                5m,
+                categoria);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                producto.AumentarStock(0m));
+        }
+
+        [Fact]
+        public void DisminuirStock_ConStockSuficiente_DebeReducirStock()
+        {
+            var categoria = new Categoria("Monitores");
+
+            var producto = new Producto(
+                "MON-001",
+                "Monitor",
+                250000m,
+                180000m,
+                5m,
+                categoria);
+
+            producto.AumentarStock(10m);
+
+            producto.DisminuirStock(4m);
+
+            Assert.Equal(6m, producto.StockActual);
+        }
+
+        [Fact]
+        public void DisminuirStock_SinStockSuficiente_DebeLanzarExcepcion()
+        {
+            var categoria = new Categoria("Monitores");
+
+            var producto = new Producto(
+                "MON-001",
+                "Monitor",
+                250000m,
+                180000m,
+                5m,
+                categoria);
+
+            producto.AumentarStock(5m);
+
+            Assert.Throws<InvalidOperationException>(() =>
+                producto.DisminuirStock(8m));
+
+            Assert.Equal(5m, producto.StockActual);
+        }
+
+        [Fact]
+        public void ObtenerEstadoStock_SinStock_DebeRetornarSinStock()
+        {
+            var categoria = new Categoria("Monitores");
+
+            var producto = new Producto(
+                "MON-001",
+                "Monitor",
+                250000m,
+                180000m,
+                5m,
+                categoria);
+
+            Assert.Equal(
+                EstadoStock.SinStock,
+                producto.ObtenerEstadoStock());
+        }
+
+        [Fact]
+        public void ObtenerEstadoStock_ConStockIgualAlMinimo_DebeRetornarStockBajo()
+        {
+            var categoria = new Categoria("Monitores");
+
+            var producto = new Producto(
+                "MON-001",
+                "Monitor",
+                250000m,
+                180000m,
+                5m,
+                categoria);
+
+            producto.AumentarStock(5m);
+
+            Assert.Equal(
+                EstadoStock.StockBajo,
+                producto.ObtenerEstadoStock());
+        }
+
+        [Fact]
+        public void ObtenerEstadoStock_ConStockSuperiorAlMinimo_DebeRetornarNormal()
+        {
+            var categoria = new Categoria("Monitores");
+
+            var producto = new Producto(
+                "MON-001",
+                "Monitor",
+                250000m,
+                180000m,
+                5m,
+                categoria);
+
+            producto.AumentarStock(10m);
+
+            Assert.Equal(
+                EstadoStock.Normal,
+                producto.ObtenerEstadoStock());
+        }
+
     }
 }

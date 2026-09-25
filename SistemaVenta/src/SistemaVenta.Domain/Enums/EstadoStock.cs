@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SistemaVenta.Domain.Enums
 {
-    internal enum EstadoStock
+    public enum EstadoStock
     {
         Normal,
         StockBajo,

@@ -82,6 +82,62 @@ namespace SistemaVenta.Domain.Entities
             Estado = EstadoProducto.Activo;
             FechaAlta = DateTime.UtcNow;
         }
+
+        //metodos
+        public void AumentarStock(decimal cantidad)
+        {
+            if (cantidad <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(cantidad),
+                    "La cantidad debe ser mayor que cero.");
+            }
+
+            StockActual += cantidad;
+        }
+
+        public void DisminuirStock(decimal cantidad)
+        {
+            if (cantidad <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(cantidad),
+                    "La cantidad debe ser mayor que cero.");
+            }
+
+            if (cantidad > StockActual)
+            {
+                throw new InvalidOperationException(
+                    "No hay stock suficiente.");
+            }
+
+            StockActual -= cantidad;
+        }
+
+        public bool HayStockDisponible(decimal cantidad)
+        {
+            if (cantidad <= 0)
+            {
+                return false;
+            }
+
+            return StockActual >= cantidad;
+        }
+
+        public EstadoStock ObtenerEstadoStock()
+        {
+            if (StockActual <= 0)
+            {
+                return EstadoStock.SinStock;
+            }
+
+            if (StockActual <= StockMinimo)
+            {
+                return EstadoStock.StockBajo;
+            }
+
+            return EstadoStock.Normal;
+        }
     }
 
 }
