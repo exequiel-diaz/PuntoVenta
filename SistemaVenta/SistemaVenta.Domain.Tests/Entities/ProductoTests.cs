@@ -21,13 +21,16 @@ namespace SistemaVenta.Domain.Tests.Entities
             decimal costo = 180000m;
             decimal stockMinimo = 5m;
 
+            var categoria = new Categoria("Monitores");
+
             //act= se ejecut lo que queremos probar
             var producto = new Producto(
                 codigo,
                 nombre,
                 precio,
                 costo,
-                stockMinimo);
+                stockMinimo,
+                categoria);
 
             //assert comprueba resultado
             Assert.Equal("MON-001", producto.CodigoInterno);
@@ -38,82 +41,107 @@ namespace SistemaVenta.Domain.Tests.Entities
 
             Assert.Equal(0m, producto.StockActual);
             Assert.Equal(EstadoProducto.Activo, producto.Estado);
+
+            Assert.Same(categoria, producto.Categoria);
         }
 
         [Fact]
         public void CrearProducto_SinNombre_DebeLanzarExcepcion()
         {
-            
+            var categoria = new Categoria("Monitores");
             Assert.Throws<ArgumentException>(() =>
                 new Producto(
                     "MON-001",
                     "",
                     250000m,
                     180000m,
-                    5m));
+                    5m,
+                    categoria));
         }
 
         [Fact]
         public void CrearProducto_SinCodigoInterno_DebeLanzarExcepcion()
         {
+            var categoria = new Categoria("Monitores");
             Assert.Throws<ArgumentException>(() =>
                 new Producto(
                     "",
                     "Monitor",
                     250000m,
                     180000m,
-                    5m));
+                    5m,
+                    categoria));
         }
 
         [Fact]
         public void CrearProducto_ConPrecioNegativo_DebeLanzarExcepcion()
         {
+            var categoria = new Categoria("Monitores");
             Assert.Throws<ArgumentOutOfRangeException>(() =>
                 new Producto(
                     "MON-001",
                     "Monitor",
                     -1m,
                     180000m,
-                    5m));
+                    5m,
+                    categoria));
         }
 
         [Fact]
         public void CrearProducto_ConCostoNegativo_DebeLanzarExcepcion()
         {
+            var categoria = new Categoria("Monitores");
             Assert.Throws<ArgumentOutOfRangeException>(() =>
                 new Producto(
                     "MON-001",
                     "Monitor",
                     250000m,
                     -1m,
-                    5m));
+                    5m,
+                    categoria));
         }
 
         [Fact]
         public void CrearProducto_ConStockMinimoNegativo_DebeLanzarExcepcion()
         {
+            var categoria = new Categoria("Monitores");
             Assert.Throws<ArgumentOutOfRangeException>(() =>
                 new Producto(
                     "MON-001",
                     "Monitor",
                     250000m,
                     180000m,
-                    -1m));
+                    -1m,
+                    categoria));
         }
 
         [Fact]
         public void CrearProducto_ConEspaciosEnNombreYCodigo_DebeEliminarEspaciosExternos()
         {
+            var categoria = new Categoria("Monitores");
             var producto = new Producto(
                 "  MON-001  ",
                 "  Monitor Samsung 24  ",
                 250000m,
                 180000m,
-                5m);
+                5m,
+                categoria);
 
             Assert.Equal("MON-001", producto.CodigoInterno);
             Assert.Equal("Monitor Samsung 24", producto.Nombre);
         }
 
+        [Fact]
+        public void CrearProducto_SinCategoria_DebeLanzarExcepcion()
+        {
+            Assert.Throws<ArgumentNullException>(() =>
+                new Producto(
+                    "MON-001",
+                    "Monitor",
+                    250000m,
+                    180000m,
+                    5m,
+                    null!));
+        }
     }
 }

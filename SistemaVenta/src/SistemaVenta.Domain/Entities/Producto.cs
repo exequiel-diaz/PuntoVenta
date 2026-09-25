@@ -19,14 +19,15 @@ namespace SistemaVenta.Domain.Entities
         public decimal StockMinimo {  get; private set; }
         public EstadoProducto Estado {  get; private set; }
         public DateTime FechaAlta {  get; private set; }
-
+        public Categoria Categoria { get; private set; }
 
         public Producto(
             string codigoInterno,
             string nombre,
             decimal precioVenta,
             decimal costo,
-            decimal stockMinimo)
+            decimal stockMinimo,
+            Categoria categoria)
         {
             if (string.IsNullOrWhiteSpace(codigoInterno))
             {
@@ -63,11 +64,19 @@ namespace SistemaVenta.Domain.Entities
                     "El stock mínimo no puede ser negativo.");
             }
 
+            if (categoria is null)
+            {
+                throw new ArgumentNullException(
+                    nameof(categoria),
+                    "La categoría es obligatoria.");
+            }
+
             CodigoInterno = codigoInterno.Trim();
             Nombre = nombre.Trim();
             PrecioVenta = precioVenta;
             Costo = costo;
             StockMinimo = stockMinimo;
+            Categoria = categoria;
 
             StockActual = 0;
             Estado = EstadoProducto.Activo;
