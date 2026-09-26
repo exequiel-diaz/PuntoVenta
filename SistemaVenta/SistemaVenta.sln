@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaVenta.Application", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaVenta.Domain.Tests", "tests\SistemaVenta.Domain.Tests\SistemaVenta.Domain.Tests.csproj", "{26B8BD9C-063D-7CCF-09B3-B12A7B0DC645}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaVenta.Application.Tests", "tests\SistemaVenta.Application.Tests\SistemaVenta.Application.Tests.csproj", "{FA5B5A1A-201A-4214-9DE9-5DDB696A73DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{26B8BD9C-063D-7CCF-09B3-B12A7B0DC645}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26B8BD9C-063D-7CCF-09B3-B12A7B0DC645}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{26B8BD9C-063D-7CCF-09B3-B12A7B0DC645}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA5B5A1A-201A-4214-9DE9-5DDB696A73DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA5B5A1A-201A-4214-9DE9-5DDB696A73DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA5B5A1A-201A-4214-9DE9-5DDB696A73DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA5B5A1A-201A-4214-9DE9-5DDB696A73DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
