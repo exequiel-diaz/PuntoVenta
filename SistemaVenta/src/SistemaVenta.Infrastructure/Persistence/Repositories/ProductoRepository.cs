@@ -23,5 +23,14 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
             return await _context.Productos
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
+
+        public async Task<IReadOnlyList<Producto>> ObtenerTodosAsync()
+        {
+            return await _context.Productos
+                .AsNoTracking()
+                .Include(p => p.Categoria)
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+        }
     }
 }

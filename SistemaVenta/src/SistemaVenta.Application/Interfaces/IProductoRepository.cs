@@ -10,6 +10,7 @@ namespace SistemaVenta.Application.Interfaces
     public interface IProductoRepository
     {
         Task<Producto?> ObtenerPorIdAsync(int id);
+        Task<IReadOnlyList<Producto>> ObtenerTodosAsync();
         //Task ActualizarAsync(Producto producto);
     }
 }

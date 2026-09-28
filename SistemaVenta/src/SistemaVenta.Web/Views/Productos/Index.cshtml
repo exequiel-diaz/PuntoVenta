@@ -1,0 +1,34 @@
+﻿@model IReadOnlyList<SistemaVenta.Application.DTOs.Productos.ProductoListadoDto>
+
+@{
+    ViewData["Title"] = "Productos";
+}
+
+<h1>Productos</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var producto in Model)
+        {
+            <tr>
+                <td>@producto.CodigoInterno</td>
+                <td>@producto.Nombre</td>
+                <td>@producto.Categoria</td>
+                <td>@producto.PrecioVenta.ToString("N2")</td>
+                <td>@producto.StockActual</td>
+                <td>@producto.Estado</td>
+            </tr>
+        }
+    </tbody>
+</table>

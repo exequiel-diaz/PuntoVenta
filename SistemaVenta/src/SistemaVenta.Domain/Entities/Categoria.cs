@@ -12,6 +12,10 @@ namespace SistemaVenta.Domain.Entities
         public string Nombre { get; private set; } = string.Empty;
         public string? Descripcion { get; private set; }
         public bool Activa { get; private set; }
+        private Categoria()
+        {
+
+        }
         public Categoria(string nombre, string? descripcion = null)
         {
             if (string.IsNullOrWhiteSpace(nombre))
@@ -25,5 +29,6 @@ namespace SistemaVenta.Domain.Entities
             Descripcion = descripcion?.Trim();
             Activa = true;
         }
+        
     }
 }

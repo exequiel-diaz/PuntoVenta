@@ -21,6 +21,10 @@ namespace SistemaVenta.Domain.Entities
         public DateTime FechaAlta {  get; private set; }
         public Categoria Categoria { get; private set; }
 
+        private Producto()
+        {
+            Categoria = null!;
+        }
         public Producto(
             string codigoInterno,
             string nombre,

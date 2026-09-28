@@ -18,6 +18,10 @@ namespace SistemaVenta.Domain.Entities
         public string? Motivo { get; private set; }
         public Producto Producto { get; private set; }
 
+        private MovimientoStock()
+        {
+            Producto = null!;
+        }
         public MovimientoStock(
            Producto producto,
            TipoMovimientoStock tipo,
