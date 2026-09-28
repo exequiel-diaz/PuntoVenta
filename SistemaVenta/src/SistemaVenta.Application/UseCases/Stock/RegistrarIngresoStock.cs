@@ -13,13 +13,15 @@ namespace SistemaVenta.Application.UseCases.Stock
     {
         private readonly IProductoRepository _productoRepository;
         private readonly IMovimientoStockRepository _movimientoStockRepository;
-
+        private readonly IUnitOfWork _unitOfWork;
         public RegistrarIngresoStock(
             IProductoRepository productoRepository,
-            IMovimientoStockRepository movimientoStockRepository)
+            IMovimientoStockRepository movimientoStockRepository,
+            IUnitOfWork unitOfWork)
         {
             _productoRepository = productoRepository;
             _movimientoStockRepository = movimientoStockRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task EjecutarAsync(
@@ -50,8 +52,8 @@ namespace SistemaVenta.Application.UseCases.Stock
                 stockPosterior,
                 motivo);
 
-            await _productoRepository.ActualizarAsync(producto);
-
+            //await _productoRepository.ActualizarAsync(producto);
+            await _unitOfWork.GuardarCambiosAsync();
             await _movimientoStockRepository.AgregarAsync(movimiento);
         }
     }

@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SistemaVenta.Domain.Entities;
 
 namespace SistemaVenta.Application.Interfaces
 {
-    public interface IProductoRepository
+    public interface IUnitOfWork
     {
-        Task<Producto?> ObtenerPorIdAsync(int id);
-        //Task ActualizarAsync(Producto producto);
+        Task GuardarCambiosAsync();//confirma los cambios realizados durante una caso de uso
     }
 }
