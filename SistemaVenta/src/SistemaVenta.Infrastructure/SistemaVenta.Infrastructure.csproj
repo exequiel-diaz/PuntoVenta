@@ -20,8 +20,4 @@
     <ProjectReference Include="..\SistemaVenta.Domain\SistemaVenta.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Persistence\Configurations\" />
-  </ItemGroup>
-
 </Project>

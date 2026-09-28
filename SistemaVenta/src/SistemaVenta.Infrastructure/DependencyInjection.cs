@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SistemaVenta.Application
+namespace SistemaVenta.Infrastructure
 {
-    internal interface Interface1
+    internal class DependencyInjection
     {
     }
 }

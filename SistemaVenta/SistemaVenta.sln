@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaVenta.Application.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaVenta.Infrastructure", "src\SistemaVenta.Infrastructure\SistemaVenta.Infrastructure.csproj", "{E75BCF55-3709-48AB-9D5F-B21DBA33FF29}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaVenta.Web", "src\SistemaVenta.Web\SistemaVenta.Web.csproj", "{73121816-6DC7-4EB0-95A4-79A8F6F61069}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{E75BCF55-3709-48AB-9D5F-B21DBA33FF29}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E75BCF55-3709-48AB-9D5F-B21DBA33FF29}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E75BCF55-3709-48AB-9D5F-B21DBA33FF29}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73121816-6DC7-4EB0-95A4-79A8F6F61069}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73121816-6DC7-4EB0-95A4-79A8F6F61069}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73121816-6DC7-4EB0-95A4-79A8F6F61069}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73121816-6DC7-4EB0-95A4-79A8F6F61069}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

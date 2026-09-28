@@ -24,6 +24,14 @@ namespace SistemaVenta.Infrastructure.Persistence
         public DbSet<MovimientoStock> MovimientosStock =>
             Set<MovimientoStock>();
 
+        protected override void OnModelCreating(
+            ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ApplyConfigurationsFromAssembly(
+                typeof(AppDbContext).Assembly);
+        }
         public async Task GuardarCambiosAsync()
         {
             await SaveChangesAsync();
