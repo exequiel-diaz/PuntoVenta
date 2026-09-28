@@ -1,0 +1,30 @@
+﻿@model IReadOnlyList<SistemaVenta.Application.DTOs.Categorias.CategoriaListadoDto>
+
+@{
+    ViewData["Title"] = "Categorías";
+}
+
+<h1>Categorías</h1>
+
+<a asp-action="Crear" class="btn btn-primary mb-3">
+    Nueva categoría
+</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Nombre</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var categoria in Model)
+        {
+            <tr>
+                <td>@categoria.Id</td>
+                <td>@categoria.Nombre</td>
+            </tr>
+        }
+    </tbody>
+</table>

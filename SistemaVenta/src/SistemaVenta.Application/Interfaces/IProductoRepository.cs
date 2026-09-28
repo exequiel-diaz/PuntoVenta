@@ -11,6 +11,7 @@ namespace SistemaVenta.Application.Interfaces
     {
         Task<Producto?> ObtenerPorIdAsync(int id);
         Task<IReadOnlyList<Producto>> ObtenerTodosAsync();
+        Task AgregarAsync(Producto producto);
         //Task ActualizarAsync(Producto producto);
     }
 }

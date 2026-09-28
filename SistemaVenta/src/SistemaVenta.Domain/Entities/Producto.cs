@@ -31,7 +31,8 @@ namespace SistemaVenta.Domain.Entities
             decimal precioVenta,
             decimal costo,
             decimal stockMinimo,
-            Categoria categoria)
+            Categoria categoria,
+            string? descripcion = null)
         {
             if (string.IsNullOrWhiteSpace(codigoInterno))
             {
@@ -77,6 +78,7 @@ namespace SistemaVenta.Domain.Entities
 
             CodigoInterno = codigoInterno.Trim();
             Nombre = nombre.Trim();
+            Descripcion = descripcion?.Trim();
             PrecioVenta = precioVenta;
             Costo = costo;
             StockMinimo = stockMinimo;

@@ -23,6 +23,12 @@ namespace SistemaVenta.Application.Tests.Fakes
             return Task.FromResult<IReadOnlyList<Producto>>(Productos);
         }
 
+        public Task AgregarAsync(Producto producto)
+        {
+            Productos.Add(producto);
+
+            return Task.CompletedTask;
+        }
         /*
         public Task ActualizarAsync(Producto producto)
         {

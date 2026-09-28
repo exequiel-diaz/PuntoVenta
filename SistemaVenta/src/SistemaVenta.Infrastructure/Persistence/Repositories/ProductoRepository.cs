@@ -32,5 +32,9 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
                 .OrderBy(p => p.Nombre)
                 .ToListAsync();
         }
+        public async Task AgregarAsync(Producto producto)
+        {
+            await _context.Productos.AddAsync(producto);
+        }
     }
 }

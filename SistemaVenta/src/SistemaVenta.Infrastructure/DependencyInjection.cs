@@ -30,6 +30,8 @@ namespace SistemaVenta.Infrastructure
                 IMovimientoStockRepository,
                 MovimientoStockRepository>();
 
+            services.AddScoped<ICategoriaRepository, CategoriaRepository>();
+
             services.AddScoped<IUnitOfWork>(
                 provider =>
                     provider.GetRequiredService<AppDbContext>());

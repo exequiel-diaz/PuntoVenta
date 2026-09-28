@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaVenta.Application.UseCases.Stock;
 using SistemaVenta.Application.UseCases.Productos;
+using SistemaVenta.Application.UseCases.Categorias;
 
 namespace SistemaVenta.Application
 {
@@ -16,6 +17,9 @@ namespace SistemaVenta.Application
         {
             services.AddScoped<RegistrarIngresoStock>();
             services.AddScoped<ListarProductos>();
+            services.AddScoped<ListarCategorias>();
+            services.AddScoped<CrearCategoria>();
+            services.AddScoped<CrearProducto>();
 
             return services;
         }
