@@ -53,8 +53,9 @@ namespace SistemaVenta.Application.UseCases.Stock
                 motivo);
 
             //await _productoRepository.ActualizarAsync(producto);
-            await _unitOfWork.GuardarCambiosAsync();
             await _movimientoStockRepository.AgregarAsync(movimiento);
+            await _unitOfWork.GuardarCambiosAsync();
+            
         }
     }
 }

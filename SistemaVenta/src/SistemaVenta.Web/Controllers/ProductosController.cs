@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using SistemaVenta.Application.UseCases.Productos;
 using SistemaVenta.Application.UseCases.Categorias;
 using SistemaVenta.Web.Models.Productos;
+using SistemaVenta.Application.UseCases.Stock;
 
 namespace SistemaVenta.Web.Controllers
 {
@@ -11,14 +12,20 @@ namespace SistemaVenta.Web.Controllers
         private readonly ListarProductos _listarProductos;
         private readonly CrearProducto _crearProducto;
         private readonly ListarCategorias _listarCategorias;
+        private readonly ObtenerProducto _obtenerProducto;
+        private readonly RegistrarIngresoStock _registrarIngresoStock;
         public ProductosController(
             ListarProductos listarProductos,
             CrearProducto crearProducto,
-            ListarCategorias listarCategorias)
+            ListarCategorias listarCategorias,
+            ObtenerProducto obtenerProducto,
+            RegistrarIngresoStock registrarIngresoStock)
         {
             _listarProductos = listarProductos;
             _crearProducto = crearProducto;
             _listarCategorias = listarCategorias;
+            _obtenerProducto = obtenerProducto;
+            _registrarIngresoStock = registrarIngresoStock;
         }
         public async Task<IActionResult> Index()
         {
@@ -74,5 +81,49 @@ namespace SistemaVenta.Web.Controllers
                     Text = c.Nombre
                 });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> IngresarStock(int id)
+        {
+            var producto = await _obtenerProducto.EjecutarAsync(id);
+
+            if (producto is null)
+                return NotFound();
+
+            var model = new IngresarStockViewModel
+            {
+                ProductoId = producto.Id,
+                NombreProducto = producto.Nombre
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> IngresarStock(
+        IngresarStockViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var producto =
+                    await _obtenerProducto.EjecutarAsync(model.ProductoId);
+
+                if (producto is null)
+                    return NotFound();
+
+                model.NombreProducto = producto.Nombre;
+
+                return View(model);
+            }
+
+            await _registrarIngresoStock.EjecutarAsync(
+                model.ProductoId,
+                model.Cantidad,
+                model.Motivo);
+
+            return RedirectToAction(nameof(Index));
+        }
+
     }
 }

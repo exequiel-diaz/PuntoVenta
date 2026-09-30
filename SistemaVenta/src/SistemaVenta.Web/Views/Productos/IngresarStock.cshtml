@@ -1,0 +1,53 @@
+﻿@model SistemaVenta.Web.Models.Productos.IngresarStockViewModel
+
+@{
+    ViewData["Title"] = "Ingresar stock";
+}
+
+<h1>Ingresar stock</h1>
+
+<p>
+    <strong>Producto:</strong>
+    @Model.NombreProducto
+</p>
+
+<form asp-action="IngresarStock" method="post">
+
+    <input asp-for="ProductoId" type="hidden" />
+
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Cantidad"
+               class="form-label"></label>
+
+        <input asp-for="Cantidad"
+               class="form-control" />
+
+        <span asp-validation-for="Cantidad"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Motivo"
+               class="form-label"></label>
+
+        <textarea asp-for="Motivo"
+                  class="form-control"></textarea>
+
+        <span asp-validation-for="Motivo"
+              class="text-danger"></span>
+    </div>
+
+    <button type="submit"
+            class="btn btn-primary">
+        Registrar ingreso
+    </button>
+
+    <a asp-action="Index"
+       class="btn btn-secondary">
+        Cancelar
+    </a>
+
+</form>

@@ -8,7 +8,8 @@ using SistemaVenta.Domain.Entities;
 
 namespace SistemaVenta.Infrastructure.Persistence.Repositories
 {
-    public class MovimientoStockRepository : IMovimientoStockRepository
+    public class MovimientoStockRepository 
+        : IMovimientoStockRepository
     {
         private readonly AppDbContext _context;
 

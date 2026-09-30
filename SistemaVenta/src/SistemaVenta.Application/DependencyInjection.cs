@@ -16,10 +16,14 @@ namespace SistemaVenta.Application
             this IServiceCollection services)
         {
             services.AddScoped<RegistrarIngresoStock>();
+
             services.AddScoped<ListarProductos>();
+            services.AddScoped<CrearProducto>();
+            services.AddScoped<ObtenerProducto>();
+
             services.AddScoped<ListarCategorias>();
             services.AddScoped<CrearCategoria>();
-            services.AddScoped<CrearProducto>();
+            
 
             return services;
         }

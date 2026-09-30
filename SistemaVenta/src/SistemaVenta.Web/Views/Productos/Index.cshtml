@@ -20,6 +20,7 @@
             <th>Precio</th>
             <th>Stock</th>
             <th>Estado</th>
+            <th>Acciones</th>
         </tr>
     </thead>
 
@@ -33,6 +34,13 @@
                 <td>@producto.PrecioVenta.ToString("N2")</td>
                 <td>@producto.StockActual</td>
                 <td>@producto.Estado</td>
+                <td>
+                    <a asp-action="IngresarStock"
+                       asp-route-id="@producto.Id"
+                       class="btn btn-sm btn-outline-primary">
+                        Ingresar stock
+                    </a>
+                </td>
             </tr>
         }
     </tbody>
