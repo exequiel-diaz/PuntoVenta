@@ -15,13 +15,17 @@ namespace SistemaVenta.Web.Controllers
         private readonly ObtenerProducto _obtenerProducto;
         private readonly RegistrarIngresoStock _registrarIngresoStock;
         private readonly EditarProducto _editarProducto;
+        private readonly DesactivarProducto _desactivarProducto;
+        private readonly ActivarProducto _activarProducto;
         public ProductosController(
             ListarProductos listarProductos,
             CrearProducto crearProducto,
             ListarCategorias listarCategorias,
             ObtenerProducto obtenerProducto,
             RegistrarIngresoStock registrarIngresoStock,
-            EditarProducto editarProducto)
+            EditarProducto editarProducto,
+            DesactivarProducto desactivarProducto,
+            ActivarProducto activarProducto)
         {
             _listarProductos = listarProductos;
             _crearProducto = crearProducto;
@@ -29,6 +33,8 @@ namespace SistemaVenta.Web.Controllers
             _obtenerProducto = obtenerProducto;
             _registrarIngresoStock = registrarIngresoStock;
             _editarProducto = editarProducto;
+            _desactivarProducto = desactivarProducto;
+            _activarProducto = activarProducto;
         }
         public async Task<IActionResult> Index()
         {
@@ -192,6 +198,27 @@ namespace SistemaVenta.Web.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Desactivar(int id)
+        {
+            await _desactivarProducto.EjecutarAsync(id);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Activar(int id)
+        {
+            await _activarProducto.EjecutarAsync(id);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+
 
     }
 }

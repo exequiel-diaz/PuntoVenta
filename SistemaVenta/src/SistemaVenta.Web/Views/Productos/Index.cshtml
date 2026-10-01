@@ -35,17 +35,47 @@
                 <td>@producto.StockActual</td>
                 <td>@producto.Estado</td>
                 <td>
-                    <a asp-action="IngresarStock"
-                       asp-route-id="@producto.Id"
-                       class="btn btn-sm btn-outline-primary">
-                        Ingresar stock
-                    </a>
+                    @if (producto.Estado == "Activo")
+                    {
+                        <a asp-action="IngresarStock"
+                           asp-route-id="@producto.Id"
+                           class="btn btn-sm btn-outline-primary">
+                            Ingresar stock
+                        </a>
+                    }
 
                     <a asp-action="Editar"
                        asp-route-id="@producto.Id"
                        class="btn btn-sm btn-outline-secondary">
                         Editar
                     </a>
+
+                    @if (producto.Estado == "Activo")
+                    {
+                        <form asp-action="Desactivar"
+                              asp-route-id="@producto.Id"
+                              method="post"
+                              class="d-inline">
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-danger">
+                                Desactivar
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="Activar"
+                              asp-route-id="@producto.Id"
+                              method="post"
+                              class="d-inline">
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-success">
+                                Activar
+                            </button>
+                        </form>
+                    }
                 </td>
             </tr>
         }

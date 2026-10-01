@@ -92,6 +92,10 @@ namespace SistemaVenta.Domain.Entities
         //metodos
         public void AumentarStock(decimal cantidad)
         {
+            if (Estado != EstadoProducto.Activo)
+                throw new InvalidOperationException(
+                    "No se puede ingresar stock a un producto inactivo.");
+
             if (cantidad <= 0)
             {
                 throw new ArgumentOutOfRangeException(
@@ -193,7 +197,16 @@ namespace SistemaVenta.Domain.Entities
             Categoria = categoria;
         }
 
-    
+        public void Desactivar()
+        {
+            Estado = EstadoProducto.Inactivo;
+        }
+        public void Activar()
+        {
+            Estado = EstadoProducto.Activo;
+        }
+
+
     }
 
 }
