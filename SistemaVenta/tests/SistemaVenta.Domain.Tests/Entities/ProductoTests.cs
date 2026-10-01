@@ -295,5 +295,131 @@ namespace SistemaVenta.Domain.Tests.Entities
                 producto.ObtenerEstadoStock());
         }
 
+        [Fact]
+        public void Desactivar_DeberiaCambiarEstadoAInactivo()
+        {
+            var categoria = new Categoria("Periféricos");
+
+            var producto = new Producto(
+                "TEC-001",
+                "Mouse",
+                10000m,
+                5000m,
+                5m,
+                categoria);
+
+            producto.Desactivar();
+
+            Assert.Equal(
+                EstadoProducto.Inactivo,
+                producto.Estado);
+        }
+
+        [Fact]
+        public void Activar_ProductoInactivo_DeberiaCambiarEstadoAActivo()
+        {
+            var categoria = new Categoria("Periféricos");
+
+            var producto = new Producto(
+                "TEC-001",
+                "Mouse",
+                10000m,
+                5000m,
+                5m,
+                categoria);
+
+            producto.Desactivar();
+
+            producto.Activar();
+
+            Assert.Equal(
+                EstadoProducto.Activo,
+                producto.Estado);
+        }
+
+        [Fact]
+        public void AumentarStock_ProductoInactivo_DeberiaLanzarExcepcion()
+        {
+            var categoria = new Categoria("Periféricos");
+
+            var producto = new Producto(
+                "TEC-001",
+                "Mouse",
+                10000m,
+                5000m,
+                5m,
+                categoria);
+
+            producto.Desactivar();
+
+            Assert.Throws<InvalidOperationException>(
+                () => producto.AumentarStock(10m));
+
+            Assert.Equal(0m, producto.StockActual);
+        }
+
+        [Fact]
+        public void ActualizarDatos_DatosValidos_DeberiaModificarProducto()
+        {
+            var categoriaOriginal =
+                new Categoria("Periféricos");
+
+            var categoriaNueva =
+                new Categoria("Accesorios");
+
+            var producto = new Producto(
+                "TEC-001",
+                "Mouse",
+                10000m,
+                5000m,
+                5m,
+                categoriaOriginal);
+
+            producto.AumentarStock(10m);
+
+            producto.ActualizarDatos(
+                "TEC-002",
+                "Mouse Gamer",
+                15000m,
+                7000m,
+                3m,
+                categoriaNueva,
+                "Mouse para gaming");
+
+            Assert.Equal("TEC-002", producto.CodigoInterno);
+            Assert.Equal("Mouse Gamer", producto.Nombre);
+            Assert.Equal("Mouse para gaming", producto.Descripcion);
+            Assert.Equal(15000m, producto.PrecioVenta);
+            Assert.Equal(7000m, producto.Costo);
+            Assert.Equal(3m, producto.StockMinimo);
+            Assert.Same(categoriaNueva, producto.Categoria);
+
+            Assert.Equal(10m, producto.StockActual);
+        }
+
+        [Fact]
+        public void ActualizarDatos_NombreVacio_DeberiaLanzarExcepcion()
+        {
+            var categoria = new Categoria("Periféricos");
+
+            var producto = new Producto(
+                "TEC-001",
+                "Mouse",
+                10000m,
+                5000m,
+                5m,
+                categoria);
+
+            Assert.Throws<ArgumentException>(() =>
+                producto.ActualizarDatos(
+                    "TEC-001",
+                    "",
+                    10000m,
+                    5000m,
+                    5m,
+                    categoria));
+        }
+    
+    
     }
 }
