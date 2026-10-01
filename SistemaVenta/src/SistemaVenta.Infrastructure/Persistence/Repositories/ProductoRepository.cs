@@ -21,6 +21,7 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
         public async Task<Producto?> ObtenerPorIdAsync(int id)
         {
             return await _context.Productos
+                .Include(p => p.Categoria)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 

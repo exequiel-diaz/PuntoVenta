@@ -14,18 +14,21 @@ namespace SistemaVenta.Web.Controllers
         private readonly ListarCategorias _listarCategorias;
         private readonly ObtenerProducto _obtenerProducto;
         private readonly RegistrarIngresoStock _registrarIngresoStock;
+        private readonly EditarProducto _editarProducto;
         public ProductosController(
             ListarProductos listarProductos,
             CrearProducto crearProducto,
             ListarCategorias listarCategorias,
             ObtenerProducto obtenerProducto,
-            RegistrarIngresoStock registrarIngresoStock)
+            RegistrarIngresoStock registrarIngresoStock,
+            EditarProducto editarProducto)
         {
             _listarProductos = listarProductos;
             _crearProducto = crearProducto;
             _listarCategorias = listarCategorias;
             _obtenerProducto = obtenerProducto;
             _registrarIngresoStock = registrarIngresoStock;
+            _editarProducto = editarProducto;
         }
         public async Task<IActionResult> Index()
         {
@@ -82,6 +85,21 @@ namespace SistemaVenta.Web.Controllers
                 });
         }
 
+        //agregado duplicaion, revisar si se puede evitar o si no es problema duplicar solo 5 lineas
+        private async Task CargarCategoriasAsync(
+            EditarProductoViewModel model)
+        {
+            var categorias =
+                await _listarCategorias.EjecutarAsync();
+
+            model.Categorias = categorias.Select(c =>
+                new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.Nombre
+                });
+        }
+
         [HttpGet]
         public async Task<IActionResult> IngresarStock(int id)
         {
@@ -121,6 +139,56 @@ namespace SistemaVenta.Web.Controllers
                 model.ProductoId,
                 model.Cantidad,
                 model.Motivo);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Editar(int id)
+        {
+            var producto = await _obtenerProducto.EjecutarAsync(id);
+
+            if (producto is null)
+                return NotFound();
+
+            var model = new EditarProductoViewModel
+            {
+                Id = producto.Id,
+                CodigoInterno = producto.CodigoInterno,
+                Nombre = producto.Nombre,
+                Descripcion = producto.Descripcion,
+                PrecioVenta = producto.PrecioVenta,
+                Costo = producto.Costo,
+                StockMinimo = producto.StockMinimo,
+                CategoriaId = producto.CategoriaId
+            };
+
+            await CargarCategoriasAsync(model);
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Editar(
+        EditarProductoViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                await CargarCategoriasAsync(model);
+
+                return View(model);
+            }
+
+            await _editarProducto.EjecutarAsync(
+                model.Id,
+                model.CodigoInterno,
+                model.Nombre,
+                model.Descripcion,
+                model.PrecioVenta,
+                model.Costo,
+                model.StockMinimo,
+                model.CategoriaId);
 
             return RedirectToAction(nameof(Index));
         }

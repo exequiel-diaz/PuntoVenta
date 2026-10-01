@@ -20,6 +20,7 @@ namespace SistemaVenta.Application
             services.AddScoped<ListarProductos>();
             services.AddScoped<CrearProducto>();
             services.AddScoped<ObtenerProducto>();
+            services.AddScoped<EditarProducto>();
 
             services.AddScoped<ListarCategorias>();
             services.AddScoped<CrearCategoria>();

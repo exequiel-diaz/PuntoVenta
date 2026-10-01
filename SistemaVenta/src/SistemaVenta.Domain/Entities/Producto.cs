@@ -144,6 +144,56 @@ namespace SistemaVenta.Domain.Entities
 
             return EstadoStock.Normal;
         }
+
+        public void ActualizarDatos(
+            string codigoInterno,
+            string nombre,
+            decimal precioVenta,
+            decimal costo,
+            decimal stockMinimo,
+            Categoria categoria,
+            string? descripcion = null)
+        {
+            if (string.IsNullOrWhiteSpace(codigoInterno))
+                throw new ArgumentException(
+                    "El código interno es obligatorio.",
+                    nameof(codigoInterno));
+
+            if (string.IsNullOrWhiteSpace(nombre))
+                throw new ArgumentException(
+                    "El nombre es obligatorio.",
+                    nameof(nombre));
+
+            if (precioVenta < 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(precioVenta),
+                    "El precio de venta no puede ser negativo.");
+
+            if (costo < 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(costo),
+                    "El costo no puede ser negativo.");
+
+            if (stockMinimo < 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(stockMinimo),
+                    "El stock mínimo no puede ser negativo.");
+
+            if (categoria is null)
+                throw new ArgumentNullException(
+                    nameof(categoria),
+                    "La categoría es obligatoria.");
+
+            CodigoInterno = codigoInterno.Trim();
+            Nombre = nombre.Trim();
+            Descripcion = descripcion?.Trim();
+            PrecioVenta = precioVenta;
+            Costo = costo;
+            StockMinimo = stockMinimo;
+            Categoria = categoria;
+        }
+
+    
     }
 
 }

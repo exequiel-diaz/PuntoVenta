@@ -31,8 +31,15 @@ namespace SistemaVenta.Application.UseCases.Productos
                 Id = producto.Id,
                 CodigoInterno = producto.CodigoInterno,
                 Nombre = producto.Nombre,
-                StockActual = producto.StockActual
+                Descripcion = producto.Descripcion,
+                PrecioVenta = producto.PrecioVenta,
+                Costo = producto.Costo,
+                StockActual = producto.StockActual,
+                StockMinimo = producto.StockMinimo,
+                CategoriaId = producto.Categoria.Id
             };
         }
+
+
     }
 }
