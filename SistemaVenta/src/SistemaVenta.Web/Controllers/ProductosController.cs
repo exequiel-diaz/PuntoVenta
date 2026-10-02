@@ -77,6 +77,7 @@ namespace SistemaVenta.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        
         private async Task CargarCategoriasAsync(
             CrearProductoViewModel model)
         {
@@ -91,7 +92,6 @@ namespace SistemaVenta.Web.Controllers
                 });
         }
 
-        //agregado duplicaion, revisar si se puede evitar o si no es problema duplicar solo 5 lineas
         private async Task CargarCategoriasAsync(
             EditarProductoViewModel model)
         {
@@ -105,6 +105,7 @@ namespace SistemaVenta.Web.Controllers
                     Text = c.Nombre
                 });
         }
+        
 
         [HttpGet]
         public async Task<IActionResult> IngresarStock(int id)
@@ -126,8 +127,15 @@ namespace SistemaVenta.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> IngresarStock(
-        IngresarStockViewModel model)
+            IngresarStockViewModel model)
         {
+            if (model.Cantidad <= 0)
+            {
+                ModelState.AddModelError(
+                    nameof(model.Cantidad),
+                    "La cantidad debe ser mayor que cero.");
+            }
+
             if (!ModelState.IsValid)
             {
                 var producto =

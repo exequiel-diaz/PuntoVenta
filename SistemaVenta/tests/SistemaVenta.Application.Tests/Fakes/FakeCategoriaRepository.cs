@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SistemaVenta.Application.Interfaces;
+﻿using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Domain.Entities;
 
 namespace SistemaVenta.Application.Tests.Fakes
@@ -11,24 +6,32 @@ namespace SistemaVenta.Application.Tests.Fakes
     public class FakeCategoriaRepository
         : ICategoriaRepository
     {
-        public Categoria? Categoria { get; set; }
-
-        public List<Categoria> Categorias { get; } = new();
+        private readonly Dictionary<int, Categoria> _categorias = new();
+        public void ConfigurarCategoria(
+            int id,
+            Categoria categoria)
+        {
+            _categorias[id] = categoria;
+        }
 
         public Task<Categoria?> ObtenerPorIdAsync(int id)
         {
-            return Task.FromResult(Categoria);
+            _categorias.TryGetValue(id, out var categoria);
+            return Task.FromResult(categoria);
         }
 
         public Task<IReadOnlyList<Categoria>> ObtenerTodasAsync()
         {
-            return Task.FromResult<IReadOnlyList<Categoria>>(
-                Categorias);
+            IReadOnlyList<Categoria> categorias =
+                _categorias.Values.ToList();
+
+            return Task.FromResult(categorias);
         }
 
         public Task AgregarAsync(Categoria categoria)
         {
-            Categorias.Add(categoria);
+            var id = _categorias.Count + 1;
+            _categorias[id] = categoria;
 
             return Task.CompletedTask;
         }

@@ -2,11 +2,6 @@
 using SistemaVenta.Application.UseCases.Productos;
 using SistemaVenta.Domain.Entities;
 using SistemaVenta.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SistemaVenta.Application.Tests.UseCases.Productos
 {
@@ -25,10 +20,11 @@ namespace SistemaVenta.Application.Tests.UseCases.Productos
                 5m,
                 categoria);
 
-            var productoRepository = new FakeProductoRepository
-            {
-                Producto = producto
-            };
+            var productoRepository = new FakeProductoRepository();
+
+            productoRepository.ConfigurarProducto(
+                1,
+                producto);
 
             var unitOfWork = new FakeUnitOfWork();
 
@@ -36,7 +32,7 @@ namespace SistemaVenta.Application.Tests.UseCases.Productos
                 productoRepository,
                 unitOfWork);
 
-            await casoDeUso.EjecutarAsync(producto.Id);
+            await casoDeUso.EjecutarAsync(1);
 
             Assert.Equal(
                 EstadoProducto.Inactivo,
@@ -49,10 +45,8 @@ namespace SistemaVenta.Application.Tests.UseCases.Productos
         [Fact]
         public async Task EjecutarAsync_ProductoInexistente_DeberiaLanzarExcepcion()
         {
-            var productoRepository = new FakeProductoRepository
-            {
-                Producto = null
-            };
+            var productoRepository = 
+                new FakeProductoRepository();
 
             var unitOfWork = new FakeUnitOfWork();
 

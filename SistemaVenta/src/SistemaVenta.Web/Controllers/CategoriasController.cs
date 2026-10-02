@@ -33,7 +33,7 @@ namespace SistemaVenta.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Crear(
-    CrearCategoriaViewModel model)
+            CrearCategoriaViewModel model)
         {
             if (!ModelState.IsValid)
             {

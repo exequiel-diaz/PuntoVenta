@@ -27,18 +27,19 @@ namespace SistemaVenta.Application.Tests.UseCases.Productos
 
             producto.Desactivar();
 
-            var productoRepository = new FakeProductoRepository
-            {
-                Producto = producto
-            };
+            var productoRepository = new FakeProductoRepository();
 
+            productoRepository.ConfigurarProducto(
+                1,
+                producto);
+            
             var unitOfWork = new FakeUnitOfWork();
 
             var casoDeUso = new ActivarProducto(
                 productoRepository,
                 unitOfWork);
 
-            await casoDeUso.EjecutarAsync(producto.Id);
+            await casoDeUso.EjecutarAsync(1);
 
             Assert.Equal(
                 EstadoProducto.Activo,
@@ -51,10 +52,7 @@ namespace SistemaVenta.Application.Tests.UseCases.Productos
         [Fact]
         public async Task EjecutarAsync_ProductoInexistente_DeberiaLanzarExcepcion()
         {
-            var productoRepository = new FakeProductoRepository
-            {
-                Producto = null
-            };
+            var productoRepository = new FakeProductoRepository();
 
             var unitOfWork = new FakeUnitOfWork();
 

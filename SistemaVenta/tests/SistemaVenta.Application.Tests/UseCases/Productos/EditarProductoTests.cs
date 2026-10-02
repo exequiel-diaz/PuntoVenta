@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SistemaVenta.Application.Tests.Fakes;
+﻿using SistemaVenta.Application.Tests.Fakes;
 using SistemaVenta.Application.UseCases.Productos;
 using SistemaVenta.Domain.Entities;
 
@@ -31,16 +26,18 @@ namespace SistemaVenta.Application.Tests.UseCases.Productos
             producto.AumentarStock(10m);
 
             var productoRepository =
-                new FakeProductoRepository
-                {
-                    Producto = producto
-                };
+                new FakeProductoRepository();
+
+            productoRepository.ConfigurarProducto(
+                1,
+                producto);
 
             var categoriaRepository =
-                new FakeCategoriaRepository
-                {
-                    Categoria = categoriaNueva
-                };
+                new FakeCategoriaRepository();
+
+            categoriaRepository.ConfigurarCategoria(
+                2,
+                categoriaNueva);
 
             var unitOfWork =
                 new FakeUnitOfWork();
@@ -51,14 +48,14 @@ namespace SistemaVenta.Application.Tests.UseCases.Productos
                 unitOfWork);
 
             await casoDeUso.EjecutarAsync(
-                producto.Id,
+                1,
                 "TEC-002",
                 "Mouse Gamer",
                 "Mouse actualizado",
                 15000m,
                 7000m,
                 3m,
-                categoriaNueva.Id);
+                2);
 
             Assert.Equal("TEC-002", producto.CodigoInterno);
             Assert.Equal("Mouse Gamer", producto.Nombre);
@@ -67,7 +64,6 @@ namespace SistemaVenta.Application.Tests.UseCases.Productos
             Assert.Equal(7000m, producto.Costo);
             Assert.Equal(3m, producto.StockMinimo);
             Assert.Same(categoriaNueva, producto.Categoria);
-            Assert.Equal(10m, producto.StockActual);
             Assert.Equal(10m, producto.StockActual);
 
             Assert.True(
@@ -78,10 +74,7 @@ namespace SistemaVenta.Application.Tests.UseCases.Productos
         public async Task EjecutarAsync_ProductoInexistente_DeberiaLanzarExcepcion()
         {
             var productoRepository =
-                new FakeProductoRepository
-                {
-                    Producto = null
-                };
+                new FakeProductoRepository();
 
             var categoriaRepository =
                 new FakeCategoriaRepository();
@@ -124,16 +117,14 @@ namespace SistemaVenta.Application.Tests.UseCases.Productos
                 categoriaOriginal);
 
             var productoRepository =
-                new FakeProductoRepository
-                {
-                    Producto = producto
-                };
+                new FakeProductoRepository();
+
+            productoRepository.ConfigurarProducto(
+                1,
+                producto);
 
             var categoriaRepository =
-                new FakeCategoriaRepository
-                {
-                    Categoria = null
-                };
+                new FakeCategoriaRepository();
 
             var unitOfWork =
                 new FakeUnitOfWork();
@@ -145,7 +136,7 @@ namespace SistemaVenta.Application.Tests.UseCases.Productos
 
             await Assert.ThrowsAsync<InvalidOperationException>(
                 () => casoDeUso.EjecutarAsync(
-                    producto.Id,
+                    1,
                     "TEC-002",
                     "Mouse Gamer",
                     null,

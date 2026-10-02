@@ -15,7 +15,6 @@ namespace SistemaVenta.Application.Tests.UseCases.Stock
         [Fact]
         public async Task EjecutarAsync_ConDatosValidos_DebeActualizarStockYRegistrarMovimiento()
         {
-            // Arrange
             var categoria = new Categoria("Monitores");
 
             var producto = new Producto(
@@ -28,10 +27,12 @@ namespace SistemaVenta.Application.Tests.UseCases.Stock
 
             producto.AumentarStock(5m);
 
-            var productoRepository = new FakeProductoRepository
-            {
-                Producto = producto
-            };
+            var productoRepository = 
+                new FakeProductoRepository();
+
+            productoRepository.ConfigurarProducto(
+                1,
+                producto);
 
             var movimientoRepository =
                 new FakeMovimientoStockRepository();
@@ -44,19 +45,13 @@ namespace SistemaVenta.Application.Tests.UseCases.Stock
                 movimientoRepository,
                 unitOfWork);
 
-            // Act
             await casoDeUso.EjecutarAsync(
-                producto.Id,
+                1,
                 10m,
                 "Ingreso de mercadería");
 
-            // Assert
             Assert.Equal(15m, producto.StockActual);
-            /*
-            Assert.Same(
-                producto,
-                productoRepository.ProductoActualizado);
-            */
+            
             Assert.NotNull(
                 movimientoRepository.MovimientoAgregado);
 
@@ -77,16 +72,16 @@ namespace SistemaVenta.Application.Tests.UseCases.Stock
                 movimientoRepository.MovimientoAgregado.StockPosterior);
             
             Assert.True(unitOfWork.GuardarCambiosFueLlamado);
+            Assert.Same(
+                producto,
+                movimientoRepository.MovimientoAgregado.Producto);
         }
 
         [Fact]
         public async Task EjecutarAsync_ProductoInexistente_DebeLanzarExcepcion()
         {
-            // Arrange
-            var productoRepository = new FakeProductoRepository
-            {
-                Producto = null
-            };
+            var productoRepository = 
+                new FakeProductoRepository();
 
             var movimientoRepository =
                 new FakeMovimientoStockRepository();
@@ -99,19 +94,17 @@ namespace SistemaVenta.Application.Tests.UseCases.Stock
                 movimientoRepository,
                 unitOfWork);
 
-            // Act
+            
             var excepcion = await Assert.ThrowsAsync<InvalidOperationException>(
                 () => casoDeUso.EjecutarAsync(
                     999,
                     10m,
                     "Ingreso de mercadería"));
 
-            // Assert
             Assert.Equal(
                 "El producto no existe.",
                 excepcion.Message);
 
-            //Assert.Null(productoRepository.ProductoActualizado);
             Assert.Null(movimientoRepository.MovimientoAgregado);
             Assert.False(unitOfWork.GuardarCambiosFueLlamado);
         }
@@ -130,10 +123,12 @@ namespace SistemaVenta.Application.Tests.UseCases.Stock
                 5m,
                 categoria);
 
-            var productoRepository = new FakeProductoRepository
-            {
-                Producto = producto
-            };
+            var productoRepository = 
+                new FakeProductoRepository();
+
+            productoRepository.ConfigurarProducto(
+                1,
+                producto);
 
             var movimientoRepository =
                 new FakeMovimientoStockRepository();
@@ -149,17 +144,14 @@ namespace SistemaVenta.Application.Tests.UseCases.Stock
             
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
                 () => casoDeUso.EjecutarAsync(
-                    producto.Id,
+                    1,
                     0m,
                     "Ingreso inválido"));
 
-            // Assert
             Assert.Equal(0m, producto.StockActual);
-            //Assert.Null(productoRepository.ProductoActualizado);
             Assert.Null(movimientoRepository.MovimientoAgregado);
             Assert.False(unitOfWork.GuardarCambiosFueLlamado);
         }
-
 
     }
 }
