@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Persistence.Repositories;
+using SistemaVenta.Infrastructure.Repositories;
+
 
 namespace SistemaVenta.Infrastructure
 {
@@ -35,6 +32,8 @@ namespace SistemaVenta.Infrastructure
             services.AddScoped<IUnitOfWork>(
                 provider =>
                     provider.GetRequiredService<AppDbContext>());
+
+            services.AddScoped<IClienteRepository, ClienteRepository>();
 
             return services;
         }

@@ -50,6 +50,52 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.ToTable("Categorias", (string)null);
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Cliente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Direccion")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("TipoCliente")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Clientes", (string)null);
+
+                    b.HasDiscriminator<string>("TipoCliente").HasValue("Cliente");
+
+                    b.UseTphMappingStrategy();
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.MovimientoStock", b =>
                 {
                     b.Property<int>("Id")
@@ -149,6 +195,62 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Productos", (string)null);
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.ClienteEmpresa", b =>
+                {
+                    b.HasBaseType("SistemaVenta.Domain.Entities.Cliente");
+
+                    b.Property<string>("Contacto")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Cuit")
+                        .IsRequired()
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("Cuit");
+
+                    b.Property<string>("RazonSocial")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.HasDiscriminator().HasValue("Empresa");
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.ClienteFisico", b =>
+                {
+                    b.HasBaseType("SistemaVenta.Domain.Entities.Cliente");
+
+                    b.Property<string>("Apellido")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Cuit")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("Cuit");
+
+                    b.Property<string>("Dni")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("FechaNacimiento")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasIndex("Dni");
+
+                    b.HasDiscriminator().HasValue("Fisico");
                 });
 
             modelBuilder.Entity("SistemaVenta.Domain.Entities.MovimientoStock", b =>

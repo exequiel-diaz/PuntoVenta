@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using SistemaVenta.Application.UseCases.Stock;
-using SistemaVenta.Application.UseCases.Productos;
+﻿using Microsoft.Extensions.DependencyInjection;
 using SistemaVenta.Application.UseCases.Categorias;
+using SistemaVenta.Application.UseCases.Clientes;
+using SistemaVenta.Application.UseCases.Productos;
+using SistemaVenta.Application.UseCases.Stock;
+
 
 namespace SistemaVenta.Application
 {
@@ -26,7 +23,16 @@ namespace SistemaVenta.Application
 
             services.AddScoped<ListarCategorias>();
             services.AddScoped<CrearCategoria>();
-            
+
+            services.AddScoped<CrearClienteFisico>();
+            services.AddScoped<CrearClienteEmpresa>();
+            services.AddScoped<ListarClientes>();
+            services.AddScoped<ObtenerCliente>();
+            services.AddScoped<EditarClienteFisico>();
+            services.AddScoped<EditarClienteEmpresa>();
+            services.AddScoped<DesactivarCliente>();
+            services.AddScoped<ActivarCliente>();
+
 
             return services;
         }

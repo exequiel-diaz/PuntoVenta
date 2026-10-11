@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaVenta.Infrastructure
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaVenta.Web", "src\SistemaVenta.Web\SistemaVenta.Web.csproj", "{73121816-6DC7-4EB0-95A4-79A8F6F61069}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaVenta.Infrastructure.Tests", "tests\SistemaVenta.Infrastructure.Tests\SistemaVenta.Infrastructure.Tests.csproj", "{3EC936E7-AD2C-4A5D-8980-1D799C693442}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{73121816-6DC7-4EB0-95A4-79A8F6F61069}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73121816-6DC7-4EB0-95A4-79A8F6F61069}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73121816-6DC7-4EB0-95A4-79A8F6F61069}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3EC936E7-AD2C-4A5D-8980-1D799C693442}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EC936E7-AD2C-4A5D-8980-1D799C693442}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EC936E7-AD2C-4A5D-8980-1D799C693442}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EC936E7-AD2C-4A5D-8980-1D799C693442}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

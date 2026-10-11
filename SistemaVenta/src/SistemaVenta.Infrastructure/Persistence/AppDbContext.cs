@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Domain.Entities;
 
@@ -23,6 +18,8 @@ namespace SistemaVenta.Infrastructure.Persistence
 
         public DbSet<MovimientoStock> MovimientosStock =>
             Set<MovimientoStock>();
+
+        public DbSet<Cliente> Clientes => Set<Cliente>();
 
         protected override void OnModelCreating(
             ModelBuilder modelBuilder)
