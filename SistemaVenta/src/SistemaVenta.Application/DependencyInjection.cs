@@ -33,7 +33,6 @@ namespace SistemaVenta.Application
             services.AddScoped<DesactivarCliente>();
             services.AddScoped<ActivarCliente>();
 
-
             return services;
         }
 

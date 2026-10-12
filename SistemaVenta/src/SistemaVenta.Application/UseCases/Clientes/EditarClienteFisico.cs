@@ -1,6 +1,7 @@
 ﻿
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Domain.Entities;
+using SistemaVenta.Domain.ValueObjects;
 
 namespace SistemaVenta.Application.UseCases.Clientes
 {
@@ -35,7 +36,6 @@ namespace SistemaVenta.Application.UseCases.Clientes
                 throw new InvalidOperationException(
                     "El cliente físico no existe.");
 
-            // Validamos los campos obligatorios antes de consultar duplicados.
             if (string.IsNullOrWhiteSpace(nombre) ||
                 string.IsNullOrWhiteSpace(apellido) ||
                 string.IsNullOrWhiteSpace(dni) ||
@@ -47,36 +47,54 @@ namespace SistemaVenta.Application.UseCases.Clientes
                     "Los campos obligatorios no pueden estar vacíos.");
             }
 
-            dni = dni.Trim();
-            email = email.Trim();
+            // Normalizamos antes de consultar duplicados.
+            var dniNormalizado =
+                NormalizadorDocumento.NormalizarDni(dni);
 
-            cuit = string.IsNullOrWhiteSpace(cuit)
-                ? null
-                : cuit.Trim();
+            var cuitNormalizado =
+                string.IsNullOrWhiteSpace(cuit)
+                    ? null
+                    : NormalizadorDocumento.NormalizarCuit(cuit);
 
-            if (await _clienteRepository.ExisteDniAsync(dni, id))
+            var emailNormalizado = email.Trim();
+
+            if (await _clienteRepository.ExisteDniAsync(
+                dniNormalizado, id))
+            {
                 throw new InvalidOperationException(
                     "Ya existe otro cliente con ese DNI.");
+            }
 
-            if (cuit is not null &&
-                await _clienteRepository.ExisteCuitAsync(cuit, id))
+            if (cuitNormalizado is not null &&
+                await _clienteRepository.ExisteCuitAsync(
+                    cuitNormalizado, id))
+            {
                 throw new InvalidOperationException(
                     "Ya existe otro cliente con ese CUIT.");
+            }
 
-            if (await _clienteRepository.ExisteEmailAsync(email, id))
+            if (await _clienteRepository.ExisteEmailAsync(
+                emailNormalizado, id))
+            {
                 throw new InvalidOperationException(
                     "Ya existe otro cliente con ese correo electrónico.");
+            }
+
+            Cliente.ValidarDatosContacto(
+                telefono,
+                email,
+                direccion);
 
             fisico.ActualizarDatosPersonales(
                 nombre,
                 apellido,
-                dni,
-                cuit,
+                dniNormalizado,
+                cuitNormalizado,
                 fechaNacimiento);
 
             fisico.ActualizarDatosContacto(
                 telefono,
-                email,
+                emailNormalizado,
                 direccion,
                 observaciones);
 

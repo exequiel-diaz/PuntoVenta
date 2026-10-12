@@ -1,4 +1,5 @@
 ﻿
+using SistemaVenta.Domain.ValueObjects;
 
 namespace SistemaVenta.Domain.Entities
 {
@@ -13,6 +14,7 @@ namespace SistemaVenta.Domain.Entities
             RazonSocial = string.Empty;
             Cuit = string.Empty;
         }
+
         public ClienteEmpresa(
             string razonSocial,
             string cuit,
@@ -27,18 +29,13 @@ namespace SistemaVenta.Domain.Entities
                 direccion,
                 observaciones)
         {
-            if (string.IsNullOrWhiteSpace(razonSocial))
-                throw new ArgumentException(
-                    "La razón social es obligatoria.",
-                    nameof(razonSocial));
+            ValidarRazonSocial(razonSocial);
 
-            if (string.IsNullOrWhiteSpace(cuit))
-                throw new ArgumentException(
-                    "El CUIT es obligatorio.",
-                    nameof(cuit));
+            var cuitNormalizado =
+                NormalizadorDocumento.NormalizarCuit(cuit);
 
             RazonSocial = razonSocial.Trim();
-            Cuit = cuit.Trim();
+            Cuit = cuitNormalizado;
 
             Contacto = string.IsNullOrWhiteSpace(contacto)
                 ? null
@@ -50,23 +47,26 @@ namespace SistemaVenta.Domain.Entities
             string cuit,
             string? contacto)
         {
-            if (string.IsNullOrWhiteSpace(razonSocial))
-                throw new ArgumentException(
-                    "La razón social es obligatoria.",
-                    nameof(razonSocial));
+            ValidarRazonSocial(razonSocial);
 
-            if (string.IsNullOrWhiteSpace(cuit))
-                throw new ArgumentException(
-                    "El CUIT es obligatorio.",
-                    nameof(cuit));
+            var cuitNormalizado =
+                NormalizadorDocumento.NormalizarCuit(cuit);
 
             RazonSocial = razonSocial.Trim();
-            Cuit = cuit.Trim();
+            Cuit = cuitNormalizado;
 
             Contacto = string.IsNullOrWhiteSpace(contacto)
                 ? null
                 : contacto.Trim();
         }
 
+        private static void ValidarRazonSocial(
+            string razonSocial)
+        {
+            if (string.IsNullOrWhiteSpace(razonSocial))
+                throw new ArgumentException(
+                    "La razón social es obligatoria.",
+                    nameof(razonSocial));
+        }
     }
 }

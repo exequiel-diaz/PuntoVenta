@@ -1,4 +1,5 @@
 ﻿
+using SistemaVenta.Domain.ValueObjects;
 
 namespace SistemaVenta.Domain.Entities
 {
@@ -33,28 +34,18 @@ namespace SistemaVenta.Domain.Entities
                 direccion,
                 observaciones)
         {
-            if (string.IsNullOrWhiteSpace(nombre))
-                throw new ArgumentException(
-                    "El nombre es obligatorio.",
-                    nameof(nombre));
+            ValidarNombreYApellido(nombre, apellido);
 
-            if (string.IsNullOrWhiteSpace(apellido))
-                throw new ArgumentException(
-                    "El apellido es obligatorio.",
-                    nameof(apellido));
+            var dniNormalizado =
+                NormalizadorDocumento.NormalizarDni(dni);
 
-            if (string.IsNullOrWhiteSpace(dni))
-                throw new ArgumentException(
-                    "El DNI es obligatorio.",
-                    nameof(dni));
+            var cuitNormalizado =
+                NormalizarCuitOpcional(cuit);
 
             Nombre = nombre.Trim();
             Apellido = apellido.Trim();
-            Dni = dni.Trim();
-            Cuit = string.IsNullOrWhiteSpace(cuit)
-                ? null
-                : cuit.Trim();
-
+            Dni = dniNormalizado;
+            Cuit = cuitNormalizado;
             FechaNacimiento = fechaNacimiento;
         }
 
@@ -65,6 +56,25 @@ namespace SistemaVenta.Domain.Entities
             string? cuit,
             DateTime? fechaNacimiento)
         {
+            ValidarNombreYApellido(nombre, apellido);
+
+            var dniNormalizado =
+                NormalizadorDocumento.NormalizarDni(dni);
+
+            var cuitNormalizado =
+                NormalizarCuitOpcional(cuit);
+
+            Nombre = nombre.Trim();
+            Apellido = apellido.Trim();
+            Dni = dniNormalizado;
+            Cuit = cuitNormalizado;
+            FechaNacimiento = fechaNacimiento;
+        }
+
+        private static void ValidarNombreYApellido(
+            string nombre,
+            string apellido)
+        {
             if (string.IsNullOrWhiteSpace(nombre))
                 throw new ArgumentException(
                     "El nombre es obligatorio.",
@@ -74,22 +84,14 @@ namespace SistemaVenta.Domain.Entities
                 throw new ArgumentException(
                     "El apellido es obligatorio.",
                     nameof(apellido));
-
-            if (string.IsNullOrWhiteSpace(dni))
-                throw new ArgumentException(
-                    "El DNI es obligatorio.",
-                    nameof(dni));
-
-            Nombre = nombre.Trim();
-            Apellido = apellido.Trim();
-            Dni = dni.Trim();
-
-            Cuit = string.IsNullOrWhiteSpace(cuit)
-                ? null
-                : cuit.Trim();
-
-            FechaNacimiento = fechaNacimiento;
         }
 
+        private static string? NormalizarCuitOpcional(
+            string? cuit)
+        {
+            return string.IsNullOrWhiteSpace(cuit)
+                ? null
+                : NormalizadorDocumento.NormalizarCuit(cuit);
+        }
     }
 }

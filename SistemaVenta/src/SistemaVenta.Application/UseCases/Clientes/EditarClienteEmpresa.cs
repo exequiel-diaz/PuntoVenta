@@ -1,6 +1,7 @@
 ﻿
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Domain.Entities;
+using SistemaVenta.Domain.ValueObjects;
 
 namespace SistemaVenta.Application.UseCases.Clientes
 {
@@ -27,7 +28,8 @@ namespace SistemaVenta.Application.UseCases.Clientes
             string? contacto = null,
             string? observaciones = null)
         {
-            var cliente = await _clienteRepository.ObtenerPorIdAsync(id);
+            var cliente =
+                await _clienteRepository.ObtenerPorIdAsync(id);
 
             if (cliente is not ClienteEmpresa empresa)
                 throw new InvalidOperationException(
@@ -43,25 +45,39 @@ namespace SistemaVenta.Application.UseCases.Clientes
                     "Los campos obligatorios no pueden estar vacíos.");
             }
 
-            cuit = cuit.Trim();
-            email = email.Trim();
+            // Normalizamos antes de consultar duplicados.
+            var cuitNormalizado =
+                NormalizadorDocumento.NormalizarCuit(cuit);
 
-            if (await _clienteRepository.ExisteCuitAsync(cuit, id))
+            var emailNormalizado = email.Trim();
+
+            if (await _clienteRepository.ExisteCuitAsync(
+                cuitNormalizado, id))
+            {
                 throw new InvalidOperationException(
                     "Ya existe otro cliente con ese CUIT.");
+            }
 
-            if (await _clienteRepository.ExisteEmailAsync(email, id))
+            if (await _clienteRepository.ExisteEmailAsync(
+                emailNormalizado, id))
+            {
                 throw new InvalidOperationException(
                     "Ya existe otro cliente con ese correo electrónico.");
+            }
+
+            Cliente.ValidarDatosContacto(
+                telefono,
+                email,
+                direccion);
 
             empresa.ActualizarDatosEmpresa(
                 razonSocial,
-                cuit,
+                cuitNormalizado,
                 contacto);
 
             empresa.ActualizarDatosContacto(
                 telefono,
-                email,
+                emailNormalizado,
                 direccion,
                 observaciones);
 

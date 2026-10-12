@@ -51,7 +51,9 @@ public class ClienteRepositoryTests
         var opciones = CrearOpciones();
 
         var email = $"test-{Guid.NewGuid():N}@ejemplo.com";
-        var dni = Guid.NewGuid().ToString("N")[..8];
+        var dni = Random.Shared.Next(
+            10_000_000,
+            100_000_000).ToString();
 
         await using var contexto = new AppDbContext(opciones);
 
@@ -104,7 +106,9 @@ public class ClienteRepositoryTests
         var opciones = CrearOpciones();
 
         var email = $"empresa-{Guid.NewGuid():N}@ejemplo.com";
-        var cuit = Guid.NewGuid().ToString("N")[..11];
+        var cuit = Random.Shared.NextInt64(
+            10_000_000_000,
+            100_000_000_000).ToString();
 
         await using var contexto = new AppDbContext(opciones);
 
@@ -160,7 +164,7 @@ public class ClienteRepositoryTests
         await using var transaccion =
             await contexto.Database.BeginTransactionAsync();
 
-        var dni = Guid.NewGuid().ToString("N")[..8];
+        var dni = Random.Shared.Next(10_000_000, 100_000_000).ToString();
 
         var cliente1 = new ClienteFisico(
             nombre: "Juan",
@@ -210,6 +214,7 @@ public class ClienteRepositoryTests
     }
 
 
+
     [Fact]
     public async Task AgregarEmpresa_ConCuitDeClienteFisico_DebeFallar()
     {
@@ -220,12 +225,18 @@ public class ClienteRepositoryTests
         await using var transaccion =
             await contexto.Database.BeginTransactionAsync();
 
-        var cuit = Guid.NewGuid().ToString("N")[..11];
+        var dni = Random.Shared.Next(
+            10_000_000,
+            100_000_000).ToString();
+
+        var cuit = Random.Shared.NextInt64(
+            10_000_000_000,
+            100_000_000_000).ToString();
 
         var fisico = new ClienteFisico(
             nombre: "Juan",
             apellido: "Pérez",
-            dni: Guid.NewGuid().ToString("N")[..8],
+            dni: dni,
             telefono: "3811111111",
             email: $"fisico-{Guid.NewGuid():N}@ejemplo.com",
             direccion: "Tucumán",
@@ -265,6 +276,7 @@ public class ClienteRepositoryTests
     }
 
 
+
     [Fact]
     public async Task AgregarCliente_ConEmailDuplicado_DebeFallar()
     {
@@ -278,10 +290,19 @@ public class ClienteRepositoryTests
         var identificador = Guid.NewGuid().ToString("N");
         var email = $"cliente-{identificador}@ejemplo.com";
 
+        // Documentos válidos para las reglas actuales del dominio.
+        var dni = Random.Shared.Next(
+            10_000_000,
+            100_000_000).ToString();
+
+        var cuit = Random.Shared.NextInt64(
+            10_000_000_000,
+            100_000_000_000).ToString();
+
         var cliente1 = new ClienteFisico(
             nombre: "Juan",
             apellido: "Pérez",
-            dni: Guid.NewGuid().ToString("N")[..8],
+            dni: dni,
             telefono: "3811111111",
             email: email,
             direccion: "Tucumán"
@@ -289,7 +310,7 @@ public class ClienteRepositoryTests
 
         var cliente2 = new ClienteEmpresa(
             razonSocial: "Empresa de Prueba S.R.L.",
-            cuit: Guid.NewGuid().ToString("N")[..11],
+            cuit: cuit,
             telefono: "3812222222",
             email: email.ToUpperInvariant(),
             direccion: "Tucumán"
@@ -297,13 +318,14 @@ public class ClienteRepositoryTests
 
         var repositorio = new ClienteRepository(contexto);
 
-        // Act
+        // Act: guardamos el primer cliente.
         await repositorio.AgregarAsync(cliente1);
         await contexto.GuardarCambiosAsync();
 
+        // Intentamos guardar otro cliente con el mismo email.
         await repositorio.AgregarAsync(cliente2);
 
-        // Assert
+        // Assert: PostgreSQL debe rechazar el email duplicado.
         var excepcion = await Assert.ThrowsAsync<DbUpdateException>(
             () => contexto.GuardarCambiosAsync());
 

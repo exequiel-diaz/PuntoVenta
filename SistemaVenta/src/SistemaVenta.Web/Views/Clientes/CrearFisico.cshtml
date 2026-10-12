@@ -1,0 +1,89 @@
+﻿@model SistemaVenta.Web.Models.Clientes.CrearClienteFisicoViewModel
+
+@{
+    ViewData["Title"] = "Registrar cliente físico";
+}
+
+<h2>Registrar cliente físico</h2>
+
+
+
+<form asp-controller="Clientes"
+      asp-action="CrearFisico"
+      method="post">
+
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Apellido" class="form-label"></label>
+        <input asp-for="Apellido" class="form-control" />
+        <span asp-validation-for="Apellido" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Dni" class="form-label"></label>
+        <input asp-for="Dni" class="form-control" />
+        <span asp-validation-for="Dni" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Cuit" class="form-label"></label>
+        <input asp-for="Cuit" class="form-control" />
+        <span asp-validation-for="Cuit" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FechaNacimiento" class="form-label">
+            Fecha de nacimiento
+        </label>
+        <input asp-for="FechaNacimiento"
+               type="date"
+               class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Telefono" class="form-label"></label>
+        <input asp-for="Telefono" class="form-control" />
+        <span asp-validation-for="Telefono" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Direccion" class="form-label"></label>
+        <input asp-for="Direccion" class="form-control" />
+        <span asp-validation-for="Direccion" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Observaciones" class="form-label"></label>
+        <textarea asp-for="Observaciones"
+                  class="form-control"
+                  rows="3"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Guardar cliente
+    </button>
+
+    <a asp-controller="Clientes"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

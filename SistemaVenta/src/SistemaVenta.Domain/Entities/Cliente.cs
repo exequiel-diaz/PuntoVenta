@@ -2,7 +2,6 @@
 
 namespace SistemaVenta.Domain.Entities
 {
-    //mantener cliente como abstrcta porque la usaremos solo para heredar
     public abstract class Cliente
     {
         public int Id { get; private set; }
@@ -13,7 +12,6 @@ namespace SistemaVenta.Domain.Entities
         public EstadoCliente Estado { get; private set; }
         public string? Observaciones { get; private set; }
 
-        //dejar protected porque solo las clases hijas deben poder llamar a este constructor
         protected Cliente()
         {
             Telefono = string.Empty;
@@ -27,20 +25,10 @@ namespace SistemaVenta.Domain.Entities
             string direccion,
             string? observaciones = null)
         {
-            if (string.IsNullOrWhiteSpace(telefono))
-                throw new ArgumentException(
-                    "El teléfono es obligatorio.",
-                    nameof(telefono));
-
-            if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException(
-                    "El correo electrónico es obligatorio.",
-                    nameof(email));
-
-            if (string.IsNullOrWhiteSpace(direccion))
-                throw new ArgumentException(
-                    "La dirección es obligatoria.",
-                    nameof(direccion));
+            ValidarDatosContacto(
+                telefono,
+                email,
+                direccion);
 
             Telefono = telefono.Trim();
             Email = email.Trim();
@@ -63,11 +51,28 @@ namespace SistemaVenta.Domain.Entities
         {
             Estado = EstadoCliente.Activo;
         }
+
         public void ActualizarDatosContacto(
             string telefono,
             string email,
             string direccion,
             string? observaciones)
+        {
+            ValidarDatosContacto(
+                telefono,
+                email,
+                direccion);
+
+            Telefono = telefono.Trim();
+            Email = email.Trim();
+            Direccion = direccion.Trim();
+            Observaciones = observaciones?.Trim();
+        }
+
+        public static void ValidarDatosContacto(
+            string telefono,
+            string email,
+            string direccion)
         {
             if (string.IsNullOrWhiteSpace(telefono))
                 throw new ArgumentException(
@@ -83,11 +88,7 @@ namespace SistemaVenta.Domain.Entities
                 throw new ArgumentException(
                     "La dirección es obligatoria.",
                     nameof(direccion));
-
-            Telefono = telefono.Trim();
-            Email = email.Trim();
-            Direccion = direccion.Trim();
-            Observaciones = observaciones?.Trim();
         }
+
     }
 }
