@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaVenta.Application.Interfaces;
+using SistemaVenta.Application.UseCases.CuentasCorrientes;
 using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Persistence.Repositories;
 using SistemaVenta.Infrastructure.Repositories;
@@ -34,6 +35,17 @@ namespace SistemaVenta.Infrastructure
                     provider.GetRequiredService<AppDbContext>());
 
             services.AddScoped<IClienteRepository, ClienteRepository>();
+            
+            services.AddScoped<
+                ICuentaCorrienteRepository,
+                CuentaCorrienteRepository>();
+
+            services.AddScoped<AbrirCuentaCorriente>();
+            services.AddScoped<ObtenerCuentaCorriente>();
+            services.AddScoped<ModificarLimiteDeuda>();
+            services.AddScoped<SuspenderCuentaCorriente>();
+            services.AddScoped<ActivarCuentaCorriente>();
+            services.AddScoped<CerrarCuentaCorriente>();
 
             return services;
         }

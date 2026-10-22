@@ -1,0 +1,60 @@
+﻿@model SistemaVenta.Web.ViewModels.CuentasCorrientes.AbrirCuentaCorrienteViewModel
+
+@{
+    ViewData["Title"] = "Abrir cuenta corriente";
+}
+
+<h2>Abrir cuenta corriente</h2>
+
+<form asp-action="Abrir" method="post">
+
+    <div asp-validation-summary="All"
+         class="text-danger"></div>
+
+    <input asp-for="ClienteId" type="hidden" />
+
+    <div class="mb-3">
+        <label class="form-label">Cliente ID</label>
+        <input value="@Model.ClienteId"
+               class="form-control"
+               disabled />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="LimiteDeuda"
+               class="form-label"></label>
+
+        <input asp-for="LimiteDeuda"
+               class="form-control"
+               type="number"
+               min="0"
+               step="0.01" />
+
+        <span asp-validation-for="LimiteDeuda"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Observaciones"
+               class="form-label"></label>
+
+        <textarea asp-for="Observaciones"
+                  class="form-control"
+                  rows="3"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Abrir cuenta
+    </button>
+
+    <a asp-controller="Cliente"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Cancelar
+    </a>
+
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

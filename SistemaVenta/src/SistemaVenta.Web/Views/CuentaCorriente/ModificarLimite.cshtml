@@ -1,0 +1,45 @@
+﻿@model SistemaVenta.Web.ViewModels.CuentasCorrientes.ModificarLimiteDeudaViewModel
+
+@{
+    ViewData["Title"] = "Modificar límite de deuda";
+}
+
+<h2>Modificar límite de deuda</h2>
+
+<form asp-action="ModificarLimite" method="post">
+
+    <div asp-validation-summary="All"
+         class="text-danger"></div>
+
+    <input asp-for="CuentaId" type="hidden" />
+    <input asp-for="ClienteId" type="hidden" />
+
+    <div class="mb-3">
+        <label asp-for="NuevoLimite"
+               class="form-label"></label>
+
+        <input asp-for="NuevoLimite"
+               type="number"
+               min="0"
+               step="0.01"
+               class="form-control" />
+
+        <span asp-validation-for="NuevoLimite"
+              class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Guardar cambios
+    </button>
+
+    <a asp-action="Detalle"
+       asp-route-clienteId="@Model.ClienteId"
+       class="btn btn-secondary">
+        Cancelar
+    </a>
+
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

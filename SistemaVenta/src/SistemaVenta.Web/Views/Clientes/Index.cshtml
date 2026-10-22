@@ -45,6 +45,7 @@
             <th>Teléfono</th>
             <th>Estado</th>
             <th>Acciones</th>
+            <th>Cuenta Corriente</th>
         </tr>
     </thead>
     <tbody>
@@ -67,7 +68,6 @@
                     }
                 </td>
                 <td>
-
                     @if (cliente.Tipo == "Físico")
                     {
                         <a asp-controller="Clientes"
@@ -122,6 +122,14 @@
                         </form>
                     }
 
+                </td>
+                <td>
+                    <a asp-controller="CuentaCorriente"
+                       asp-action="Index"
+                       asp-route-clienteId="@cliente.Id"
+                       class="btn btn-outline-primary btn-sm">
+                        Cuenta corriente
+                    </a>
                 </td>
             </tr>
         }

@@ -1,0 +1,80 @@
+﻿@model SistemaVenta.Web.ViewModels.CuentasCorrientes.RegistrarMovimientoCuentaViewModel
+
+@{
+    ViewData["Title"] = "Registrar movimiento";
+
+    var esDebito = Model.TipoMovimiento == "Debito";
+
+    var titulo = esDebito
+        ? "Registrar débito"
+        : "Registrar crédito";
+}
+
+<h2>@titulo</h2>
+
+<p class="text-muted">
+    Cuenta corriente del cliente #@Model.ClienteId
+</p>
+
+<div class="card">
+    <div class="card-body">
+
+        <form asp-action="RegistrarMovimiento"
+              asp-controller="CuentaCorriente"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input asp-for="CuentaId" type="hidden" />
+            <input asp-for="ClienteId" type="hidden" />
+            <input asp-for="TipoMovimiento" type="hidden" />
+
+            <div asp-validation-summary="All"
+                 class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Importe"
+                       class="form-label"></label>
+
+                <input asp-for="Importe"
+                       type="number"
+                       min="0.01"
+                       step="0.01"
+                       class="form-control" />
+
+                <span asp-validation-for="Importe"
+                      class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Descripcion"
+                       class="form-label"></label>
+
+                <textarea asp-for="Descripcion"
+                          class="form-control"
+                          rows="3"></textarea>
+
+                <span asp-validation-for="Descripcion"
+                      class="text-danger"></span>
+            </div>
+
+            <button type="submit"
+                    class="btn btn-primary">
+                Registrar movimiento
+            </button>
+
+            <a asp-controller="CuentaCorriente"
+               asp-action="Detalle"
+               asp-route-clienteId="@Model.ClienteId"
+               class="btn btn-secondary">
+                Cancelar
+            </a>
+
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

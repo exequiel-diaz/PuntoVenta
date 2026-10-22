@@ -21,6 +21,12 @@ namespace SistemaVenta.Infrastructure.Persistence
 
         public DbSet<Cliente> Clientes => Set<Cliente>();
 
+        public DbSet<CuentaCorriente> CuentasCorrientes
+            => Set<CuentaCorriente>();
+
+        public DbSet<MovimientoCuentaCorriente> MovimientosCuentaCorriente
+            => Set<MovimientoCuentaCorriente>();
+
         protected override void OnModelCreating(
             ModelBuilder modelBuilder)
         {

@@ -1,0 +1,346 @@
+﻿@model SistemaVenta.Application.DTOs.CuentasCorrientes.CuentaCorrienteDetalleDto
+@using SistemaVenta.Domain.Enums
+
+@{
+    ViewData["Title"] = "Cuenta corriente";
+}
+
+<h2 class="mb-4">Cuenta corriente</h2>
+
+@if (TempData["MensajeExito"] is string mensaje)
+{
+    <div class="alert alert-success">
+        @mensaje
+    </div>
+}
+
+@if (TempData["MensajeError"] is string error)
+{
+    <div class="alert alert-danger">
+        @error
+    </div>
+}
+
+<!-- INFORMACIÓN GENERAL -->
+
+<div class="card mb-4">
+    <div class="card-header">
+        <strong>Información general</strong>
+    </div>
+
+    <div class="card-body">
+
+        <p>
+            <strong>Cliente ID:</strong>
+            @Model.ClienteId
+        </p>
+
+        <p>
+            <strong>Estado:</strong>
+            @Model.Estado
+        </p>
+
+        <p>
+            <strong>Fecha de apertura:</strong>
+            @Model.FechaApertura.ToLocalTime().ToString("dd/MM/yyyy")
+        </p>
+
+        <p>
+            <strong>Límite de deuda:</strong>
+            $@Model.LimiteDeuda.ToString("N2")
+        </p>
+
+        <p>
+            <strong>Saldo actual:</strong>
+            $@Model.SaldoActual.ToString("N2")
+        </p>
+
+        <p>
+            <strong>Crédito disponible:</strong>
+            $@Math.Max(
+                        0m,
+                        Model.LimiteDeuda - Model.SaldoActual
+                        ).ToString("N2")
+        </p>
+
+        <p class="mb-0">
+            <strong>Observaciones:</strong>
+            @(Model.Observaciones ?? "Sin observaciones")
+        </p>
+
+    </div>
+</div>
+
+
+<!-- ACCIONES ADMINISTRATIVAS -->
+
+<div class="card mb-4">
+    <div class="card-header">
+        <strong>Acciones administrativas</strong>
+    </div>
+
+    <div class="card-body">
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <!-- MODIFICAR LÍMITE -->
+            @if (Model.Estado != EstadoCuentaCorriente.Cerrada)
+            {
+                <a asp-controller="CuentaCorriente"
+                   asp-action="ModificarLimite"
+                   asp-route-clienteId="@Model.ClienteId"
+                   class="btn btn-outline-primary">
+                    Modificar límite de deuda
+                </a>
+            }
+
+
+            <!-- SUSPENDER CUENTA -->
+            @if (Model.Estado == EstadoCuentaCorriente.Activa)
+            {
+                <form asp-controller="CuentaCorriente"
+                      asp-action="Suspender"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="cuentaId"
+                           value="@Model.Id" />
+
+                    <input type="hidden"
+                           name="clienteId"
+                           value="@Model.ClienteId" />
+
+                    <button type="submit"
+                            class="btn btn-warning"
+                            onclick="return confirm('¿Suspender esta cuenta corriente?');">
+                        Suspender cuenta
+                    </button>
+
+                </form>
+            }
+
+
+            <!-- ACTIVAR CUENTA -->
+            @if (Model.Estado == EstadoCuentaCorriente.Suspendida)
+            {
+                <form asp-controller="CuentaCorriente"
+                      asp-action="Activar"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="cuentaId"
+                           value="@Model.Id" />
+
+                    <input type="hidden"
+                           name="clienteId"
+                           value="@Model.ClienteId" />
+
+                    <button type="submit"
+                            class="btn btn-success">
+                        Activar cuenta
+                    </button>
+
+                </form>
+            }
+
+
+            <!-- CERRAR CUENTA -->
+            @if (Model.Estado != EstadoCuentaCorriente.Cerrada
+                        && Model.SaldoActual == 0)
+            {
+                <form asp-controller="CuentaCorriente"
+                      asp-action="Cerrar"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="cuentaId"
+                           value="@Model.Id" />
+
+                    <input type="hidden"
+                           name="clienteId"
+                           value="@Model.ClienteId" />
+
+                    <button type="submit"
+                            class="btn btn-outline-danger"
+                            onclick="return confirm('¿Cerrar definitivamente esta cuenta corriente?');">
+                        Cerrar cuenta
+                    </button>
+
+                </form>
+            }
+
+        </div>
+
+        @if (Model.Estado == EstadoCuentaCorriente.Cerrada)
+        {
+            <p class="text-muted mt-3 mb-0">
+                Esta cuenta corriente está cerrada.
+                No se permiten nuevas operaciones.
+            </p>
+        }
+
+    </div>
+</div>
+
+
+<!-- REGISTRAR MOVIMIENTOS -->
+
+<div class="card mb-4">
+    <div class="card-header">
+        <strong>Registrar movimientos</strong>
+    </div>
+
+    <div class="card-body">
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <!-- REGISTRAR DÉBITO -->
+            @if (Model.Estado == EstadoCuentaCorriente.Activa
+                        && Model.SaldoActual < Model.LimiteDeuda)
+            {
+                <a asp-controller="CuentaCorriente"
+                   asp-action="RegistrarMovimiento"
+                   asp-route-clienteId="@Model.ClienteId"
+                   asp-route-tipo="Debito"
+                   class="btn btn-outline-danger">
+                    Registrar débito
+                </a>
+            }
+
+
+            <!-- REGISTRAR CRÉDITO -->
+            @if (Model.Estado != EstadoCuentaCorriente.Cerrada
+                        && Model.SaldoActual > 0)
+            {
+                <a asp-controller="CuentaCorriente"
+                   asp-action="RegistrarMovimiento"
+                   asp-route-clienteId="@Model.ClienteId"
+                   asp-route-tipo="Credito"
+                   class="btn btn-outline-success">
+                    Registrar crédito
+                </a>
+            }
+
+        </div>
+
+        @if (Model.Estado == EstadoCuentaCorriente.Cerrada)
+        {
+            <p class="text-muted mb-0">
+                No se pueden registrar movimientos
+                en una cuenta cerrada.
+            </p>
+        }
+        else if (Model.Estado == EstadoCuentaCorriente.Suspendida)
+        {
+            <p class="text-muted mt-3 mb-0">
+                La cuenta está suspendida.
+                Solo se permite registrar pagos de deudas pendientes.
+            </p>
+        }
+        else if (Model.SaldoActual >= Model.LimiteDeuda)
+        {
+            <p class="text-muted mt-3 mb-0">
+                La cuenta no tiene crédito disponible
+                para registrar nuevas deudas.
+            </p>
+        }
+
+    </div>
+</div>
+
+
+<!-- HISTORIAL DE MOVIMIENTOS -->
+
+<h3 class="mb-3">Historial de movimientos</h3>
+
+@if (!Model.Movimientos.Any())
+{
+    <div class="alert alert-info">
+        Esta cuenta todavía no tiene movimientos.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+
+        <table class="table table-striped table-hover">
+
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th class="text-end">Importe</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @foreach (var movimiento in Model.Movimientos)
+                {
+                    <tr>
+
+                        <td>
+                            @movimiento.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        </td>
+
+                        <td>
+                            @if (movimiento.Tipo == TipoMovimientoCuenta.Debito)
+                            {
+                                <span class="badge bg-danger">
+                                    Débito
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">
+                                    Crédito
+                                </span>
+                            }
+                        </td>
+
+                        <td>
+                            @movimiento.Descripcion
+                        </td>
+
+                        <td class="text-end">
+                            @if (movimiento.Tipo == TipoMovimientoCuenta.Debito)
+                            {
+                                <span class="text-danger">
+                                    +$@movimiento.Importe.ToString("N2")
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-success">
+                                    -$@movimiento.Importe.ToString("N2")
+                                </span>
+                            }
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+}
+
+
+<!-- VOLVER A CLIENTES -->
+
+<div class="mt-4">
+    <a asp-controller="Clientes"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Volver a clientes
+    </a>
+</div>

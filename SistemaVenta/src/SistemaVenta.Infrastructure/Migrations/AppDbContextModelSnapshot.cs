@@ -96,6 +96,72 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.UseTphMappingStrategy();
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.CuentaCorriente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaApertura")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("LimiteDeuda")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClienteId")
+                        .IsUnique();
+
+                    b.ToTable("CuentasCorrientes", (string)null);
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.MovimientoCuentaCorriente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CuentaCorrienteId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Importe")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CuentaCorrienteId");
+
+                    b.ToTable("MovimientosCuentaCorriente", (string)null);
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.MovimientoStock", b =>
                 {
                     b.Property<int>("Id")
@@ -253,6 +319,24 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.HasDiscriminator().HasValue("Fisico");
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.CuentaCorriente", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.Cliente", null)
+                        .WithOne()
+                        .HasForeignKey("SistemaVenta.Domain.Entities.CuentaCorriente", "ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.MovimientoCuentaCorriente", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.CuentaCorriente", null)
+                        .WithMany("Movimientos")
+                        .HasForeignKey("CuentaCorrienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.MovimientoStock", b =>
                 {
                     b.HasOne("SistemaVenta.Domain.Entities.Producto", "Producto")
@@ -273,6 +357,11 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Categoria");
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.CuentaCorriente", b =>
+                {
+                    b.Navigation("Movimientos");
                 });
 #pragma warning restore 612, 618
         }
