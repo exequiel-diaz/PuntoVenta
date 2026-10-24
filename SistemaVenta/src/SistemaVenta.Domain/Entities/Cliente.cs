@@ -5,7 +5,6 @@ namespace SistemaVenta.Domain.Entities
     public abstract class Cliente
     {
         public int Id { get; private set; }
-
         public string Telefono { get; private set; }
         public string Email { get; private set; }
         public string Direccion { get; private set; }

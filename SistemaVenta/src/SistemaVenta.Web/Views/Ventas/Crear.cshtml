@@ -1,0 +1,503 @@
+﻿@model SistemaVenta.Web.ViewModels.Ventas.RegistrarVentaViewModel
+
+@{
+    ViewData["Title"] = "Registrar venta";
+
+    var preciosJson = System.Text.Json.JsonSerializer.Serialize(
+        Model.PreciosProductos);
+}
+
+<h2 class="mb-4">Registrar venta</h2>
+
+@if (TempData["MensajeExito"] is string mensaje)
+{
+    <div class="alert alert-success">
+        @mensaje
+    </div>
+}
+
+<form id="formulario-venta"
+      asp-controller="Ventas"
+      asp-action="Crear"
+      method="post">
+
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger mb-3"></div>
+
+    <!-- CLIENTE -->
+
+    <div class="mb-4">
+        <label asp-for="ClienteId" class="form-label">
+            Cliente
+        </label>
+
+        <select asp-for="ClienteId"
+                asp-items="Model.ClientesDisponibles"
+                class="form-select">
+
+            <option value="0">
+                Seleccione un cliente
+            </option>
+        </select>
+
+        <span asp-validation-for="ClienteId"
+              class="text-danger"></span>
+    </div>
+
+    <hr />
+
+    <!-- PRODUCTOS -->
+
+    <h4 class="mb-3">Detalle de productos</h4>
+
+    <div id="contenedor-detalles">
+
+        @for (var i = 0; i < Model.Detalles.Count; i++)
+        {
+            <div class="row mb-3 detalle-venta">
+
+                <!-- PRODUCTO -->
+
+                <div class="col-md-4">
+                    <label class="form-label">
+                        Producto
+                    </label>
+
+                    <select asp-for="Detalles[i].ProductoId"
+                            asp-items="Model.ProductosDisponibles"
+                            class="form-select">
+
+                        <option value="0">
+                            Seleccione un producto
+                        </option>
+                    </select>
+
+                    <span asp-validation-for="Detalles[i].ProductoId"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- CANTIDAD -->
+
+                <div class="col-md-2">
+                    <label class="form-label">
+                        Cantidad
+                    </label>
+
+                    <input asp-for="Detalles[i].Cantidad"
+                           type="number"
+                           min="0.001"
+                           step="0.001"
+                           class="form-control" />
+
+                    <span asp-validation-for="Detalles[i].Cantidad"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- PRECIO UNITARIO -->
+
+                <div class="col-md-2">
+                    <label class="form-label">
+                        Precio unitario
+                    </label>
+
+                    <input type="text"
+                           class="form-control precio-unitario"
+                           readonly />
+                </div>
+
+                <!-- SUBTOTAL -->
+
+                <div class="col-md-2">
+                    <label class="form-label">
+                        Subtotal
+                    </label>
+
+                    <input type="text"
+                           class="form-control subtotal"
+                           readonly />
+                </div>
+
+                <!-- QUITAR -->
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button"
+                            class="btn btn-outline-danger w-100"
+                            onclick="eliminarDetalle(this)">
+                        Quitar
+                    </button>
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+    <!-- AGREGAR PRODUCTO -->
+
+    <button type="button"
+            class="btn btn-outline-primary mb-4"
+            onclick="agregarDetalle()">
+        + Agregar producto
+    </button>
+
+    <hr />
+
+    <!-- TOTAL -->
+
+    <div class="d-flex justify-content-end mb-4">
+        <div class="text-end">
+            <h5>Total estimado</h5>
+
+            <h3 id="total-venta">
+                $0,00
+            </h3>
+
+            <small class="text-muted">
+                El importe definitivo se calcula
+                al confirmar la venta.
+            </small>
+        </div>
+    </div>
+
+    <!-- BOTONES -->
+
+    <div class="mb-3">
+
+        <button type="submit"
+                class="btn btn-success">
+            Confirmar venta
+        </button>
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Cancelar
+        </a>
+
+    </div>
+
+</form>
+
+<!-- PLANTILLA PARA AGREGAR PRODUCTOS -->
+
+<template id="plantilla-detalle">
+
+    <div class="row mb-3 detalle-venta">
+
+        <!-- PRODUCTO -->
+
+        <div class="col-md-4">
+            <label class="form-label">
+                Producto
+            </label>
+
+            <select name="Detalles[__index__].ProductoId"
+                    class="form-select">
+
+                <option value="0">
+                    Seleccione un producto
+                </option>
+
+                @foreach (var producto in Model.ProductosDisponibles)
+                {
+                    <option value="@producto.Value">
+                        @producto.Text
+                    </option>
+                }
+
+            </select>
+        </div>
+
+        <!-- CANTIDAD -->
+
+        <div class="col-md-2">
+            <label class="form-label">
+                Cantidad
+            </label>
+
+            <input type="number"
+                   name="Detalles[__index__].Cantidad"
+                   value="1"
+                   min="0.001"
+                   step="0.001"
+                   class="form-control" />
+        </div>
+
+        <!-- PRECIO UNITARIO -->
+
+        <div class="col-md-2">
+            <label class="form-label">
+                Precio unitario
+            </label>
+
+            <input type="text"
+                   class="form-control precio-unitario"
+                   readonly />
+        </div>
+
+        <!-- SUBTOTAL -->
+
+        <div class="col-md-2">
+            <label class="form-label">
+                Subtotal
+            </label>
+
+            <input type="text"
+                   class="form-control subtotal"
+                   readonly />
+        </div>
+
+        <!-- QUITAR -->
+
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="button"
+                    class="btn btn-outline-danger w-100"
+                    onclick="eliminarDetalle(this)">
+                Quitar
+            </button>
+        </div>
+
+    </div>
+
+</template>
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+
+        // PRECIOS RECIBIDOS DESDE EL SERVIDOR
+
+        const preciosProductos = @Html.Raw(preciosJson);
+
+        const formatoMoneda = new Intl.NumberFormat("es-AR", {
+            style: "currency",
+            currency: "ARS"
+        });
+
+        // CALCULAR PRECIOS, SUBTOTALES Y TOTAL
+
+        function calcularTotales() {
+
+            let total = 0;
+
+            const filas = document.querySelectorAll(
+                "#contenedor-detalles .detalle-venta"
+            );
+
+            filas.forEach(fila => {
+
+                const selectorProducto = fila.querySelector(
+                    'select[name$=".ProductoId"]'
+                );
+
+                const campoCantidad = fila.querySelector(
+                    'input[name$=".Cantidad"]'
+                );
+
+                const campoPrecio = fila.querySelector(
+                    ".precio-unitario"
+                );
+
+                const campoSubtotal = fila.querySelector(
+                    ".subtotal"
+                );
+
+                const productoId = selectorProducto.value;
+
+                const precio = Number(
+                    preciosProductos[productoId] ?? 0
+                );
+
+                const cantidadTexto = campoCantidad.value
+                    .replace(",", ".");
+
+                const cantidad = Number(cantidadTexto);
+
+                const subtotal =
+                    Number.isFinite(cantidad) && cantidad > 0
+                        ? precio * cantidad
+                        : 0;
+
+                campoPrecio.value =
+                    formatoMoneda.format(precio);
+
+                campoSubtotal.value =
+                    formatoMoneda.format(subtotal);
+
+                total += subtotal;
+            });
+
+            document.getElementById("total-venta").textContent =
+                formatoMoneda.format(total);
+        }
+
+        // AGREGAR UNA FILA
+
+        function agregarDetalle() {
+
+            const contenedor = document.getElementById(
+                "contenedor-detalles"
+            );
+
+            const plantilla = document.getElementById(
+                "plantilla-detalle"
+            );
+
+            const indice = contenedor.querySelectorAll(
+                ".detalle-venta"
+            ).length;
+
+            const html = plantilla.innerHTML.replaceAll(
+                "__index__",
+                indice
+            );
+
+            contenedor.insertAdjacentHTML(
+                "beforeend",
+                html
+            );
+
+            reindexarDetalles();
+            calcularTotales();
+        }
+
+        // ELIMINAR UNA FILA
+
+        function eliminarDetalle(boton) {
+
+            const filas = document.querySelectorAll(
+                "#contenedor-detalles .detalle-venta"
+            );
+
+            if (filas.length <= 1) {
+                alert(
+                    "La venta debe tener al menos un producto."
+                );
+                return;
+            }
+
+            boton.closest(".detalle-venta").remove();
+
+            reindexarDetalles();
+            calcularTotales();
+        }
+
+        // ACTUALIZAR ÍNDICES DE LOS DETALLES
+
+        function reindexarDetalles() {
+
+            const filas = document.querySelectorAll(
+                "#contenedor-detalles .detalle-venta"
+            );
+
+            filas.forEach((fila, indice) => {
+
+                fila.querySelectorAll("[name]").forEach(
+                    campo => {
+
+                        campo.name = campo.name.replace(
+                            /Detalles\[\d+\]/,
+                            `Detalles[${indice}]`
+                        );
+                    }
+                );
+
+                fila.querySelectorAll("[id]").forEach(
+                    campo => {
+
+                        campo.id = campo.id.replace(
+                            /Detalles_\d+__/,
+                            `Detalles_${indice}__`
+                        );
+                    }
+                );
+
+                fila.querySelectorAll(
+                    "[data-valmsg-for]"
+                ).forEach(elemento => {
+
+                    const nombre = elemento.getAttribute(
+                        "data-valmsg-for"
+                    );
+
+                    elemento.setAttribute(
+                        "data-valmsg-for",
+                        nombre.replace(
+                            /Detalles\[\d+\]/,
+                            `Detalles[${indice}]`
+                        )
+                    );
+                });
+            });
+        }
+
+        //VALIDAR SI SE REPITE ALGUN PRODUCTO
+
+        function validarProductosRepetidos() {
+
+            const productosSeleccionados = new Set();
+
+            const selectores = document.querySelectorAll(
+                '#contenedor-detalles select[name$=".ProductoId"]'
+            );
+
+            for (const selector of selectores) {
+
+                const productoId = selector.value;
+
+                // Ignoramos la opción "Seleccione un producto".
+                if (!productoId || productoId === "0") {
+                    continue;
+                }
+
+                if (productosSeleccionados.has(productoId)) {
+                    return false;
+                }
+
+                productosSeleccionados.add(productoId);
+            }
+
+            return true;
+        }
+
+        // ESCUCHAR CAMBIOS EN PRODUCTOS Y CANTIDADES
+
+        document.getElementById("contenedor-detalles")
+            .addEventListener(
+                "input",
+                calcularTotales
+            );
+
+        document.getElementById("contenedor-detalles")
+            .addEventListener(
+                "change",
+                calcularTotales
+            );
+
+
+        document.getElementById("formulario-venta")
+            .addEventListener("submit", function (evento) {
+
+                if (!validarProductosRepetidos()) {
+
+                    evento.preventDefault();
+
+                    alert(
+                        "No podés seleccionar el mismo producto " +
+                        "más de una vez en la venta."
+                    );
+                }
+            });
+
+
+
+        // CALCULAR AL CARGAR LA PÁGINA
+
+        calcularTotales();
+
+    </script>
+}

@@ -45,6 +45,11 @@ namespace SistemaVenta.Infrastructure.Persistence.Configurations
                 .HasPrecision(18, 3)
                 .IsRequired();
 
+            // Control de concurrencia optimista de PostgreSQL.
+            // xmin es una columna de sistema que cambia al actualizar la fila.
+            builder.Property<uint>("xmin")
+                .IsRowVersion();
+
             builder.Property(p => p.StockMinimo)
                 .HasPrecision(18, 3)
                 .IsRequired();

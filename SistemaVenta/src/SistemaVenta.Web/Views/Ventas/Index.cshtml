@@ -1,0 +1,114 @@
+﻿@model IReadOnlyList<SistemaVenta.Application.DTOs.Ventas.VentaListadoDto>
+
+@{
+    ViewData["Title"] = "Historial de ventas";
+}
+
+
+@if (TempData["MensajeExito"] is string mensajeExito)
+{
+    <div class="alert alert-success" role="alert">
+        @mensajeExito
+    </div>
+}
+
+@if (TempData["MensajeError"] is string mensajeError)
+{
+    <div class="alert alert-danger" role="alert">
+        @mensajeError
+    </div>
+}
+
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Historial de ventas</h2>
+
+    <a asp-controller="Ventas"
+       asp-action="Crear"
+       class="btn btn-primary">
+        + Nueva venta
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        Todavía no hay ventas registradas.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>Venta</th>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Estado</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var venta in Model)
+                {
+                    <tr>
+                        <td>
+                            #@venta.Id
+                        </td>
+
+                        <td>
+                            @venta.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        </td>
+
+                        <td>
+                            @venta.NombreCliente
+                        </td>
+
+                        <td>
+                            @if (venta.Estado ==
+                                                SistemaVenta.Domain.Enums.EstadoVenta.Confirmada)
+                            {
+                                <span class="badge bg-success">
+                                    Confirmada
+                                </span>
+                            }
+                            else if (venta.Estado ==
+                            SistemaVenta.Domain.Enums.EstadoVenta.Anulada)
+                            {
+                                <span class="badge bg-danger">
+                                    Anulada
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    Pendiente
+                                </span>
+                            }
+                        </td>
+
+
+                        <td class="text-end">
+                            @venta.Total.ToString("C2",
+                            System.Globalization.CultureInfo.GetCultureInfo("es-AR"))
+                        </td>
+
+                        <td class="text-center">
+                            <a asp-controller="Ventas"
+                               asp-action="Detalle"
+                               asp-route-id="@venta.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                Ver detalle
+                            </a>
+                        </td>
+            </tr>
+                        }
+            </tbody>
+
+        </table>
+    </div>
+}

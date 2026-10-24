@@ -37,5 +37,6 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
         {
             await _context.Productos.AddAsync(producto);
         }
+    
     }
 }

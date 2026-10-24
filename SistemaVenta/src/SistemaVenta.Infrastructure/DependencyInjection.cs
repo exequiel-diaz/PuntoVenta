@@ -6,6 +6,7 @@ using SistemaVenta.Application.UseCases.CuentasCorrientes;
 using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Persistence.Repositories;
 using SistemaVenta.Infrastructure.Repositories;
+using SistemaVenta.Application.UseCases.Ventas;
 
 
 namespace SistemaVenta.Infrastructure
@@ -46,6 +47,10 @@ namespace SistemaVenta.Infrastructure
             services.AddScoped<SuspenderCuentaCorriente>();
             services.AddScoped<ActivarCuentaCorriente>();
             services.AddScoped<CerrarCuentaCorriente>();
+
+            // Módulo de Ventas
+            services.AddScoped<IVentaRepository, VentaRepository>();
+            services.AddScoped<RegistrarVenta>();
 
             return services;
         }

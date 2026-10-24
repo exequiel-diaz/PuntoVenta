@@ -106,8 +106,26 @@ namespace SistemaVenta.Domain.Entities
             StockActual += cantidad;
         }
 
+        public void RestaurarStockPorAnulacion(decimal cantidad)
+        {
+            if (cantidad <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(cantidad),
+                    "La cantidad debe ser mayor que cero.");
+            }
+
+            StockActual += cantidad;
+        }
+        
         public void DisminuirStock(decimal cantidad)
         {
+            if (Estado != EstadoProducto.Activo)
+            {
+                throw new InvalidOperationException(
+                    "No se puede descontar stock de un producto inactivo.");
+            }
+
             if (cantidad <= 0)
             {
                 throw new ArgumentOutOfRangeException(

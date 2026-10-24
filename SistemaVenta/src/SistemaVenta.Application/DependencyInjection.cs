@@ -3,6 +3,7 @@ using SistemaVenta.Application.UseCases.Categorias;
 using SistemaVenta.Application.UseCases.Clientes;
 using SistemaVenta.Application.UseCases.Productos;
 using SistemaVenta.Application.UseCases.Stock;
+using SistemaVenta.Application.UseCases.Ventas;
 
 
 namespace SistemaVenta.Application
@@ -32,6 +33,12 @@ namespace SistemaVenta.Application
             services.AddScoped<EditarClienteEmpresa>();
             services.AddScoped<DesactivarCliente>();
             services.AddScoped<ActivarCliente>();
+
+            // Ventas
+            services.AddScoped<ListarVentas>();
+            services.AddScoped<ObtenerDetalleVenta>();
+            services.AddScoped<AnularVenta>();
+
 
             return services;
         }

@@ -129,6 +129,37 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.ToTable("CuentasCorrientes", (string)null);
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.DetalleVenta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Cantidad")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("numeric(18,3)");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("VentaId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("VentaId");
+
+                    b.ToTable("DetallesVenta", (string)null);
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.MovimientoCuentaCorriente", b =>
                 {
                     b.Property<int>("Id")
@@ -253,6 +284,12 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .HasPrecision(18, 3)
                         .HasColumnType("numeric(18,3)");
 
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CategoriaId");
@@ -261,6 +298,38 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Productos", (string)null);
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Venta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClienteId");
+
+                    b.ToTable("Ventas", (string)null);
                 });
 
             modelBuilder.Entity("SistemaVenta.Domain.Entities.ClienteEmpresa", b =>
@@ -328,6 +397,23 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.DetalleVenta", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SistemaVenta.Domain.Entities.Venta", null)
+                        .WithMany("Detalles")
+                        .HasForeignKey("VentaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.MovimientoCuentaCorriente", b =>
                 {
                     b.HasOne("SistemaVenta.Domain.Entities.CuentaCorriente", null)
@@ -359,9 +445,23 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.Navigation("Categoria");
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Venta", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.Cliente", null)
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.CuentaCorriente", b =>
                 {
                     b.Navigation("Movimientos");
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Venta", b =>
+                {
+                    b.Navigation("Detalles");
                 });
 #pragma warning restore 612, 618
         }

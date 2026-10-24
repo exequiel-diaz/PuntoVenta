@@ -1,20 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Domain.Entities;
 
 namespace SistemaVenta.Application.Tests.Fakes
 {
-    public class FakeMovimientoStockRepository: IMovimientoStockRepository
+    public class FakeMovimientoStockRepository
+        : IMovimientoStockRepository
     {
-        public MovimientoStock? MovimientoAgregado { get; private set; }
+        private readonly List<MovimientoStock> _movimientos = new();
+
+        public IReadOnlyList<MovimientoStock> Movimientos =>
+            _movimientos.AsReadOnly();
+
+        // Conservamos esta propiedad para no romper
+        // las pruebas existentes.
+        public MovimientoStock? MovimientoAgregado =>
+            _movimientos.LastOrDefault();
 
         public Task AgregarAsync(MovimientoStock movimiento)
         {
-            MovimientoAgregado = movimiento;
+            _movimientos.Add(movimiento);
 
             return Task.CompletedTask;
         }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Domain.Entities;
+using SistemaVenta.Application.Exceptions;
 
 namespace SistemaVenta.Infrastructure.Persistence
 {
@@ -27,6 +28,10 @@ namespace SistemaVenta.Infrastructure.Persistence
         public DbSet<MovimientoCuentaCorriente> MovimientosCuentaCorriente
             => Set<MovimientoCuentaCorriente>();
 
+        public DbSet<Venta> Ventas => Set<Venta>();
+
+        public DbSet<DetalleVenta> DetallesVenta => Set<DetalleVenta>();
+
         protected override void OnModelCreating(
             ModelBuilder modelBuilder)
         {
@@ -35,10 +40,21 @@ namespace SistemaVenta.Infrastructure.Persistence
             modelBuilder.ApplyConfigurationsFromAssembly(
                 typeof(AppDbContext).Assembly);
         }
+
         public async Task GuardarCambiosAsync()
         {
-            await SaveChangesAsync();
+            try
+            {
+                await SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                throw new ConflictoConcurrenciaException(
+                    "El stock o los datos de un producto cambiaron durante la operación. Revisá la disponibilidad e intentá nuevamente.",
+                    ex);
+            }
         }
+
 
     }
 }
