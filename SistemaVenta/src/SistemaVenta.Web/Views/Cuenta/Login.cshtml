@@ -1,0 +1,203 @@
+﻿@model SistemaVenta.Web.ViewModels.LoginVM
+
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+}
+
+<!-- Importación de fuentes -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+    /* Fondo oscuro (puedes quitarlo si usas el layout con navbar) */
+    body {
+        background-color: #1e2433; 
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    .login-card {
+        background-color: #ffffff;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        width: 100%;
+        max-width: 380px; /* Tarjeta más angosta */
+        padding: 2rem 1.75rem; /* Menos padding interno */
+    }
+
+    /* Espacio para el logo un poco más chico */
+    .logo-placeholder {
+        width: 50px;
+        height: 50px;
+        background-color: #f8f9fa;
+        border: 1.5px dashed #dee2e6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem auto;
+        color: #adb5bd;
+        font-size: 0.65rem;
+        text-align: center;
+        line-height: 1.1;
+    }
+
+    .font-serif {
+        font-family: 'Playfair Display', Georgia, serif;
+        color: #0b1527;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+
+    /* Inputs más compactos */
+    .input-icon-group {
+        position: relative;
+    }
+
+    .input-icon-group .form-control {
+        padding-left: 2.25rem; 
+        padding-top: 0.4rem;
+        padding-bottom: 0.4rem;
+        font-size: 0.9rem;
+        border-radius: 0.5rem;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .input-icon-group .icon-left {
+        position: absolute;
+        left: 0.8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #adb5bd;
+        pointer-events: none;
+        width: 14px;
+        height: 14px;
+    }
+
+    .input-icon-group .icon-right {
+        position: absolute;
+        right: 0.8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #adb5bd;
+        cursor: pointer;
+        width: 14px;
+        height: 14px;
+    }
+
+    /* Botones más proporcionados */
+    .btn-primary-custom {
+        background-color: #0047ff;
+        border-color: #0047ff;
+        border-radius: 50rem;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .btn-primary-custom:hover {
+        background-color: #0036c7;
+        border-color: #0036c7;
+    }
+
+    .btn-outline-custom {
+        border: 1px solid #d1d5db;
+        color: #333;
+        border-radius: 50rem;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .btn-outline-custom:hover {
+        background-color: #f3f4f6;
+    }
+
+    /* Ajustes de tipografía */
+    .system-name {
+        font-size: 1rem;
+        color: #0b1527;
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+</style>
+
+<div class="d-flex justify-content-center align-items-center min-vh-100 py-4">
+    
+    <div class="login-card text-center">
+        
+        <!-- ESPACIO PARA EL LOGO -->
+        <div class="logo-placeholder">
+            <span>Tu<br>Logo</span>
+        </div>
+        
+        <!-- NOMBRE DEL SISTEMA -->
+        <div class="system-name fw-bold">Sistema de Venta</div>
+
+        <!-- TÍTULOS -->
+        <h3 class="font-serif mb-1">Bienvenido</h3>
+        <p class="text-muted small mb-3" style="font-size: 0.8rem;">Por favor, inicia sesión en tu cuenta</p>
+
+        <form asp-controller="Cuenta" asp-action="Login" method="post">
+            
+            <div asp-validation-summary="ModelOnly" class="text-danger small text-start mb-2" style="font-size: 0.8rem;"></div>
+
+            <!-- CAMPO EMAIL -->
+            <div class="text-start mb-2">
+                <label asp-for="Email" class="form-label fw-semibold text-dark">Correo Electrónico</label>
+                <div class="input-icon-group">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="icon-left" viewBox="0 0 16 16">
+                        <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/>
+                    </svg>
+                    <input asp-for="Email" type="email" class="form-control" placeholder="Ingresa tu correo" />
+                </div>
+                <span asp-validation-for="Email" class="text-danger" style="font-size: 0.75rem;"></span>
+            </div>
+
+            <!-- CAMPO CONTRASEÑA -->
+            <div class="text-start mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label asp-for="Password" class="form-label fw-semibold text-dark mb-0">Contraseña</label>
+                    <a href="#" class="text-decoration-none" style="font-size: 0.75rem;">¿Olvidaste tu contraseña?</a>
+                </div>
+                <div class="input-icon-group">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="icon-left" viewBox="0 0 16 16">
+                        <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/>
+                    </svg>
+                    <input asp-for="Password" class="form-control" placeholder="••••••••" style="padding-right: 2.25rem;" />
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="icon-right" viewBox="0 0 16 16">
+                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                    </svg>
+                </div>
+                <span asp-validation-for="Password" class="text-danger" style="font-size: 0.75rem;"></span>
+            </div>
+
+            <!-- RECORDARME -->
+            <div class="form-check text-start mb-3">
+                <input class="form-check-input" type="checkbox" id="recordarme" style="transform: scale(0.85);">
+                <label class="form-check-label text-muted" for="recordarme" style="font-size: 0.8rem; padding-top: 2px;">
+                    Recordarme
+                </label>
+            </div>
+
+            <!-- BOTÓN PRINCIPAL -->
+            <button type="submit" class="btn btn-primary-custom text-white w-100 mb-3">
+                Iniciar Sesión
+            </button>
+
+      
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

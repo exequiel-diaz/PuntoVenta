@@ -1,0 +1,172 @@
+﻿@model SistemaVenta.Web.ViewModels.RegistroVM
+
+@{
+    ViewData["Title"] = "Registrar empleado";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-4">
+                        <h2 class="fw-semibold mb-1">Nuevo empleado</h2>
+                    </div>
+
+                    <form asp-controller="Empleados"
+                          asp-action="Registrar"
+                          method="post"
+                          novalidate>
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="alert alert-danger py-2 px-3 small rounded-3"></div>
+
+                        <div class="row g-3">
+
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="Nombre" class="form-label small fw-medium">
+                                    Nombre
+                                </label>
+                                <input asp-for="Nombre"
+                                       class="form-control form-control-lg rounded-3"
+                                       placeholder="Ej: Juan" />
+                                <span asp-validation-for="Nombre"
+                                      class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="Apellido" class="form-label small fw-medium">
+                                    Apellido
+                                </label>
+                                <input asp-for="Apellido"
+                                       class="form-control form-control-lg rounded-3"
+                                       placeholder="Ej: Pérez" />
+                                <span asp-validation-for="Apellido"
+                                      class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="DNI" class="form-label small fw-medium">
+                                    DNI
+                                </label>
+                                <input asp-for="DNI"
+                                       class="form-control form-control-lg rounded-3"
+                                       placeholder="Ej: 30123456"
+                                       inputmode="numeric" />
+                                <span asp-validation-for="DNI"
+                                      class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="FechaNacimiento" class="form-label small fw-medium">
+                                    Fecha de nacimiento
+                                </label>
+                                <input asp-for="FechaNacimiento"
+                                       type="date"
+                                       class="form-control form-control-lg rounded-3"
+                                       max="@DateTime.Today.AddDays(-1).ToString("yyyy-MM-dd")" />
+                                <span asp-validation-for="FechaNacimiento"
+                                      class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Direccion" class="form-label small fw-medium">
+                                    Dirección
+                                </label>
+                                <input asp-for="Direccion"
+                                       class="form-control form-control-lg rounded-3"
+                                       placeholder="Ej: Av. Siempre Viva 742" />
+                                <span asp-validation-for="Direccion"
+                                      class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="Telefono" class="form-label small fw-medium">
+                                    Teléfono
+                                </label>
+                                <input asp-for="Telefono"
+                                       class="form-control form-control-lg rounded-3"
+                                       placeholder="Ej: 11 5555-5555"
+                                       inputmode="tel" />
+                                <span asp-validation-for="Telefono"
+                                      class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="Puesto" class="form-label small fw-medium">
+                                    Puesto
+                                </label>
+                                <select asp-for="Puesto"
+                                        class="form-select form-select-lg rounded-3">
+                                    
+                                    <option value="Cajero">Cajero</option>
+                                    <option value="Vendedor">Vendedor</option>
+                                    <option value="Encargado">Encargado</option>
+                                </select>
+                                <span asp-validation-for="Puesto"
+                                      class="text-danger small"></span>
+                            </div>
+
+                           
+                            <div class="col-12">
+                                <hr class="my-2 text-muted opacity-25" />
+                                <p class="small text-muted mb-0">Credenciales de acceso</p>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Email" class="form-label small fw-medium">
+                                    Correo electrónico
+                                </label>
+                                <input asp-for="Email"
+                                       type="email"
+                                       class="form-control form-control-lg rounded-3"
+                                       placeholder="ejemplo@correo.com" />
+                                <span asp-validation-for="Email"
+                                      class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="Password" class="form-label small fw-medium">
+                                    Contraseña
+                                </label>
+                                <input asp-for="Password"
+                                       class="form-control form-control-lg rounded-3"
+                                       placeholder="••••••••" />
+                                <span asp-validation-for="Password"
+                                      class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label asp-for="ConfirmarPassword" class="form-label small fw-medium">
+                                    Confirmar contraseña
+                                </label>
+                                <input asp-for="ConfirmarPassword"
+                                       class="form-control form-control-lg rounded-3"
+                                       placeholder="••••••••" />
+                                <span asp-validation-for="ConfirmarPassword"
+                                      class="text-danger small"></span>
+                            </div>
+
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit"
+                                    class="btn btn-primary btn-lg rounded-3 fw-medium">
+                                Registrar
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

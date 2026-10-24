@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Infrastructure.Persistence;
+using SistemaVenta.Infrastructure.Persistence.Identity;
 using SistemaVenta.Infrastructure.Persistence.Repositories;
 
 namespace SistemaVenta.Infrastructure
@@ -19,10 +16,18 @@ namespace SistemaVenta.Infrastructure
             IConfiguration configuration)
         {
             var connectionString =
-                configuration.GetConnectionString("DefaultConnection");
+                configuration.GetConnectionString("ConexionPostgreSQL");
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(connectionString));
+
+            // Configuración de Identity
+
+            services.AddIdentity<AppUsuarios, IdentityRole>()
+                    .AddEntityFrameworkStores<AppDbContext>()
+                    .AddDefaultTokenProviders();
+            
+
 
             services.AddScoped<IProductoRepository, ProductoRepository>();
 

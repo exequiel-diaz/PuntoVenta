@@ -12,6 +12,13 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(
     builder.Configuration);
 
+//Configurar la autenticación y autorización
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Cuenta/Login";
+    options.AccessDeniedPath = "/Cuenta/Login";
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -31,7 +38,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Home}/{action=Inicio}/{id?}")
     .WithStaticAssets();
 
 

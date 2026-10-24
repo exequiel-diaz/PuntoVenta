@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using SistemaVenta.Web.Models;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SistemaVenta.Web.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -18,6 +20,11 @@ namespace SistemaVenta.Web.Controllers
             return View();
         }
 
+        [AllowAnonymous]
+        public IActionResult Inicio()
+        {
+            return View();
+        }
         public IActionResult Privacy()
         {
             return View();
