@@ -32,6 +32,8 @@ namespace SistemaVenta.Infrastructure.Persistence
 
         public DbSet<DetalleVenta> DetallesVenta => Set<DetalleVenta>();
 
+        public DbSet<Usuario> Usuarios => Set<Usuario>();
+
         protected override void OnModelCreating(
             ModelBuilder modelBuilder)
         {

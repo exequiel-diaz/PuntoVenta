@@ -7,6 +7,9 @@ using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Persistence.Repositories;
 using SistemaVenta.Infrastructure.Repositories;
 using SistemaVenta.Application.UseCases.Ventas;
+using SistemaVenta.Infrastructure.Security;
+using SistemaVenta.Application.UseCases.Usuarios;
+using SistemaVenta.Infrastructure.Initialization;
 
 
 namespace SistemaVenta.Infrastructure
@@ -36,7 +39,12 @@ namespace SistemaVenta.Infrastructure
                     provider.GetRequiredService<AppDbContext>());
 
             services.AddScoped<IClienteRepository, ClienteRepository>();
-            
+            services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+            services.AddScoped<IPasswordHasher, PasswordHasherService>();
+            services.AddScoped<RegistrarUsuario>();
+            services.AddScoped<AutenticarUsuario>();
+            services.AddScoped<AdministradorInicializador>();
+
             services.AddScoped<
                 ICuentaCorrienteRepository,
                 CuentaCorrienteRepository>();
@@ -51,6 +59,7 @@ namespace SistemaVenta.Infrastructure
             // Módulo de Ventas
             services.AddScoped<IVentaRepository, VentaRepository>();
             services.AddScoped<RegistrarVenta>();
+            services.AddScoped<VendedorPruebaInicializador>();
 
             return services;
         }
