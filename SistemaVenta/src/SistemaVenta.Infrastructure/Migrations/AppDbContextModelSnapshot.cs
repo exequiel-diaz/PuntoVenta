@@ -22,6 +22,33 @@ namespace SistemaVenta.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.AplicacionPago", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DocumentoComercialId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("ImporteAplicado")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("PagoId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentoComercialId");
+
+                    b.HasIndex("PagoId");
+
+                    b.ToTable("AplicacionesPago", (string)null);
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.Categoria", b =>
                 {
                     b.Property<int>("Id")
@@ -160,6 +187,47 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.ToTable("DetallesVenta", (string)null);
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.DocumentoComercial", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("FechaEmision")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("TipoDocumento")
+                        .IsRequired()
+                        .HasMaxLength(21)
+                        .HasColumnType("character varying(21)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Numero");
+
+                    b.ToTable("DocumentosComerciales", (string)null);
+
+                    b.HasDiscriminator<string>("TipoDocumento").HasValue("DocumentoComercial");
+
+                    b.UseTphMappingStrategy();
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.MovimientoCuentaCorriente", b =>
                 {
                     b.Property<int>("Id")
@@ -233,6 +301,51 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.HasIndex("ProductoId");
 
                     b.ToTable("MovimientosStock", (string)null);
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Pago", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FormaPago")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<decimal>("Importe")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("Pagos", (string)null);
                 });
 
             modelBuilder.Entity("SistemaVenta.Domain.Entities.Producto", b =>
@@ -422,6 +535,160 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.HasDiscriminator().HasValue("Fisico");
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Factura", b =>
+                {
+                    b.HasBaseType("SistemaVenta.Domain.Entities.DocumentoComercial");
+
+                    b.Property<decimal>("ImporteTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("ImporteTotal");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("VentaId")
+                        .HasColumnType("integer");
+
+                    b.HasIndex("VentaId");
+
+                    b.HasDiscriminator().HasValue("Factura");
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.NotaCredito", b =>
+                {
+                    b.HasBaseType("SistemaVenta.Domain.Entities.DocumentoComercial");
+
+                    b.Property<int>("FacturaId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("ImporteTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasIndex("FacturaId");
+
+                    b.ToTable("DocumentosComerciales", t =>
+                        {
+                            t.Property("ImporteTotal")
+                                .HasColumnName("NotaCredito_ImporteTotal");
+                        });
+
+                    b.HasDiscriminator().HasValue("NotaCredito");
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.NotaDebito", b =>
+                {
+                    b.HasBaseType("SistemaVenta.Domain.Entities.DocumentoComercial");
+
+                    b.Property<int>("FacturaId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("ImporteTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasIndex("FacturaId");
+
+                    b.ToTable("DocumentosComerciales", t =>
+                        {
+                            t.Property("FacturaId")
+                                .HasColumnName("NotaDebito_FacturaId");
+
+                            t.Property("ImporteTotal")
+                                .HasColumnName("NotaDebito_ImporteTotal");
+
+                            t.Property("Motivo")
+                                .HasColumnName("NotaDebito_Motivo");
+                        });
+
+                    b.HasDiscriminator().HasValue("NotaDebito");
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Recibo", b =>
+                {
+                    b.HasBaseType("SistemaVenta.Domain.Entities.DocumentoComercial");
+
+                    b.Property<decimal>("ImporteTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("PagoId")
+                        .HasColumnType("integer");
+
+                    b.HasIndex("PagoId");
+
+                    b.ToTable("DocumentosComerciales", t =>
+                        {
+                            t.Property("ImporteTotal")
+                                .HasColumnName("Recibo_ImporteTotal");
+                        });
+
+                    b.HasDiscriminator().HasValue("Recibo");
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Ticket", b =>
+                {
+                    b.HasBaseType("SistemaVenta.Domain.Entities.DocumentoComercial");
+
+                    b.Property<decimal>("ImporteTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<int?>("VentaId")
+                        .HasColumnType("integer");
+
+                    b.HasIndex("VentaId");
+
+                    b.ToTable("DocumentosComerciales", t =>
+                        {
+                            t.Property("ImporteTotal")
+                                .HasColumnName("Ticket_ImporteTotal");
+
+                            t.Property("Tipo")
+                                .HasColumnName("Ticket_Tipo");
+
+                            t.Property("VentaId")
+                                .HasColumnName("Ticket_VentaId");
+                        });
+
+                    b.HasDiscriminator().HasValue("Ticket");
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.AplicacionPago", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.DocumentoComercial", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentoComercialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SistemaVenta.Domain.Entities.Pago", "Pago")
+                        .WithMany("Aplicaciones")
+                        .HasForeignKey("PagoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Pago");
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.CuentaCorriente", b =>
                 {
                     b.HasOne("SistemaVenta.Domain.Entities.Cliente", null)
@@ -468,6 +735,15 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.Navigation("Producto");
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Pago", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.Producto", b =>
                 {
                     b.HasOne("SistemaVenta.Domain.Entities.Categoria", "Categoria")
@@ -488,9 +764,58 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Factura", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.Venta", null)
+                        .WithMany()
+                        .HasForeignKey("VentaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.NotaCredito", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.Factura", null)
+                        .WithMany()
+                        .HasForeignKey("FacturaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.NotaDebito", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.Factura", null)
+                        .WithMany()
+                        .HasForeignKey("FacturaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Recibo", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.Pago", null)
+                        .WithMany()
+                        .HasForeignKey("PagoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Ticket", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.Venta", null)
+                        .WithMany()
+                        .HasForeignKey("VentaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.CuentaCorriente", b =>
                 {
                     b.Navigation("Movimientos");
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.Pago", b =>
+                {
+                    b.Navigation("Aplicaciones");
                 });
 
             modelBuilder.Entity("SistemaVenta.Domain.Entities.Venta", b =>

@@ -34,6 +34,15 @@ namespace SistemaVenta.Infrastructure.Persistence
 
         public DbSet<Usuario> Usuarios => Set<Usuario>();
 
+        public DbSet<Pago> Pagos => Set<Pago>();
+
+        public DbSet<AplicacionPago> AplicacionesPago =>
+            Set<AplicacionPago>();
+
+        public DbSet<DocumentoComercial> DocumentosComerciales =>
+            Set<DocumentoComercial>();
+
+
         protected override void OnModelCreating(
             ModelBuilder modelBuilder)
         {
