@@ -59,6 +59,16 @@ namespace SistemaVenta.Infrastructure.Persistence.Configurations
                 .WithMany()
                 .HasForeignKey(p => p.UsuarioId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Relación Pago -> AplicacionesPagoVenta.
+            builder.HasMany(p => p.AplicacionesVentas)
+                .WithOne(a => a.Pago)
+                .HasForeignKey(a => a.PagoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // EF Core utiliza la colección privada.
+            builder.Navigation(p => p.AplicacionesVentas)
+                .UsePropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

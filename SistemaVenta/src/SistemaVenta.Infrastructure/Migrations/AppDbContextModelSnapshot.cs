@@ -49,6 +49,33 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.ToTable("AplicacionesPago", (string)null);
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.AplicacionPagoVenta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("ImporteAplicado")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("PagoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("VentaId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PagoId");
+
+                    b.HasIndex("VentaId");
+
+                    b.ToTable("AplicacionesPagoVenta", (string)null);
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.Categoria", b =>
                 {
                     b.Property<int>("Id")
@@ -696,6 +723,25 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.Navigation("Pago");
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.AplicacionPagoVenta", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.Pago", "Pago")
+                        .WithMany("AplicacionesVentas")
+                        .HasForeignKey("PagoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SistemaVenta.Domain.Entities.Venta", "Venta")
+                        .WithMany()
+                        .HasForeignKey("VentaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Pago");
+
+                    b.Navigation("Venta");
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.CuentaCorriente", b =>
                 {
                     b.HasOne("SistemaVenta.Domain.Entities.Cliente", null)
@@ -730,10 +776,12 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("SistemaVenta.Domain.Entities.Venta", null)
+                    b.HasOne("SistemaVenta.Domain.Entities.Venta", "Venta")
                         .WithMany()
                         .HasForeignKey("VentaId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Venta");
                 });
 
             modelBuilder.Entity("SistemaVenta.Domain.Entities.MovimientoStock", b =>
@@ -828,6 +876,8 @@ namespace SistemaVenta.Infrastructure.Migrations
             modelBuilder.Entity("SistemaVenta.Domain.Entities.Pago", b =>
                 {
                     b.Navigation("Aplicaciones");
+
+                    b.Navigation("AplicacionesVentas");
                 });
 
             modelBuilder.Entity("SistemaVenta.Domain.Entities.Venta", b =>

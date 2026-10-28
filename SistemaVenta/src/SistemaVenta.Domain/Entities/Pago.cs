@@ -24,9 +24,15 @@ namespace SistemaVenta.Domain.Entities
         public IReadOnlyCollection<AplicacionPago> Aplicaciones =>
             _aplicaciones.AsReadOnly();
 
-        public decimal ImporteDisponible =>
-            Importe - _aplicaciones.Sum(a => a.ImporteAplicado);
+        private readonly List<AplicacionPagoVenta> _aplicacionesVentas = new();
 
+        public IReadOnlyCollection<AplicacionPagoVenta> AplicacionesVentas =>
+            _aplicacionesVentas.AsReadOnly();
+
+        public decimal ImporteDisponible =>
+            Importe
+            - _aplicaciones.Sum(a => a.ImporteAplicado)
+            - _aplicacionesVentas.Sum(a => a.ImporteAplicado);
         private Pago()
         {
         }
@@ -97,6 +103,37 @@ namespace SistemaVenta.Domain.Entities
             _aplicaciones.Add(aplicacion);
         }
 
+        public void AgregarAplicacionVenta(
+            Venta venta,
+            decimal importeAplicado)
+        {
+            if (Estado == EstadoPago.Anulado)
+                throw new InvalidOperationException(
+                    "No se puede aplicar un pago anulado.");
+
+            if (venta is null)
+                throw new ArgumentNullException(nameof(venta));
+
+            if (venta.Id <= 0)
+                throw new ArgumentException(
+                    "La venta debe estar registrada.");
+
+            if (importeAplicado <= 0)
+                throw new ArgumentException(
+                    "El importe aplicado debe ser mayor que cero.");
+
+            if (importeAplicado > ImporteDisponible)
+                throw new InvalidOperationException(
+                    "El importe aplicado supera el saldo disponible del pago.");
+
+            var aplicacion = new AplicacionPagoVenta(
+                this,
+                venta,
+                importeAplicado);
+
+            _aplicacionesVentas.Add(aplicacion);
+        }
+
         public void Anular()
         {
             if (Estado == EstadoPago.Anulado)
@@ -105,7 +142,7 @@ namespace SistemaVenta.Domain.Entities
                     "El pago ya se encuentra anulado.");
             }
 
-            if (_aplicaciones.Count > 0)
+            if (_aplicaciones.Count > 0 || _aplicacionesVentas.Count > 0)
             {
                 throw new InvalidOperationException(
                     "No se puede anular un pago que tiene aplicaciones.");
@@ -113,5 +150,7 @@ namespace SistemaVenta.Domain.Entities
 
             Estado = EstadoPago.Anulado;
         }
+    
+    
     }
 }
