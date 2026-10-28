@@ -23,6 +23,9 @@ namespace SistemaVenta.Integration.Tests.Pagos
             var contexto = scope.ServiceProvider
                 .GetRequiredService<AppDbContext>();
 
+            await using var transaccion =
+                await contexto.Database.BeginTransactionAsync();
+
             var identificador = Guid.NewGuid().ToString("N");
             var dni = Random.Shared.Next(10_000_000, 100_000_000).ToString();
 
