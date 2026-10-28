@@ -16,6 +16,8 @@ namespace SistemaVenta.Application.Tests.Ventas
         private readonly FakeMovimientoStockRepository _movimientos = new();
         private readonly FakeUnitOfWork _unitOfWork = new();
         private readonly FakeDocumentoComercialRepository _documentos = new();
+        private readonly FakeCuentaCorrienteRepository _cuentas = new();
+
 
         private AnularVenta CrearCasoDeUso()
         {
@@ -25,8 +27,10 @@ namespace SistemaVenta.Application.Tests.Ventas
                 _movimientos,
                 _unitOfWork,
                 _documentos,
-                new FakeTransaccionVenta());
+                new FakeTransaccionVenta(),
+                _cuentas);
         }
+
 
 
         private static void AsignarId(object entidad, int id)

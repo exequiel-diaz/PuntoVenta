@@ -78,11 +78,12 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 new MovimientoStockRepository(context);
 
             var registrarVenta = new RegistrarVenta(
-                ventaRepository,
-                clienteRepository,
-                productoRepository,
-                movimientoRepository,
-                context);
+                new VentaRepository(context),
+                new ClienteRepository(context),
+                new ProductoRepository(context),
+                new MovimientoStockRepository(context),
+                context,
+                new CuentaCorrienteRepository(context));
 
             var solicitud = new RegistrarVentaDto
             {
@@ -240,7 +241,6 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
             Assert.Null(productoPersistido);
         }
 
-
         [Fact]
         public async Task GuardarVenta_SiFallaUnMovimiento_NoDebeGuardarCambiosParciales()
         {
@@ -332,7 +332,6 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
             await transaccion.RollbackAsync();
         }
 
-
         [Fact]
         public async Task RegistrarVenta_SiHayConflictoConcurrencia_NoDebeGuardarVentaParcial()
         {
@@ -400,14 +399,16 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                     new ClienteRepository(contextoA),
                     new ProductoRepository(contextoA),
                     new MovimientoStockRepository(contextoA),
-                    contextoA);
+                    contextoA,
+                    new CuentaCorrienteRepository(contextoA));
 
                 var registrarVentaB = new RegistrarVenta(
                     new VentaRepository(contextoB),
                     new ClienteRepository(contextoB),
                     new ProductoRepository(contextoB),
                     new MovimientoStockRepository(contextoB),
-                    contextoB);
+                    contextoB,
+                    new CuentaCorrienteRepository(contextoB));
 
                 var solicitudA = new RegistrarVentaDto
                 {
@@ -534,6 +535,118 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 }
             }
         }
+
+
+        [Fact]
+        public async Task RegistrarVentaACredito_DebeGuardarVentaYDebitoVinculados()
+        {
+            // ARRANGE
+            await using var context = _factory.CreateDbContext([]);
+
+            await using var transaccion =
+                await context.Database.BeginTransactionAsync();
+
+            var cliente = new ClienteFisico(
+                nombre: "Cliente",
+                apellido: "CreditoPrueba",
+                dni: Random.Shared.Next(10_000_000, 100_000_000).ToString(),
+                telefono: "3811234567",
+                email: $"credito-{Guid.NewGuid():N}@test.com",
+                direccion: "Tucumán");
+
+            var categoria = new Categoria(
+                "Categoría crédito",
+                "Prueba de venta a cuenta corriente");
+
+            var producto = new Producto(
+                codigoInterno: $"CRED-{Guid.NewGuid():N}",
+                nombre: "Memoria RAM de prueba",
+                precioVenta: 25000m,
+                costo: 15000m,
+                stockMinimo: 2m,
+                categoria: categoria);
+
+            producto.AumentarStock(10m);
+
+            context.Clientes.Add(cliente);
+            context.Productos.Add(producto);
+
+            await context.SaveChangesAsync();
+
+            var cuenta = new CuentaCorriente(
+                cliente.Id,
+                125000m);
+
+            context.CuentasCorrientes.Add(cuenta);
+
+            await context.SaveChangesAsync();
+
+            var registrarVenta = new RegistrarVenta(
+                new VentaRepository(context),
+                new ClienteRepository(context),
+                new ProductoRepository(context),
+                new MovimientoStockRepository(context),
+                context,
+                new CuentaCorrienteRepository(context));
+
+            var solicitud = new RegistrarVentaDto
+            {
+                ClienteId = cliente.Id,
+                Modalidad = ModalidadVenta.CuentaCorriente,
+                Detalles = new()
+        {
+            new()
+            {
+                ProductoId = producto.Id,
+                Cantidad = 2m
+            }
+        }
+            };
+
+            // ACT
+            int ventaId = await registrarVenta.EjecutarAsync(solicitud);
+
+            // Consultar los datos realmente guardados.
+            context.ChangeTracker.Clear();
+
+            var ventaGuardada = await context.Ventas
+                .Include(v => v.Detalles)
+                .SingleAsync(v => v.Id == ventaId);
+
+            var cuentaGuardada = await context.CuentasCorrientes
+                .Include(c => c.Movimientos)
+                .SingleAsync(c => c.ClienteId == cliente.Id);
+
+            var productoGuardado = await context.Productos
+                .SingleAsync(p => p.Id == producto.Id);
+
+            var debito = Assert.Single(
+                cuentaGuardada.Movimientos);
+
+            // ASSERT
+            Assert.Equal(
+                EstadoVenta.Confirmada,
+                ventaGuardada.Estado);
+
+            Assert.Equal(50000m, ventaGuardada.Total);
+
+            Assert.Equal(8m, productoGuardado.StockActual);
+
+            Assert.True(debito.EsDebito());
+
+            Assert.Equal(50000m, debito.Importe);
+
+            Assert.Equal(ventaId, debito.VentaId);
+
+            Assert.Equal(50000m, cuentaGuardada.SaldoActual);
+
+            Assert.Equal(
+                75000m,
+                cuentaGuardada.LimiteDeuda - cuentaGuardada.SaldoActual);
+
+            // La transacción se revierte al finalizar.
+        }
+
 
     }
 }

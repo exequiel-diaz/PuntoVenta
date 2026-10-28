@@ -14,6 +14,7 @@ namespace SistemaVenta.Application.UseCases.Ventas
         private readonly IUnitOfWork _unitOfWork;
         private readonly IDocumentoComercialRepository _documentos;
         private readonly ITransaccionVenta _transaccion;
+        private readonly ICuentaCorrienteRepository _cuentas;
 
         public AnularVenta(
             IVentaRepository ventas,
@@ -21,14 +22,16 @@ namespace SistemaVenta.Application.UseCases.Ventas
             IMovimientoStockRepository movimientos,
             IUnitOfWork unitOfWork,
             IDocumentoComercialRepository documentos,
-            ITransaccionVenta transaccion)
+            ITransaccionVenta transaccion,
+            ICuentaCorrienteRepository cuentas)
         {
             _ventas = ventas;
             _productos = productos;
             _movimientos = movimientos;
             _unitOfWork = unitOfWork;
-            _documentos = documentos; 
+            _documentos = documentos;
             _transaccion = transaccion;
+            _cuentas = cuentas;
         }
 
         public async Task EjecutarAsync(int ventaId)
@@ -74,6 +77,16 @@ namespace SistemaVenta.Application.UseCases.Ventas
                     {
                         throw new InvalidOperationException(
                             "No se puede anular una venta que ya tiene una factura registrada.");
+                    }
+
+
+                    var cuenta = await _cuentas.ObtenerPorClienteIdAsync(
+                        venta.ClienteId);
+
+                    if (cuenta is not null &&
+                        cuenta.TieneDebitoDeVenta(venta.Id))
+                    {
+                        cuenta.RevertirDebitoDeVenta(venta);
                     }
 
 

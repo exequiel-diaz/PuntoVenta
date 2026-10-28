@@ -1,6 +1,7 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using SistemaVenta.Application.DTOs.Ventas;
 
 namespace SistemaVenta.Web.ViewModels.Ventas;
 
@@ -9,6 +10,10 @@ public class RegistrarVentaViewModel
     [Range(1, int.MaxValue,
         ErrorMessage = "Debe seleccionar un cliente.")]
     public int ClienteId { get; set; }
+
+    [Required(ErrorMessage = "Debe seleccionar una modalidad de venta.")]
+    public ModalidadVenta Modalidad { get; set; }
+        = ModalidadVenta.Contado;
 
     [Required(ErrorMessage = "Debe agregar productos.")]
     [MinLength(1,

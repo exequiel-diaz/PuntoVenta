@@ -13,19 +13,22 @@ namespace SistemaVenta.Application.UseCases.Ventas
         private readonly IProductoRepository _productos;
         private readonly IMovimientoStockRepository _movimientos;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICuentaCorrienteRepository _cuentas;
 
         public RegistrarVenta(
             IVentaRepository ventas,
             IClienteRepository clientes,
             IProductoRepository productos,
             IMovimientoStockRepository movimientos,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            ICuentaCorrienteRepository cuentas)
         {
             _ventas = ventas;
             _clientes = clientes;
             _productos = productos;
             _movimientos = movimientos;
             _unitOfWork = unitOfWork;
+            _cuentas = cuentas;
         }
 
         public async Task<int> EjecutarAsync(RegistrarVentaDto solicitud)
@@ -127,6 +130,34 @@ namespace SistemaVenta.Application.UseCases.Ventas
                     item.Producto.PrecioVenta);
             }
 
+
+            // 4.1. Validar modalidad de venta
+
+            if (!Enum.IsDefined(solicitud.Modalidad))
+            {
+                throw new ArgumentException(
+                    "La modalidad de venta no es válida.");
+            }
+
+            if (solicitud.Modalidad == ModalidadVenta.CuentaCorriente)
+            {
+                var cuenta = await _cuentas.ObtenerPorClienteIdAsync(
+                    solicitud.ClienteId);
+
+                if (cuenta is null)
+                {
+                    throw new InvalidOperationException(
+                        "El cliente no tiene una cuenta corriente habilitada.");
+                }
+
+                if (!cuenta.PuedeRegistrarDeuda(venta.Total))
+                {
+                    throw new InvalidOperationException(
+                        "La cuenta corriente no está activa o no tiene crédito suficiente.");
+                }
+            }
+
+
             // 5. Registrar salidas de inventario
 
             foreach (var item in productosValidados)
@@ -155,6 +186,29 @@ namespace SistemaVenta.Application.UseCases.Ventas
             // 7. Registrar venta
 
             await _ventas.AgregarAsync(venta);
+
+
+            // 7.1. Registrar deuda si la venta es a cuenta corriente
+
+            if (solicitud.Modalidad == ModalidadVenta.CuentaCorriente)
+            {
+                var cuenta = await _cuentas.ObtenerPorClienteIdAsync(
+                    solicitud.ClienteId);
+
+                if (cuenta is null)
+                {
+                    throw new InvalidOperationException(
+                        "El cliente no tiene cuenta corriente.");
+                }
+
+
+                cuenta.RegistrarDebito(
+                    venta.Total,
+                    "Venta a cuenta corriente",
+                    venta);
+
+            }
+
 
             // 8. Persistir cambios
 

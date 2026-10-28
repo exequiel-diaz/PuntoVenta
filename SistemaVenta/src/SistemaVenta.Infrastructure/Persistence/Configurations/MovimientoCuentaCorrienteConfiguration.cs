@@ -30,5 +30,13 @@ public class MovimientoCuentaCorrienteConfiguration
             .IsRequired();
 
         builder.HasIndex(m => m.CuentaCorrienteId);
+
+        builder.HasOne(m => m.Venta)
+            .WithMany()
+            .HasForeignKey(m => m.VentaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(m => m.VentaId);
+
     }
 }

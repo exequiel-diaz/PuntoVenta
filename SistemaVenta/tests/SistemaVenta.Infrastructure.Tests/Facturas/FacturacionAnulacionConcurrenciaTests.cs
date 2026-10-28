@@ -96,7 +96,8 @@ namespace SistemaVenta.Infrastructure.Tests.Facturas
                     new MovimientoStockRepository(contextoAnulacion),
                     contextoAnulacion,
                     new DocumentoComercialRepository(contextoAnulacion),
-                    new TransaccionVentaPostgres(contextoAnulacion));
+                    new TransaccionVentaPostgres(contextoAnulacion),
+                    new CuentaCorrienteRepository(contextoAnulacion));
 
                 // ACT: facturar primero.
                 var facturaId = await emitirFactura.EjecutarAsync(

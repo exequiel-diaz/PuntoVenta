@@ -59,7 +59,8 @@ public class CuentaCorriente
 
     public void RegistrarDebito(
         decimal importe,
-        string descripcion)
+        string descripcion,
+        Venta? venta = null)
     {
         if (importe <= 0)
             throw new ArgumentException(
@@ -72,14 +73,17 @@ public class CuentaCorriente
         var movimiento = new MovimientoCuentaCorriente(
             TipoMovimientoCuenta.Debito,
             importe,
-            descripcion);
+            descripcion,
+            venta);
 
         _movimientos.Add(movimiento);
     }
 
+
     public void RegistrarCredito(
         decimal importe,
-        string descripcion)
+        string descripcion,
+        Venta? venta = null)
     {
         if (Estado == EstadoCuentaCorriente.Cerrada)
             throw new InvalidOperationException(
@@ -96,10 +100,75 @@ public class CuentaCorriente
         var movimiento = new MovimientoCuentaCorriente(
             TipoMovimientoCuenta.Credito,
             importe,
-            descripcion);
+            descripcion,
+            venta);
 
         _movimientos.Add(movimiento);
     }
+
+
+    public bool TieneDebitoDeVenta(int ventaId)
+    {
+        if (ventaId <= 0)
+            throw new ArgumentException(
+                "El identificador de la venta debe ser válido.");
+
+        return _movimientos.Any(m =>
+            m.VentaId == ventaId &&
+            m.EsDebito());
+    }
+
+    public bool TieneCreditoDeVenta(int ventaId)
+    {
+        if (ventaId <= 0)
+            throw new ArgumentException(
+                "El identificador de la venta debe ser válido.");
+
+        return _movimientos.Any(m =>
+            m.VentaId == ventaId &&
+            !m.EsDebito());
+    }
+
+
+    public void RevertirDebitoDeVenta(Venta venta)
+    {
+        if (venta is null)
+            throw new ArgumentNullException(nameof(venta));
+
+        if (venta.Id <= 0)
+            throw new ArgumentException(
+                "La venta debe estar registrada.");
+
+        if (venta.ClienteId != ClienteId)
+            throw new InvalidOperationException(
+                "La venta no pertenece al cliente de esta cuenta.");
+
+        var debitos = _movimientos
+            .Where(m =>
+                m.VentaId == venta.Id &&
+                m.EsDebito())
+            .ToList();
+
+        if (debitos.Count != 1)
+            throw new InvalidOperationException(
+                "La venta debe tener exactamente un débito asociado.");
+
+        if (TieneCreditoDeVenta(venta.Id))
+            throw new InvalidOperationException(
+                "La venta ya tiene un crédito asociado.");
+
+        var importe = debitos[0].Importe;
+
+        if (SaldoActual < importe)
+            throw new InvalidOperationException(
+                "No se puede anular esta venta porque la cuenta no tiene deuda suficiente para compensarla. Revisá los pagos registrados.");
+
+        RegistrarCredito(
+            importe,
+            $"Anulación de venta #{venta.Id}",
+            venta);
+    }
+
 
     public void ModificarLimiteDeuda(decimal nuevoLimite)
     {

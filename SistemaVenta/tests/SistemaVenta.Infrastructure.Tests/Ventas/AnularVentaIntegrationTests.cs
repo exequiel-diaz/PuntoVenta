@@ -61,7 +61,8 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 new ClienteRepository(context),
                 new ProductoRepository(context),
                 new MovimientoStockRepository(context),
-                context);
+                context,
+                new CuentaCorrienteRepository(context));
 
             await registrarVenta.EjecutarAsync(
                 new RegistrarVentaDto
@@ -100,7 +101,8 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 new MovimientoStockRepository(context),
                 context,
                 new DocumentoComercialRepository(context),
-                new TransaccionVentaPostgres(context));
+                new TransaccionVentaPostgres(context),
+                new CuentaCorrienteRepository(context));
 
 
             await anularVenta.EjecutarAsync(ventaId);
@@ -192,7 +194,8 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                     new ClienteRepository(preparacion),
                     new ProductoRepository(preparacion),
                     new MovimientoStockRepository(preparacion),
-                    preparacion);
+                    preparacion,
+                    new CuentaCorrienteRepository(preparacion));
 
                 await registrarVenta.EjecutarAsync(
                     new RegistrarVentaDto
@@ -239,7 +242,8 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                     new MovimientoStockRepository(contextoA),
                     contextoA,
                     new DocumentoComercialRepository(contextoA),
-                    new TransaccionVentaPostgres(contextoA));
+                    new TransaccionVentaPostgres(contextoA),
+                    new CuentaCorrienteRepository(contextoA));
 
 
 
@@ -249,7 +253,8 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                     new MovimientoStockRepository(contextoB),
                     contextoB,
                     new DocumentoComercialRepository(contextoB),
-                    new TransaccionVentaPostgres(contextoB));
+                    new TransaccionVentaPostgres(contextoB),
+                    new CuentaCorrienteRepository(contextoB));
 
 
                 // ACT: A anula la venta.
@@ -344,6 +349,259 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 }
             }
         }
+
+
+        [Fact]
+        public async Task AnularVentaACredito_DebeRestaurarStockYRevertirDeuda()
+        {
+            await using var context = _factory.CreateDbContext([]);
+            await using var transaccion =
+                await context.Database.BeginTransactionAsync();
+
+            // ARRANGE: cliente, producto y cuenta corriente.
+            var cliente = new ClienteFisico(
+                nombre: "Cliente",
+                apellido: "AnulacionCredito",
+                dni: Random.Shared.Next(10_000_000, 100_000_000).ToString(),
+                telefono: "3811234567",
+                email: $"anulacion-credito-{Guid.NewGuid():N}@test.com",
+                direccion: "Tucumán");
+
+            var categoria = new Categoria(
+                $"Credito-{Guid.NewGuid():N}",
+                "Categoría de prueba");
+
+            var producto = new Producto(
+                codigoInterno: $"ACR-{Guid.NewGuid():N}",
+                nombre: "Producto venta a crédito",
+                precioVenta: 25000m,
+                costo: 15000m,
+                stockMinimo: 1m,
+                categoria: categoria);
+
+            producto.AumentarStock(10m);
+
+            context.Clientes.Add(cliente);
+            context.Productos.Add(producto);
+
+            await context.SaveChangesAsync();
+
+            var cuenta = new CuentaCorriente(
+                clienteId: cliente.Id,
+                limiteDeuda: 125000m);
+
+            context.CuentasCorrientes.Add(cuenta);
+            await context.SaveChangesAsync();
+
+            // Registrar una venta a crédito por $50.000.
+            var registrarVenta = new RegistrarVenta(
+                new VentaRepository(context),
+                new ClienteRepository(context),
+                new ProductoRepository(context),
+                new MovimientoStockRepository(context),
+                context,
+                new CuentaCorrienteRepository(context));
+
+            await registrarVenta.EjecutarAsync(
+                new RegistrarVentaDto
+                {
+                    ClienteId = cliente.Id,
+                    Modalidad = ModalidadVenta.CuentaCorriente,
+                    Detalles = new()
+                    {
+                new()
+                {
+                    ProductoId = producto.Id,
+                    Cantidad = 2m
+                }
+                    }
+                });
+
+            var ventaId = await context.Ventas
+                .Where(v => v.ClienteId == cliente.Id)
+                .Select(v => v.Id)
+                .SingleAsync();
+
+            // Comprobar la situación anterior a la anulación.
+            context.ChangeTracker.Clear();
+
+            var cuentaAntes = await context.CuentasCorrientes
+                .Include(c => c.Movimientos)
+                .SingleAsync(c => c.ClienteId == cliente.Id);
+
+            Assert.Equal(50000m, cuentaAntes.SaldoActual);
+
+            var stockAntes = await context.Productos
+                .Where(p => p.Id == producto.Id)
+                .Select(p => p.StockActual)
+                .SingleAsync();
+
+            Assert.Equal(8m, stockAntes);
+
+            context.ChangeTracker.Clear();
+
+            // ACT: anular la venta.
+            var anularVenta = new AnularVenta(
+                new VentaRepository(context),
+                new ProductoRepository(context),
+                new MovimientoStockRepository(context),
+                context,
+                new DocumentoComercialRepository(context),
+                new TransaccionVentaPostgres(context),
+                new CuentaCorrienteRepository(context));
+
+            await anularVenta.EjecutarAsync(ventaId);
+
+            // ASSERT: consultar nuevamente PostgreSQL.
+            context.ChangeTracker.Clear();
+
+            var ventaGuardada = await context.Ventas
+                .AsNoTracking()
+                .SingleAsync(v => v.Id == ventaId);
+
+            var productoGuardado = await context.Productos
+                .AsNoTracking()
+                .SingleAsync(p => p.Id == producto.Id);
+
+            var cuentaGuardada = await context.CuentasCorrientes
+                .AsNoTracking()
+                .Include(c => c.Movimientos)
+                .SingleAsync(c => c.ClienteId == cliente.Id);
+
+            Assert.Equal(EstadoVenta.Anulada, ventaGuardada.Estado);
+            Assert.Equal(10m, productoGuardado.StockActual);
+            Assert.Equal(0m, cuentaGuardada.SaldoActual);
+            Assert.Equal(125000m,
+                cuentaGuardada.LimiteDeuda - cuentaGuardada.SaldoActual);
+
+            // El débito original permanece registrado.
+            var debito = Assert.Single(
+                cuentaGuardada.Movimientos,
+                m => m.EsDebito());
+
+            Assert.Equal(50000m, debito.Importe);
+            Assert.Equal(ventaId, debito.VentaId);
+
+            // La anulación genera un crédito compensatorio.
+            var credito = Assert.Single(
+                cuentaGuardada.Movimientos,
+                m => !m.EsDebito());
+
+            Assert.Equal(50000m, credito.Importe);
+            Assert.Equal(ventaId, credito.VentaId);
+
+            Assert.Equal(2, cuentaGuardada.Movimientos.Count);
+
+            // Sin Commit: los datos se revierten al finalizar.
+        }
+
+
+        [Fact]
+        public async Task AnularVentaACredito_ConPagoParcial_NoDebeAnular()
+        {
+            await using var context = _factory.CreateDbContext([]);
+            await using var transaccion =
+                await context.Database.BeginTransactionAsync();
+
+            var cliente = new ClienteFisico(
+                nombre: "Cliente",
+                apellido: "PagoParcial",
+                dni: Random.Shared.Next(10_000_000, 100_000_000).ToString(),
+                telefono: "3811234567",
+                email: $"pago-parcial-{Guid.NewGuid():N}@test.com",
+                direccion: "Tucumán");
+
+            var categoria = new Categoria(
+                $"PagoParcial-{Guid.NewGuid():N}");
+
+            var producto = new Producto(
+                codigoInterno: $"PPA-{Guid.NewGuid():N}",
+                nombre: "Producto pago parcial",
+                precioVenta: 25000m,
+                costo: 15000m,
+                stockMinimo: 1m,
+                categoria: categoria);
+
+            producto.AumentarStock(10m);
+
+            context.Clientes.Add(cliente);
+            context.Productos.Add(producto);
+            await context.SaveChangesAsync();
+
+            var cuenta = new CuentaCorriente(cliente.Id, 125000m);
+            context.CuentasCorrientes.Add(cuenta);
+            await context.SaveChangesAsync();
+
+            var registrar = new RegistrarVenta(
+                new VentaRepository(context),
+                new ClienteRepository(context),
+                new ProductoRepository(context),
+                new MovimientoStockRepository(context),
+                context,
+                new CuentaCorrienteRepository(context));
+
+            await registrar.EjecutarAsync(new RegistrarVentaDto
+            {
+                ClienteId = cliente.Id,
+                Modalidad = ModalidadVenta.CuentaCorriente,
+                Detalles = new()
+        {
+            new()
+            {
+                ProductoId = producto.Id,
+                Cantidad = 2m
+            }
+        }
+            });
+
+            var ventaId = await context.Ventas
+                .Where(v => v.ClienteId == cliente.Id)
+                .Select(v => v.Id)
+                .SingleAsync();
+
+            // Simular un pago parcial de $20.000.
+            cuenta.RegistrarCredito(20000m, "Pago parcial del cliente");
+            await context.SaveChangesAsync();
+
+            context.ChangeTracker.Clear();
+
+            var anular = new AnularVenta(
+                new VentaRepository(context),
+                new ProductoRepository(context),
+                new MovimientoStockRepository(context),
+                context,
+                new DocumentoComercialRepository(context),
+                new TransaccionVentaPostgres(context),
+                new CuentaCorrienteRepository(context));
+
+            // La anulación debe ser rechazada.
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => anular.EjecutarAsync(ventaId));
+
+            context.ChangeTracker.Clear();
+
+            var ventaGuardada = await context.Ventas
+                .AsNoTracking()
+                .SingleAsync(v => v.Id == ventaId);
+
+            var productoGuardado = await context.Productos
+                .AsNoTracking()
+                .SingleAsync(p => p.Id == producto.Id);
+
+            var cuentaGuardada = await context.CuentasCorrientes
+                .AsNoTracking()
+                .Include(c => c.Movimientos)
+                .SingleAsync(c => c.ClienteId == cliente.Id);
+
+            Assert.Equal(EstadoVenta.Confirmada, ventaGuardada.Estado);
+            Assert.Equal(8m, productoGuardado.StockActual);
+            Assert.Equal(30000m, cuentaGuardada.SaldoActual);
+            Assert.Equal(2, cuentaGuardada.Movimientos.Count);
+        }
+
+
+
+
 
 
     }

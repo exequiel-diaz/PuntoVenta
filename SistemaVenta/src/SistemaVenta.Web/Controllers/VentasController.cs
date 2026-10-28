@@ -76,9 +76,11 @@ public class VentasController : Controller
 
         try
         {
+
             var solicitud = new RegistrarVentaDto
             {
                 ClienteId = modelo.ClienteId,
+                Modalidad = modelo.Modalidad,
                 Detalles = modelo.Detalles
                     .Select(d => new DetalleVentaEntradaDto
                     {
@@ -87,6 +89,7 @@ public class VentasController : Controller
                     })
                     .ToList()
             };
+
 
             var ventaId = await _registrarVenta.EjecutarAsync(solicitud);
 

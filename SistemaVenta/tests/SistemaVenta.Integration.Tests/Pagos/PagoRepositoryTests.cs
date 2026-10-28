@@ -96,11 +96,12 @@ public class PagoRepositoryTests
 
         // Cliente de prueba.
         var identificador = Guid.NewGuid().ToString("N");
+        var dni = Random.Shared.Next(10_000_000, 100_000_000).ToString();
 
         var cliente = new ClienteFisico(
             "Cliente",
             "Prueba",
-            "12345678",
+            dni,
             "3815551234",
             $"cliente_{identificador}@test.com",
             "Dirección de prueba");

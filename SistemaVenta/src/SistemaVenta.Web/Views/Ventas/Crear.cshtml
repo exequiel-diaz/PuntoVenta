@@ -46,6 +46,29 @@
               class="text-danger"></span>
     </div>
 
+
+    <!-- MODALIDAD DE VENTA -->
+
+    <div class="mb-4">
+        <label asp-for="Modalidad" class="form-label">
+            Modalidad de venta
+        </label>
+
+        <select asp-for="Modalidad" class="form-select">
+            <option value="1">Contado</option>
+            <option value="2">Cuenta corriente</option>
+        </select>
+
+        <span asp-validation-for="Modalidad"
+              class="text-danger"></span>
+
+        <small class="form-text text-muted">
+            Para vender a cuenta corriente, el cliente
+            debe tener una cuenta activa y crédito disponible.
+        </small>
+    </div>
+
+
     <hr />
 
     <!-- PRODUCTOS -->

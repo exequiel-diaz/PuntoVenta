@@ -16,6 +16,7 @@ namespace SistemaVenta.Application.Tests.Ventas
         private readonly FakeProductoRepository _productos = new();
         private readonly FakeMovimientoStockRepository _movimientos = new();
         private readonly FakeUnitOfWork _unitOfWork = new();
+        private readonly FakeCuentaCorrienteRepository _cuentas = new();
 
         private RegistrarVenta CrearCasoDeUso()
         {
@@ -24,7 +25,8 @@ namespace SistemaVenta.Application.Tests.Ventas
                 _clientes,
                 _productos,
                 _movimientos,
-                _unitOfWork);
+                _unitOfWork,
+                _cuentas);
         }
 
         private static Producto CrearProducto(

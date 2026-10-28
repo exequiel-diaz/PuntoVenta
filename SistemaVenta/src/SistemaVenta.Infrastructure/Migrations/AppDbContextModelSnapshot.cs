@@ -254,9 +254,14 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.Property<int>("Tipo")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("VentaId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CuentaCorrienteId");
+
+                    b.HasIndex("VentaId");
 
                     b.ToTable("MovimientosCuentaCorriente", (string)null);
                 });
@@ -724,6 +729,11 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .HasForeignKey("CuentaCorrienteId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("SistemaVenta.Domain.Entities.Venta", null)
+                        .WithMany()
+                        .HasForeignKey("VentaId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("SistemaVenta.Domain.Entities.MovimientoStock", b =>

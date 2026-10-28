@@ -7,6 +7,8 @@ public class MovimientoCuentaCorriente
     public int Id { get; private set; }
 
     public int CuentaCorrienteId { get; private set; }
+    public int? VentaId { get; private set; }
+    public Venta? Venta { get; private set; }
 
     public DateTime Fecha { get; private set; }
 
@@ -24,7 +26,8 @@ public class MovimientoCuentaCorriente
     internal MovimientoCuentaCorriente(
         TipoMovimientoCuenta tipo,
         decimal importe,
-        string descripcion)
+        string descripcion,
+        Venta? venta = null)
     {
         if (!Enum.IsDefined(tipo))
             throw new ArgumentException(
@@ -41,10 +44,9 @@ public class MovimientoCuentaCorriente
         Tipo = tipo;
         Importe = importe;
         Descripcion = descripcion.Trim();
-
+        Venta = venta;
         Fecha = DateTime.UtcNow;
     }
-
     public bool EsDebito()
     {
         return Tipo == TipoMovimientoCuenta.Debito;
