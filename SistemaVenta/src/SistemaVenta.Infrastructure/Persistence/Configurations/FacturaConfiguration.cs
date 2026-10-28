@@ -24,6 +24,10 @@ namespace SistemaVenta.Infrastructure.Persistence.Configurations
                 .WithMany()
                 .HasForeignKey(f => f.VentaId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(f => f.VentaId)
+                .IsUnique()
+                .HasFilter("\"TipoDocumento\" = 'Factura'");
         }
     }
 }

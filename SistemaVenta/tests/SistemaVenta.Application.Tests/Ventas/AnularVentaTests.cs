@@ -1,9 +1,10 @@
 ﻿
-using System.Reflection;
+using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Application.Tests.Fakes;
 using SistemaVenta.Application.UseCases.Ventas;
 using SistemaVenta.Domain.Entities;
 using SistemaVenta.Domain.Enums;
+using System.Reflection;
 using Xunit;
 
 namespace SistemaVenta.Application.Tests.Ventas
@@ -14,6 +15,7 @@ namespace SistemaVenta.Application.Tests.Ventas
         private readonly FakeProductoRepository _productos = new();
         private readonly FakeMovimientoStockRepository _movimientos = new();
         private readonly FakeUnitOfWork _unitOfWork = new();
+        private readonly FakeDocumentoComercialRepository _documentos = new();
 
         private AnularVenta CrearCasoDeUso()
         {
@@ -21,8 +23,11 @@ namespace SistemaVenta.Application.Tests.Ventas
                 _ventas,
                 _productos,
                 _movimientos,
-                _unitOfWork);
+                _unitOfWork,
+                _documentos,
+                new FakeTransaccionVenta());
         }
+
 
         private static void AsignarId(object entidad, int id)
         {
@@ -341,6 +346,74 @@ namespace SistemaVenta.Application.Tests.Ventas
             Assert.Empty(_movimientos.Movimientos);
             Assert.False(_unitOfWork.GuardarCambiosFueLlamado);
         }
+
+
+        [Fact]
+        public async Task AnularVenta_VentaFacturada_NoAnulaNiRestauraStock()
+        {
+            // Arrange
+            var categoria = new Categoria("Componentes");
+
+            var producto = new Producto(
+                "RAM-001",
+                "Memoria RAM 8 GB",
+                15000m,
+                10000m,
+                2m,
+                categoria);
+
+            AsignarId(producto, 1);
+
+            producto.AumentarStock(10m);
+
+            var venta = new Venta(1);
+
+            venta.AgregarDetalle(
+                producto,
+                cantidad: 2m,
+                precioUnitario: 15000m);
+
+            venta.Confirmar();
+
+            AsignarId(venta, 1);
+
+            // Simulamos el descuento original de la venta.
+            producto.DisminuirStock(2m);
+
+            _productos.ConfigurarProducto(1, producto);
+
+            await _ventas.AgregarAsync(venta);
+
+            // La venta ya tiene una factura emitida.
+            _documentos.Factura = new Factura(
+                venta.Id,
+                TipoFactura.B,
+                venta.Total,
+                "INT-FACTURA-001");
+
+            // Act
+            var excepcion =
+                await Assert.ThrowsAsync<InvalidOperationException>(
+                    () => CrearCasoDeUso().EjecutarAsync(venta.Id));
+
+            // Assert
+            Assert.Equal(
+                "No se puede anular una venta que ya tiene una factura registrada.",
+                excepcion.Message);
+
+            // La venta continúa confirmada.
+            Assert.Equal(EstadoVenta.Confirmada, venta.Estado);
+
+            // El stock permanece descontado.
+            Assert.Equal(8m, producto.StockActual);
+
+            // No se generan movimientos adicionales.
+            Assert.Empty(_movimientos.Movimientos);
+
+            // No se solicita guardar ningún cambio.
+            Assert.False(_unitOfWork.GuardarCambiosFueLlamado);
+        }
+
 
     }
 }

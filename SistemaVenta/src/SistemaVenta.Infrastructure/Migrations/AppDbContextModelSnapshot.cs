@@ -530,7 +530,8 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.HasIndex("Dni");
+                    b.HasIndex("Dni")
+                        .IsUnique();
 
                     b.HasDiscriminator().HasValue("Fisico");
                 });
@@ -541,8 +542,7 @@ namespace SistemaVenta.Infrastructure.Migrations
 
                     b.Property<decimal>("ImporteTotal")
                         .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)")
-                        .HasColumnName("ImporteTotal");
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Tipo")
                         .IsRequired()
@@ -552,7 +552,9 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.Property<int>("VentaId")
                         .HasColumnType("integer");
 
-                    b.HasIndex("VentaId");
+                    b.HasIndex("VentaId")
+                        .IsUnique()
+                        .HasFilter("\"TipoDocumento\" = 'Factura'");
 
                     b.HasDiscriminator().HasValue("Factura");
                 });

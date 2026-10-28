@@ -1,13 +1,16 @@
-using SistemaVenta.Application;
-using SistemaVenta.Application.UseCases.CuentasCorrientes;
-using SistemaVenta.Infrastructure;
-using SistemaVenta.Infrastructure.Initialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using SistemaVenta.Application;
+using SistemaVenta.Application.Interfaces;
+using SistemaVenta.Application.UseCases.CuentasCorrientes;
+using SistemaVenta.Application.UseCases.Facturas;
+using SistemaVenta.Infrastructure;
+using SistemaVenta.Infrastructure.Initialization;
+using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Security;
+using System.Threading.RateLimiting;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,6 +61,14 @@ builder.Services.AddScoped<RegistrarDebitoCuentaCorriente>();
 builder.Services.AddScoped<RegistrarCreditoCuentaCorriente>();
 
 
+
+builder.Services.AddScoped<EmitirFactura>();
+builder.Services.AddScoped<
+    ITransaccionAplicacionPago,
+    TransaccionAplicacionPago>(); builder.Services.AddScoped<ITransaccionVenta, TransaccionVentaPostgres>();
+builder.Services.AddScoped<
+    ITransaccionVenta,
+    TransaccionVentaPostgres>();
 
 builder.Services.AddRateLimiter(options =>
 {

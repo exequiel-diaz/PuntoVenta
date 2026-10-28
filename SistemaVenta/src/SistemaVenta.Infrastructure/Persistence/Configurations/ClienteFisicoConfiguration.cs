@@ -26,7 +26,8 @@ namespace SistemaVenta.Infrastructure.Persistence.Configurations
             builder.Property(c => c.FechaNacimiento)
                 .HasColumnType("date");
 
-            builder.HasIndex(c => c.Dni);
+            builder.HasIndex(c => c.Dni)
+                .IsUnique();
         }
     }
 }

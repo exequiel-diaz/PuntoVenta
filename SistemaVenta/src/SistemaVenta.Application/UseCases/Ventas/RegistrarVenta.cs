@@ -28,7 +28,7 @@ namespace SistemaVenta.Application.UseCases.Ventas
             _unitOfWork = unitOfWork;
         }
 
-        public async Task EjecutarAsync(RegistrarVentaDto solicitud)
+        public async Task<int> EjecutarAsync(RegistrarVentaDto solicitud)
         {
             if (solicitud is null)
             {
@@ -159,6 +159,9 @@ namespace SistemaVenta.Application.UseCases.Ventas
             // 8. Persistir cambios
 
             await _unitOfWork.GuardarCambiosAsync();
+
+            // 9. Devuelvo el identificador de la venta registraddas
+            return venta.Id;
         }
     }
 }

@@ -4,10 +4,10 @@ using SistemaVenta.Application.DTOs.Ventas;
 using SistemaVenta.Application.UseCases.Ventas;
 using SistemaVenta.Domain.Entities;
 using SistemaVenta.Domain.Enums;
+using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Persistence.Repositories;
 using SistemaVenta.Infrastructure.Repositories;
 using SistemaVenta.Infrastructure.Tests.Persistence;
-using SistemaVenta.Application.Exceptions;
 using Xunit;
 
 namespace SistemaVenta.Infrastructure.Tests.Ventas
@@ -93,11 +93,15 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
             Assert.Equal(8.5m, stockAntes);
 
             // ACT: anular mediante el caso de uso real.
+
             var anularVenta = new AnularVenta(
                 new VentaRepository(context),
                 new ProductoRepository(context),
                 new MovimientoStockRepository(context),
-                context);
+                context,
+                new DocumentoComercialRepository(context),
+                new TransaccionVentaPostgres(context));
+
 
             await anularVenta.EjecutarAsync(ventaId);
 
@@ -228,25 +232,41 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 Assert.Equal(EstadoVenta.Confirmada, ventaA.Estado);
                 Assert.Equal(EstadoVenta.Confirmada, ventaB.Estado);
 
+
                 var anularA = new AnularVenta(
                     new VentaRepository(contextoA),
                     new ProductoRepository(contextoA),
                     new MovimientoStockRepository(contextoA),
-                    contextoA);
+                    contextoA,
+                    new DocumentoComercialRepository(contextoA),
+                    new TransaccionVentaPostgres(contextoA));
+
+
 
                 var anularB = new AnularVenta(
                     new VentaRepository(contextoB),
                     new ProductoRepository(contextoB),
                     new MovimientoStockRepository(contextoB),
-                    contextoB);
+                    contextoB,
+                    new DocumentoComercialRepository(contextoB),
+                    new TransaccionVentaPostgres(contextoB));
+
 
                 // ACT: A anula la venta.
                 await anularA.EjecutarAsync(ventaId);
 
-                // B conserva una versión anterior de la venta.
-                // PostgreSQL debe detectar el conflicto mediante xmin.
-                await Assert.ThrowsAsync<ConflictoConcurrenciaException>(
+
+                // B había cargado una versión anterior de la venta.
+                // Al obtener el bloqueo, se actualiza su estado.
+                // La segunda anulación debe rechazarse.
+
+                var excepcion = await Assert.ThrowsAsync<InvalidOperationException>(
                     () => anularB.EjecutarAsync(ventaId));
+
+                Assert.Equal(
+                    "Solo se puede anular una venta confirmada.",
+                    excepcion.Message);
+
 
                 // ASSERT: verificar desde un tercer contexto.
                 await using var verificacion = _factory.CreateDbContext([]);

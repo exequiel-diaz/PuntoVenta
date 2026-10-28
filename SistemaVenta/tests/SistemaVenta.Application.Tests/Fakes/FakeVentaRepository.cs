@@ -1,6 +1,7 @@
 ﻿
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Domain.Entities;
+using System.Reflection;
 
 namespace SistemaVenta.Application.Tests.Fakes
 {
@@ -26,9 +27,24 @@ namespace SistemaVenta.Application.Tests.Fakes
 
         public Task AgregarAsync(Venta venta)
         {
+            ArgumentNullException.ThrowIfNull(venta);
+
+            if (venta.Id == 0)
+            {
+                var propiedadId = typeof(Venta).GetProperty(
+                    nameof(Venta.Id),
+                    BindingFlags.Public | BindingFlags.Instance);
+
+                propiedadId!.SetValue(
+                    venta,
+                    _ventas.Count + 1);
+            }
+
             _ventas.Add(venta);
 
             return Task.CompletedTask;
         }
+
+
     }
 }

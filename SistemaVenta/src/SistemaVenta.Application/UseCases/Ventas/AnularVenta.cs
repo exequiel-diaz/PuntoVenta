@@ -3,6 +3,7 @@ using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Domain.Entities;
 using SistemaVenta.Domain.Enums;
 
+
 namespace SistemaVenta.Application.UseCases.Ventas
 {
     public class AnularVenta
@@ -11,17 +12,23 @@ namespace SistemaVenta.Application.UseCases.Ventas
         private readonly IProductoRepository _productos;
         private readonly IMovimientoStockRepository _movimientos;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IDocumentoComercialRepository _documentos;
+        private readonly ITransaccionVenta _transaccion;
 
         public AnularVenta(
             IVentaRepository ventas,
             IProductoRepository productos,
             IMovimientoStockRepository movimientos,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IDocumentoComercialRepository documentos,
+            ITransaccionVenta transaccion)
         {
             _ventas = ventas;
             _productos = productos;
             _movimientos = movimientos;
             _unitOfWork = unitOfWork;
+            _documentos = documentos; 
+            _transaccion = transaccion;
         }
 
         public async Task EjecutarAsync(int ventaId)
@@ -35,74 +42,95 @@ namespace SistemaVenta.Application.UseCases.Ventas
                     nameof(ventaId));
             }
 
-            // 2. Recuperar la venta
-
-            var venta = await _ventas.ObtenerPorIdAsync(ventaId);
-
-            if (venta is null)
-            {
-                throw new InvalidOperationException(
-                    "La venta no existe.");
-            }
-
-            // 3. Verificar estado
-
-            if (venta.Estado != EstadoVenta.Confirmada)
-            {
-                throw new InvalidOperationException(
-                    "Solo se puede anular una venta confirmada.");
-            }
-
-            // 4. Recuperar todos los productos antes de modificarlos
-
-            var productosParaRestaurar =
-                new List<(Producto Producto, decimal Cantidad)>();
-
-            foreach (var detalle in venta.Detalles)
-            {
-                var producto = await _productos.ObtenerPorIdAsync(
-                    detalle.ProductoId);
-
-                if (producto is null)
+            await _transaccion.EjecutarAsync(
+                ventaId,
+                async () =>
                 {
-                    throw new InvalidOperationException(
-                        $"El producto {detalle.ProductoId} no existe.");
-                }
+                    // 2. Recuperar la venta
 
-                productosParaRestaurar.Add((
-                    producto,
-                    detalle.Cantidad));
-            }
+                    var venta = await _ventas.ObtenerPorIdAsync(ventaId);
 
-            // 5. Restaurar stock y registrar movimientos
+                    if (venta is null)
+                    {
+                        throw new InvalidOperationException(
+                            "La venta no existe.");
+                    }
 
-            foreach (var item in productosParaRestaurar)
-            {
-                var stockAnterior = item.Producto.StockActual;
+                    // 3. Verificar estado
 
-                item.Producto.RestaurarStockPorAnulacion(
-                    item.Cantidad);
+                    if (venta.Estado != EstadoVenta.Confirmada)
+                    {
+                        throw new InvalidOperationException(
+                            "Solo se puede anular una venta confirmada.");
+                    }
 
-                var stockPosterior = item.Producto.StockActual;
 
-                var movimiento = new MovimientoStock(
-                    producto: item.Producto,
-                    tipo: TipoMovimientoStock.AnulacionVenta,
-                    cantidad: item.Cantidad,
-                    stockAnterior: stockAnterior,
-                    stockPosterior: stockPosterior,
-                    motivo: $"Anulación de venta #{venta.Id}");
+                    // Verificar si la venta ya tiene una factura.
 
-                await _movimientos.AgregarAsync(movimiento);
-            }
+                    var facturaExistente =
+                        await _documentos.ObtenerFacturaPorVentaIdAsync(ventaId);
 
-            // 6. Cambiar estado de la venta
+                    if (facturaExistente is not null)
+                    {
+                        throw new InvalidOperationException(
+                            "No se puede anular una venta que ya tiene una factura registrada.");
+                    }
 
-            venta.Anular();
 
-            // 7. Persistir todos los cambios
+                    // 4. Recuperar todos los productos antes de modificarlos
 
-            await _unitOfWork.GuardarCambiosAsync();
+                    var productosParaRestaurar =
+                        new List<(Producto Producto, decimal Cantidad)>();
+
+                    foreach (var detalle in venta.Detalles)
+                    {
+                        var producto = await _productos.ObtenerPorIdAsync(
+                            detalle.ProductoId);
+
+                        if (producto is null)
+                        {
+                            throw new InvalidOperationException(
+                                $"El producto {detalle.ProductoId} no existe.");
+                        }
+
+                        productosParaRestaurar.Add((
+                            producto,
+                            detalle.Cantidad));
+                    }
+
+                    // 5. Restaurar stock y registrar movimientos
+
+                    foreach (var item in productosParaRestaurar)
+                    {
+                        var stockAnterior = item.Producto.StockActual;
+
+                        item.Producto.RestaurarStockPorAnulacion(
+                            item.Cantidad);
+
+                        var stockPosterior = item.Producto.StockActual;
+
+                        var movimiento = new MovimientoStock(
+                            producto: item.Producto,
+                            tipo: TipoMovimientoStock.AnulacionVenta,
+                            cantidad: item.Cantidad,
+                            stockAnterior: stockAnterior,
+                            stockPosterior: stockPosterior,
+                            motivo: $"Anulación de venta #{venta.Id}");
+
+                        await _movimientos.AgregarAsync(movimiento);
+                    }
+
+                    // 6. Cambiar estado de la venta
+
+                    venta.Anular();
+
+                    // 7. Persistir todos los cambios
+
+                    await _unitOfWork.GuardarCambiosAsync();
+                });
         }
+    
+    
+    
     }
 }

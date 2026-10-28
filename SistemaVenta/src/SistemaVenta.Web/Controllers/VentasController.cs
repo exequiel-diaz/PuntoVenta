@@ -88,12 +88,14 @@ public class VentasController : Controller
                     .ToList()
             };
 
-            await _registrarVenta.EjecutarAsync(solicitud);
+            var ventaId = await _registrarVenta.EjecutarAsync(solicitud);
 
             TempData["MensajeExito"] =
-                "La venta se registró correctamente.";
+                $"La venta #{ventaId} se registró correctamente.";
 
-            return RedirectToAction(nameof(Crear));
+            return RedirectToAction(
+                nameof(Detalle),
+                new { id = ventaId });
         }
         catch (ConflictoConcurrenciaException)
         {
