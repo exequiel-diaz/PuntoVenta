@@ -21,6 +21,7 @@ namespace SistemaVenta.Infrastructure.Repositories
         {
             return await _context.Pagos
                 .Include(p => p.Aplicaciones)
+                .Include(p => p.AplicacionesVentas)
                 .FirstOrDefaultAsync(
                     p => p.Id == id,
                     cancellationToken);

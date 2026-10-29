@@ -39,6 +39,16 @@ namespace SistemaVenta.Integration.Tests.Pagos
                 facturaId > 0,
                 "Se necesita una factura en sistema_venta_tests.");
 
+            // Buscar un pago existente en la base de pruebas.
+            var pagoId = await contexto1.Pagos
+                .AsNoTracking()
+                .Select(p => p.Id)
+                .FirstOrDefaultAsync();
+
+            Assert.True(
+                pagoId > 0,
+                "Se necesita un pago en sistema_venta_tests.");
+
             var transaccionPago1 =
                 new TransaccionAplicacionPago(contexto1);
 
@@ -62,6 +72,7 @@ namespace SistemaVenta.Integration.Tests.Pagos
             // Act
             var tarea1 = transaccionPago1.EjecutarAsync(
                 facturaId,
+                pagoId,
                 async () =>
                 {
                     primerBloqueoAdquirido.SetResult(true);
@@ -80,6 +91,7 @@ namespace SistemaVenta.Integration.Tests.Pagos
 
                 var tarea2 = transaccionPago2.EjecutarAsync(
                     facturaId,
+                    pagoId,
                     () =>
                     {
                         segundoBloqueoAdquirido = true;

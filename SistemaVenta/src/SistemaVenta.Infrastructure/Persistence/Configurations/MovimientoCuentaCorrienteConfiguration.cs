@@ -38,5 +38,15 @@ public class MovimientoCuentaCorrienteConfiguration
 
         builder.HasIndex(m => m.VentaId);
 
+        // Relación opcional con el pago que originó el movimiento.
+        builder.HasOne(m => m.Pago)
+            .WithMany()
+            .HasForeignKey(m => m.PagoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Índice para consultar movimientos asociados a un pago.
+        builder.HasIndex(m => m.PagoId);
+
+
     }
 }

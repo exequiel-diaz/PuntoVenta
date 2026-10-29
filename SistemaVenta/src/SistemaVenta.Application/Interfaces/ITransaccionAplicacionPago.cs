@@ -5,6 +5,7 @@ namespace SistemaVenta.Application.Interfaces
     {
         Task EjecutarAsync(
             int documentoComercialId,
+            int pagoId,
             Func<Task> operacion,
             CancellationToken cancellationToken = default);
     }

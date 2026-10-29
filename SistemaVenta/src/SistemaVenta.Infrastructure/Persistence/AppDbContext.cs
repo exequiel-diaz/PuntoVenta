@@ -39,6 +39,9 @@ namespace SistemaVenta.Infrastructure.Persistence
         public DbSet<AplicacionPago> AplicacionesPago =>
             Set<AplicacionPago>();
 
+        public DbSet<AplicacionPagoVenta> AplicacionesPagoVenta =>
+            Set<AplicacionPagoVenta>();
+
         public DbSet<DocumentoComercial> DocumentosComerciales =>
             Set<DocumentoComercial>();
 

@@ -36,6 +36,7 @@ namespace SistemaVenta.Application.UseCases.Pagos
 
             await _transaccion.EjecutarAsync(
                 documentoComercialId,
+                pagoId,
                 async () =>
                 {
                     var pago =

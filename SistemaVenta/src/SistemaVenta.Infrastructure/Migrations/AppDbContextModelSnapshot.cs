@@ -278,6 +278,9 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<int?>("PagoId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Tipo")
                         .HasColumnType("integer");
 
@@ -287,6 +290,8 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CuentaCorrienteId");
+
+                    b.HasIndex("PagoId");
 
                     b.HasIndex("VentaId");
 
@@ -776,10 +781,17 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("SistemaVenta.Domain.Entities.Pago", "Pago")
+                        .WithMany()
+                        .HasForeignKey("PagoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("SistemaVenta.Domain.Entities.Venta", "Venta")
                         .WithMany()
                         .HasForeignKey("VentaId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Pago");
 
                     b.Navigation("Venta");
                 });

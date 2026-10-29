@@ -153,6 +153,17 @@ public class CuentaCorriente
             throw new InvalidOperationException(
                 "La venta debe tener exactamente un débito asociado.");
 
+        var tienePagosAplicados = _movimientos.Any(m =>
+            m.VentaId == venta.Id &&
+            m.EsCredito() &&
+            m.PagoId.HasValue);
+
+        if (tienePagosAplicados)
+        {
+            throw new InvalidOperationException(
+                "No se puede anular una venta que tiene pagos aplicados.");
+        }
+
         if (TieneCreditoDeVenta(venta.Id))
             throw new InvalidOperationException(
                 "La venta ya tiene un crédito asociado.");
@@ -209,4 +220,101 @@ public class CuentaCorriente
 
         Estado = EstadoCuentaCorriente.Cerrada;
     }
+
+    public void RegistrarPagoDeVenta(
+    Venta venta,
+    Pago pago,
+    decimal importe)
+    {
+        if (venta is null)
+            throw new ArgumentNullException(nameof(venta));
+
+        if (pago is null)
+            throw new ArgumentNullException(nameof(pago));
+
+        if (venta.Id <= 0)
+            throw new ArgumentException(
+                "La venta debe estar registrada.");
+
+        if (venta.ClienteId != ClienteId)
+            throw new InvalidOperationException(
+                "La venta no pertenece al cliente de esta cuenta.");
+
+        if (pago.Id <= 0)
+            throw new ArgumentException(
+                "El pago debe estar registrado.");
+
+        if (Estado == EstadoCuentaCorriente.Cerrada)
+            throw new InvalidOperationException(
+                "No se pueden registrar pagos en una cuenta cerrada.");
+
+        if (importe <= 0)
+            throw new ArgumentException(
+                "El importe debe ser mayor que cero.");
+
+        if (!TieneDebitoDeVenta(venta.Id))
+            throw new InvalidOperationException(
+                "La venta no tiene una deuda registrada en esta cuenta.");
+
+        var debitoRevertido = _movimientos.Any(m =>
+            m.VentaId == venta.Id &&
+            m.EsCredito() &&
+            !m.PagoId.HasValue &&
+            m.Pago is null);
+
+        if (debitoRevertido)
+        {
+            throw new InvalidOperationException(
+                "No se pueden aplicar pagos a una venta cuyo débito fue revertido.");
+        }
+
+        var saldoPendiente =
+            ObtenerSaldoPendienteDeVenta(venta.Id);
+
+        if (importe > saldoPendiente)
+        {
+            throw new InvalidOperationException(
+                "El pago no puede superar el saldo pendiente de la venta.");
+        }
+
+        if (importe > SaldoActual)
+        {
+            throw new InvalidOperationException(
+                "El pago no puede superar la deuda de la cuenta.");
+        }
+
+        var movimiento = new MovimientoCuentaCorriente(
+            TipoMovimientoCuenta.Credito,
+            importe,
+            $"Pago #{pago.Id} aplicado a venta #{venta.Id}",
+            venta,
+            pago);
+
+        _movimientos.Add(movimiento);
+    }
+
+    public decimal ObtenerSaldoPendienteDeVenta(int ventaId)
+    {
+        if (ventaId <= 0)
+        {
+            throw new ArgumentException(
+                "El identificador de la venta debe ser válido.");
+        }
+
+        var debitos = _movimientos
+            .Where(m =>
+                m.VentaId == ventaId &&
+                m.EsDebito())
+            .Sum(m => m.Importe);
+
+        var creditos = _movimientos
+            .Where(m =>
+                m.VentaId == ventaId &&
+                m.EsCredito())
+            .Sum(m => m.Importe);
+
+        return debitos - creditos;
+    }
+
+
 }

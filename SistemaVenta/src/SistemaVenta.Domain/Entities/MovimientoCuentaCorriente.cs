@@ -9,7 +9,9 @@ public class MovimientoCuentaCorriente
     public int CuentaCorrienteId { get; private set; }
     public int? VentaId { get; private set; }
     public Venta? Venta { get; private set; }
+    public int? PagoId { get; private set; }
 
+    public Pago? Pago { get; private set; }
     public DateTime Fecha { get; private set; }
 
     public TipoMovimientoCuenta Tipo { get; private set; }
@@ -27,7 +29,8 @@ public class MovimientoCuentaCorriente
         TipoMovimientoCuenta tipo,
         decimal importe,
         string descripcion,
-        Venta? venta = null)
+        Venta? venta = null,
+        Pago? pago=null)
     {
         if (!Enum.IsDefined(tipo))
             throw new ArgumentException(
@@ -41,10 +44,17 @@ public class MovimientoCuentaCorriente
             throw new ArgumentException(
                 "La descripción es obligatoria.");
 
+        if (pago is not null && tipo != TipoMovimientoCuenta.Credito)
+        {
+            throw new InvalidOperationException(
+                "Un pago solamente puede asociarse a un movimiento de crédito.");
+        }
+
         Tipo = tipo;
         Importe = importe;
         Descripcion = descripcion.Trim();
         Venta = venta;
+        Pago = pago;
         Fecha = DateTime.UtcNow;
     }
     public bool EsDebito()

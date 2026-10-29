@@ -18,6 +18,7 @@ namespace SistemaVenta.Infrastructure.Persistence
 
         public async Task EjecutarAsync(
             int documentoComercialId,
+            int pagoId,
             Func<Task> operacion,
             CancellationToken cancellationToken = default)
         {
@@ -25,11 +26,18 @@ namespace SistemaVenta.Infrastructure.Persistence
                 throw new ArgumentException(
                     "El identificador del documento debe ser válido.");
 
+            if (pagoId <= 0)
+                throw new ArgumentException(
+                    "El identificador del pago debe ser válido.");
+
+            ArgumentNullException.ThrowIfNull(operacion);
+
             // Si ya existe una transacción, reutilizarla.
             if (_context.Database.CurrentTransaction is not null)
             {
                 await BloquearDocumentoAsync(
                     documentoComercialId,
+                    pagoId,
                     cancellationToken);
 
                 await operacion();
@@ -43,6 +51,7 @@ namespace SistemaVenta.Infrastructure.Persistence
 
             await BloquearDocumentoAsync(
                 documentoComercialId,
+                pagoId,
                 cancellationToken);
 
             await operacion();
@@ -52,6 +61,7 @@ namespace SistemaVenta.Infrastructure.Persistence
 
         private async Task BloquearDocumentoAsync(
             int documentoComercialId,
+            int pagoId,
             CancellationToken cancellationToken)
         {
             // Limitar el tiempo de espera por bloqueos.
@@ -59,15 +69,31 @@ namespace SistemaVenta.Infrastructure.Persistence
                 "SET LOCAL lock_timeout = '10s'",
                 cancellationToken);
 
+            // Bloquear primero el pago para coordinar
+            // las aplicaciones a facturas y ventas.
+            var pagoEncontrado = await _context.Database
+                .SqlQuery<int>(
+                    $"""
+                    SELECT "Id" AS "Value"
+                    FROM "Pagos"
+                    WHERE "Id" = {pagoId}
+                    FOR UPDATE
+                    """)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (pagoEncontrado == 0)
+                throw new InvalidOperationException(
+                    "El pago no existe.");
+
             // Bloquear la fila del documento comercial.
             var documentoId = await _context.Database
                 .SqlQuery<int>(
                     $"""
-            SELECT "Id" AS "Value"
-            FROM "DocumentosComerciales"
-            WHERE "Id" = {documentoComercialId}
-            FOR UPDATE
-            """)
+                    SELECT "Id" AS "Value"
+                    FROM "DocumentosComerciales"
+                    WHERE "Id" = {documentoComercialId}
+                    FOR UPDATE
+                    """)
                 .SingleOrDefaultAsync(cancellationToken);
 
             if (documentoId == 0)

@@ -10,6 +10,7 @@ namespace SistemaVenta.Application.Tests.Fakes
 
         public async Task EjecutarAsync(
             int documentoComercialId,
+            int pagoId,
             Func<Task> operacion,
             CancellationToken cancellationToken = default)
         {

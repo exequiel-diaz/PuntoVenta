@@ -56,6 +56,25 @@ namespace SistemaVenta.Integration.Tests.Pagos
             contexto.DocumentosComerciales.Add(factura);
             await contexto.SaveChangesAsync();
 
+            // Crear un usuario para registrar el pago.
+            var usuario = new Usuario(
+                $"test_{identificador[..20]}",
+                "Vendedor de prueba",
+                "hash-de-prueba-no-utilizado-para-login",
+                RolUsuario.Vendedor);
+
+            contexto.Usuarios.Add(usuario);
+            await contexto.SaveChangesAsync();
+
+            // Crear un pago que pueda bloquearse.
+            var pago = new Pago(
+                20000m,
+                FormaPago.Efectivo,
+                usuario.Id);
+
+            contexto.Pagos.Add(pago);
+            await contexto.SaveChangesAsync();
+
             var transaccionPago =
                 new TransaccionAplicacionPago(contexto);
 
@@ -64,6 +83,7 @@ namespace SistemaVenta.Integration.Tests.Pagos
             // Act
             await transaccionPago.EjecutarAsync(
                 factura.Id,
+                pago.Id,
                 () =>
                 {
                     operacionEjecutada = true;
