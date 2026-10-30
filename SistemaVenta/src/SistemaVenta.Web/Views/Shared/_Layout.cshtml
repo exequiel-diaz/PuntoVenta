@@ -34,7 +34,9 @@
                 <div class="collapse navbar-collapse"
                      id="navbarPrincipal">
 
+
                     <ul class="navbar-nav me-auto">
+
                         <li class="nav-item">
                             <a class="nav-link text-dark"
                                asp-controller="Home"
@@ -42,7 +44,47 @@
                                 Inicio
                             </a>
                         </li>
+
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-controller="Ventas"
+                                   asp-action="Index">
+                                    Ventas
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-controller="Productos"
+                                   asp-action="Index">
+                                    Productos
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-controller="Categorias"
+                                   asp-action="Index">
+                                    Categorías
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark"
+                                   asp-controller="Clientes"
+                                   asp-action="Index">
+                                    Clientes
+                                </a>
+                            </li>
+
+                         
+
+                        }
+
                     </ul>
+
 
                     <ul class="navbar-nav ms-auto align-items-sm-center">
 

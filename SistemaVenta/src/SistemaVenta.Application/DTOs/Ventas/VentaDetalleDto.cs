@@ -7,7 +7,7 @@ namespace SistemaVenta.Application.DTOs.Ventas
     {
         public int Id { get; set; }
 
-        public int ClienteId { get; set; }
+        public int? ClienteId { get; set; }
 
         public string NombreCliente { get; set; } = string.Empty;
 
@@ -16,6 +16,7 @@ namespace SistemaVenta.Application.DTOs.Ventas
         public EstadoVenta Estado { get; set; }
 
         public decimal Total { get; set; }
+        public bool TieneFactura { get; set; }
 
         public List<DetalleVentaListadoDto> Detalles { get; set; } = new();
     }

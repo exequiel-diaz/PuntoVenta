@@ -7,7 +7,7 @@ namespace SistemaVenta.Application.DTOs.Ventas
     {
         public int Id { get; set; }
 
-        public int ClienteId { get; set; }
+        public int? ClienteId { get; set; }
 
         public string NombreCliente { get; set; } = string.Empty;
 

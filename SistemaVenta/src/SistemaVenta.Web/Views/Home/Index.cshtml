@@ -1,8 +1,162 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container py-4">
+
+    <!-- ENCABEZADO -->
+
+    <div class="bg-light rounded-3 p-4 p-md-5 mb-4 border">
+
+        <h1 class="display-5 fw-bold mb-3">
+            SistemaVenta
+        </h1>
+
+        <p class="lead mb-2">
+            Sistema de gestión para un comercio de artículos
+            de computación.
+        </p>
+
+        <p class="text-muted mb-4">
+            Administrá productos, categorías, clientes y ventas
+            desde un único lugar.
+        </p>
+
+        <a asp-controller="Ventas"
+           asp-action="Crear"
+           class="btn btn-primary btn-lg">
+            + Registrar nueva venta
+        </a>
+
+    </div>
+
+    <!-- MÓDULOS PRINCIPALES -->
+
+    <h2 class="h4 mb-4">
+        Módulos principales
+    </h2>
+
+    <div class="row g-4">
+
+        <!-- VENTAS -->
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm">
+
+                <div class="card-body d-flex flex-column">
+
+                    <h5 class="card-title">
+                        Ventas
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Registrá nuevas ventas, consultá
+                        el historial y emití facturas internas.
+                    </p>
+
+                    <a asp-controller="Ventas"
+                       asp-action="Index"
+                       class="btn btn-outline-primary mt-auto">
+                        Ir a Ventas
+                    </a>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- PRODUCTOS -->
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm">
+
+                <div class="card-body d-flex flex-column">
+
+                    <h5 class="card-title">
+                        Productos
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Administrá los artículos de computación,
+                        sus precios y el stock disponible.
+                    </p>
+
+                    <a asp-controller="Productos"
+                       asp-action="Index"
+                       class="btn btn-outline-primary mt-auto">
+                        Ir a Productos
+                    </a>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- CATEGORÍAS -->
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm">
+
+                <div class="card-body d-flex flex-column">
+
+                    <h5 class="card-title">
+                        Categorías
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Organizá los productos por categorías
+                        para facilitar su administración.
+                    </p>
+
+                    <a asp-controller="Categorias"
+                       asp-action="Index"
+                       class="btn btn-outline-primary mt-auto">
+                        Ir a Categorías
+                    </a>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- CLIENTES -->
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm">
+
+                <div class="card-body d-flex flex-column">
+
+                    <h5 class="card-title">
+                        Clientes
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Administrá clientes particulares,
+                        empresas y sus cuentas corrientes.
+                    </p>
+
+                    <a asp-controller="Clientes"
+                       asp-action="Index"
+                       class="btn btn-outline-primary mt-auto">
+                        Ir a Clientes
+                    </a>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- INFORMACIÓN INFERIOR -->
+
+    <div class="alert alert-info mt-5 mb-0">
+
+        <strong>Información:</strong>
+        Las operaciones de venta actualizan automáticamente
+        el stock de los productos. Las ventas pueden anularse
+        siempre que no tengan una factura emitida.
+
+    </div>
+
 </div>

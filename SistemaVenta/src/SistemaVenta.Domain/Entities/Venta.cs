@@ -7,7 +7,7 @@ namespace SistemaVenta.Domain.Entities
     {
         public int Id { get; private set; }
 
-        public int ClienteId { get; private set; }
+        public int? ClienteId { get; private set; }
 
         public DateTime Fecha { get; private set; }
 
@@ -25,9 +25,9 @@ namespace SistemaVenta.Domain.Entities
         {
         }
 
-        public Venta(int clienteId)
+        public Venta(int? clienteId)
         {
-            if (clienteId <= 0)
+            if (clienteId.HasValue && clienteId.Value <= 0)
             {
                 throw new ArgumentException(
                     "El cliente debe ser válido.",

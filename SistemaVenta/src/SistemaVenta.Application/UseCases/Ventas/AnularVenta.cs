@@ -80,13 +80,16 @@ namespace SistemaVenta.Application.UseCases.Ventas
                     }
 
 
-                    var cuenta = await _cuentas.ObtenerPorClienteIdAsync(
-                        venta.ClienteId);
-
-                    if (cuenta is not null &&
-                        cuenta.TieneDebitoDeVenta(venta.Id))
+                    if (venta.ClienteId.HasValue)
                     {
-                        cuenta.RevertirDebitoDeVenta(venta);
+                        var cuenta = await _cuentas.ObtenerPorClienteIdAsync(
+                            venta.ClienteId.Value);
+
+                        if (cuenta is not null &&
+                            cuenta.TieneDebitoDeVenta(venta.Id))
+                        {
+                            cuenta.RevertirDebitoDeVenta(venta);
+                        }
                     }
 
 

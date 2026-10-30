@@ -34,12 +34,13 @@ namespace SistemaVenta.Application.UseCases.Ventas
                     Id = v.Id,
                     ClienteId = v.ClienteId,
 
-                    NombreCliente =
-                        nombresClientes.TryGetValue(
-                            v.ClienteId,
+                    NombreCliente = !v.ClienteId.HasValue
+                        ? "Consumidor final"
+                        : nombresClientes.TryGetValue(
+                            v.ClienteId.Value,
                             out var nombre)
                             ? nombre
-                            : $"Cliente #{v.ClienteId}",
+                            : $"Cliente #{v.ClienteId.Value}",
 
                     Fecha = v.Fecha,
                     Estado = v.Estado,

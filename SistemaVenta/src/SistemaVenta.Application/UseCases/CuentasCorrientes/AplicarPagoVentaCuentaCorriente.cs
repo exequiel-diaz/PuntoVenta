@@ -68,13 +68,22 @@ public class AplicarPagoVentaCuentaCorriente
                     throw new InvalidOperationException(
                         "Solo se pueden aplicar pagos a ventas confirmadas.");
 
+                if (!venta.ClienteId.HasValue)
+                {
+                    throw new InvalidOperationException(
+                        "No se pueden aplicar pagos de cuenta corriente " +
+                        "a una venta sin cliente registrado.");
+                }
+
                 var cuenta =
                     await _cuentaRepository.ObtenerPorClienteIdAsync(
-                        venta.ClienteId);
+                        venta.ClienteId.Value);
 
                 if (cuenta is null)
+                {
                     throw new InvalidOperationException(
                         "El cliente no tiene una cuenta corriente.");
+                }
 
                 // Validar la deuda antes de modificar el pago.
                 if (importe >
