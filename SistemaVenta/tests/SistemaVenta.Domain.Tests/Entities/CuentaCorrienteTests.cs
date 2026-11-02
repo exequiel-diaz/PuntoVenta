@@ -244,5 +244,259 @@ namespace SistemaVenta.Domain.Tests.Entities
 
             Assert.False(cuenta.PuedeRegistrarDeuda(10000m));
         }
+
+
+
+        [Fact]
+        public void RegistrarPagoDeVenta_SiVentaTieneDebitoRevertido_DebeFallar()
+        {
+            // Arrange
+            var cuenta = new CuentaCorriente(
+                clienteId: 1,
+                limiteDeuda: 500000m);
+
+            var categoria = new Categoria(
+                "Periféricos",
+                "Productos periféricos");
+
+            var producto = new Producto(
+                codigoInterno: "TEC-CC-001",
+                nombre: "Teclado",
+                precioVenta: 100000m,
+                costo: 50000m,
+                stockMinimo: 2m,
+                categoria: categoria);
+
+            var venta = new Venta(1);
+
+            venta.AgregarDetalle(
+                producto,
+                cantidad: 1m,
+                precioUnitario: 100000m);
+
+            venta.Confirmar();
+
+            typeof(Venta)
+                .GetProperty(nameof(Venta.Id))!
+                .SetValue(venta, 1);
+
+            cuenta.RegistrarDebito(
+                100000m,
+                "Venta a cuenta corriente",
+                venta);
+
+            cuenta.RevertirDebitoDeVenta(venta);
+
+            var pago = new Pago(
+                importe: 10000m,
+                formaPago: FormaPago.Efectivo,
+                usuarioId: 1);
+
+            typeof(Pago)
+                .GetProperty(nameof(Pago.Id))!
+                .SetValue(pago, 1);
+
+            // Act
+            var excepcion = Assert.Throws<InvalidOperationException>(() =>
+                cuenta.RegistrarPagoDeVenta(
+                    venta,
+                    pago,
+                    10000m));
+
+            // Assert
+            Assert.Equal(
+                "No se pueden aplicar pagos a una venta cuyo débito fue revertido.",
+                excepcion.Message);
+
+            Assert.Equal(0m, cuenta.SaldoActual);
+            Assert.Equal(2, cuenta.Movimientos.Count);
+        }
+
+
+        [Fact]
+        public void TieneAnulacionDeVenta_DebeDistinguirCreditoDeAnulacion()
+        {
+            // Arrange
+            var cuenta = new CuentaCorriente(
+                clienteId: 1,
+                limiteDeuda: 500000m);
+
+            var categoria = new Categoria(
+                "Periféricos",
+                "Productos periféricos");
+
+            var producto = new Producto(
+                codigoInterno: "TEC-CC-002",
+                nombre: "Teclado",
+                precioVenta: 100000m,
+                costo: 50000m,
+                stockMinimo: 2m,
+                categoria: categoria);
+
+            var venta = new Venta(1);
+
+            venta.AgregarDetalle(
+                producto,
+                cantidad: 1m,
+                precioUnitario: 100000m);
+
+            venta.Confirmar();
+
+            typeof(Venta)
+                .GetProperty(nameof(Venta.Id))!
+                .SetValue(venta, 1);
+
+            cuenta.RegistrarDebito(
+                100000m,
+                "Venta a cuenta corriente",
+                venta);
+
+            // Act y Assert: todavía no hay anulación.
+            Assert.False(cuenta.TieneAnulacionDeVenta(venta.Id));
+
+            // Un crédito común no debe interpretarse como anulación.
+            cuenta.RegistrarCredito(
+                20000m,
+                "Crédito manual",
+                venta);
+
+            Assert.True(cuenta.TieneCreditoDeVenta(venta.Id));
+            Assert.False(cuenta.TieneAnulacionDeVenta(venta.Id));
+
+            // Comprobamos que el saldo no cambió inesperadamente.
+            Assert.Equal(80000m, cuenta.SaldoActual);
+        }
+
+
+        [Fact]
+        public void RegistrarNotaCredito_DebeReducirSaldoYVincularDocumento()
+        {
+            // Arrange
+            var cuenta = new CuentaCorriente(
+                clienteId: 1,
+                limiteDeuda: 500000m);
+
+            var categoria = new Categoria(
+                "Periféricos",
+                "Productos periféricos");
+
+            var producto = new Producto(
+                codigoInterno: "TEC-NC-001",
+                nombre: "Teclado",
+                precioVenta: 100000m,
+                costo: 50000m,
+                stockMinimo: 2m,
+                categoria: categoria);
+
+            var venta = new Venta(1);
+
+            venta.AgregarDetalle(
+                producto,
+                cantidad: 1m,
+                precioUnitario: 100000m);
+
+            venta.Confirmar();
+
+            typeof(Venta)
+                .GetProperty(nameof(Venta.Id))!
+                .SetValue(venta, 1);
+
+            cuenta.RegistrarDebito(
+                100000m,
+                "Venta a cuenta corriente",
+                venta);
+
+            var notaCredito = new NotaCredito(
+                facturaId: 1,
+                numero: "INT-NC-PRUEBA-001",
+                motivo: "Descuento comercial",
+                importeTotal: 30000m);
+
+            // Act
+            cuenta.RegistrarNotaCredito(notaCredito, venta);
+
+            // Assert
+            Assert.Equal(70000m, cuenta.SaldoActual);
+
+            Assert.Equal(
+                70000m,
+                cuenta.ObtenerSaldoPendienteDeVenta(venta.Id));
+
+            Assert.Equal(2, cuenta.Movimientos.Count);
+
+            var movimiento = cuenta.Movimientos.Last();
+
+            Assert.Equal(
+                TipoMovimientoCuenta.Credito,
+                movimiento.Tipo);
+
+            Assert.Equal(
+                OrigenMovimientoCuenta.NotaCredito,
+                movimiento.Origen);
+
+            Assert.Equal(30000m, movimiento.Importe);
+
+            Assert.Equal(venta.Id, movimiento.VentaId);
+
+            Assert.Same(
+                notaCredito,
+                movimiento.DocumentoComercial);
+        }
+
+
+        [Fact]
+        public void RegistrarNotaCredito_SiYaFueAplicada_DebeFallar()
+        {
+            // Arrange
+            var cuenta = new CuentaCorriente(1, 500000m);
+
+            var categoria = new Categoria(
+                "Periféricos",
+                "Productos periféricos");
+
+            var producto = new Producto(
+                "TEC-NC-002",
+                "Teclado",
+                100000m,
+                50000m,
+                2m,
+                categoria);
+
+            var venta = new Venta(1);
+
+            venta.AgregarDetalle(producto, 1m, 100000m);
+            venta.Confirmar();
+
+            typeof(Venta)
+                .GetProperty(nameof(Venta.Id))!
+                .SetValue(venta, 1);
+
+            cuenta.RegistrarDebito(
+                100000m,
+                "Venta a cuenta corriente",
+                venta);
+
+            var notaCredito = new NotaCredito(
+                facturaId: 1,
+                numero: "INT-NC-PRUEBA-002",
+                motivo: "Descuento",
+                importeTotal: 30000m);
+
+            // Act
+            cuenta.RegistrarNotaCredito(notaCredito, venta);
+
+            var excepcion = Assert.Throws<InvalidOperationException>(() =>
+                cuenta.RegistrarNotaCredito(notaCredito, venta));
+
+            // Assert
+            Assert.Equal(
+                "La Nota de Crédito ya fue aplicada a esta cuenta.",
+                excepcion.Message);
+
+            Assert.Equal(70000m, cuenta.SaldoActual);
+            Assert.Equal(2, cuenta.Movimientos.Count);
+        }
+
+
     }
 }

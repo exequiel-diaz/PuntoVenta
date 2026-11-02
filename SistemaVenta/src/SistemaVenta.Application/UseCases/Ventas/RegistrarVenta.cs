@@ -38,10 +38,24 @@ namespace SistemaVenta.Application.UseCases.Ventas
                 throw new ArgumentNullException(nameof(solicitud));
             }
 
-            if (solicitud.ClienteId <= 0)
+            if (solicitud.ClienteId.HasValue &&
+                solicitud.ClienteId.Value <= 0)
             {
                 throw new ArgumentException(
                     "El cliente debe ser válido.");
+            }
+
+            if (!Enum.IsDefined(solicitud.Modalidad))
+            {
+                throw new ArgumentException(
+                    "La modalidad de venta no es válida.");
+            }
+
+            if (solicitud.Modalidad == ModalidadVenta.CuentaCorriente &&
+                !solicitud.ClienteId.HasValue)
+            {
+                throw new InvalidOperationException(
+                    "Las ventas a cuenta corriente requieren un cliente registrado.");
             }
 
             if (solicitud.Detalles is null ||
@@ -53,19 +67,24 @@ namespace SistemaVenta.Application.UseCases.Ventas
 
             // 1. Validar cliente
 
-            var cliente = await _clientes.ObtenerPorIdAsync(
-                solicitud.ClienteId);
+            // 1. Validar cliente, si corresponde
 
-            if (cliente is null)
+            if (solicitud.ClienteId.HasValue)
             {
-                throw new InvalidOperationException(
-                    "El cliente no existe.");
-            }
+                var cliente = await _clientes.ObtenerPorIdAsync(
+                    solicitud.ClienteId.Value);
 
-            if (!cliente.EstaActivo())
-            {
-                throw new InvalidOperationException(
-                    "No se puede vender a un cliente inactivo.");
+                if (cliente is null)
+                {
+                    throw new InvalidOperationException(
+                        "El cliente no existe.");
+                }
+
+                if (!cliente.EstaActivo())
+                {
+                    throw new InvalidOperationException(
+                        "No se puede vender a un cliente inactivo.");
+                }
             }
 
             // 2. Validar datos de entrada
@@ -110,7 +129,9 @@ namespace SistemaVenta.Application.UseCases.Ventas
                 if (!producto.HayStockDisponible(detalle.Cantidad))
                 {
                     throw new InvalidOperationException(
-                        $"No hay stock suficiente para {producto.Nombre}.");
+                        $"No hay stock suficiente para {producto.Nombre}. " +
+                        $"Stock actual: {producto.StockActual}. " +
+                        $"Cantidad solicitada: {detalle.Cantidad}.");
                 }
 
                 productosValidados.Add((
@@ -133,16 +154,10 @@ namespace SistemaVenta.Application.UseCases.Ventas
 
             // 4.1. Validar modalidad de venta
 
-            if (!Enum.IsDefined(solicitud.Modalidad))
-            {
-                throw new ArgumentException(
-                    "La modalidad de venta no es válida.");
-            }
-
             if (solicitud.Modalidad == ModalidadVenta.CuentaCorriente)
             {
                 var cuenta = await _cuentas.ObtenerPorClienteIdAsync(
-                    solicitud.ClienteId);
+                    solicitud.ClienteId.Value);
 
                 if (cuenta is null)
                 {
@@ -193,7 +208,7 @@ namespace SistemaVenta.Application.UseCases.Ventas
             if (solicitud.Modalidad == ModalidadVenta.CuentaCorriente)
             {
                 var cuenta = await _cuentas.ObtenerPorClienteIdAsync(
-                    solicitud.ClienteId);
+                    solicitud.ClienteId.Value);
 
                 if (cuenta is null)
                 {

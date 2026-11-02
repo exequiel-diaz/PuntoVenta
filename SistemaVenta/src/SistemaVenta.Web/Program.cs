@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using SistemaVenta.Application;
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Application.UseCases.CuentasCorrientes;
+using SistemaVenta.Application.UseCases.DocumentosComerciales;
 using SistemaVenta.Application.UseCases.Facturas;
 using SistemaVenta.Infrastructure;
 using SistemaVenta.Infrastructure.Initialization;
@@ -60,15 +61,18 @@ builder.Services.AddInfrastructure(
 builder.Services.AddScoped<RegistrarDebitoCuentaCorriente>();
 builder.Services.AddScoped<RegistrarCreditoCuentaCorriente>();
 
-
-
 builder.Services.AddScoped<EmitirFactura>();
 builder.Services.AddScoped<
     ITransaccionAplicacionPago,
-    TransaccionAplicacionPago>(); builder.Services.AddScoped<ITransaccionVenta, TransaccionVentaPostgres>();
+    TransaccionAplicacionPago>(); 
+
 builder.Services.AddScoped<
     ITransaccionVenta,
     TransaccionVentaPostgres>();
+
+builder.Services.AddScoped<EmitirNotaCredito>();
+builder.Services.AddScoped<EmitirNotaDebito>();
+
 
 builder.Services.AddRateLimiter(options =>
 {

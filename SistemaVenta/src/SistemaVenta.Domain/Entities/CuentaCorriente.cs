@@ -70,20 +70,27 @@ public class CuentaCorriente
             throw new InvalidOperationException(
                 "La cuenta no permite registrar esta deuda.");
 
+
         var movimiento = new MovimientoCuentaCorriente(
             TipoMovimientoCuenta.Debito,
             importe,
             descripcion,
-            venta);
+            venta: venta,
+            origen: venta is null
+                ? OrigenMovimientoCuenta.AjusteManual
+                : OrigenMovimientoCuenta.Venta);
+
 
         _movimientos.Add(movimiento);
     }
 
 
+
     public void RegistrarCredito(
         decimal importe,
         string descripcion,
-        Venta? venta = null)
+        Venta? venta = null,
+        OrigenMovimientoCuenta origen = OrigenMovimientoCuenta.AjusteManual)
     {
         if (Estado == EstadoCuentaCorriente.Cerrada)
             throw new InvalidOperationException(
@@ -97,11 +104,14 @@ public class CuentaCorriente
             throw new InvalidOperationException(
                 "El crédito no puede superar la deuda existente.");
 
+
         var movimiento = new MovimientoCuentaCorriente(
             TipoMovimientoCuenta.Credito,
             importe,
             descripcion,
-            venta);
+            venta: venta,
+            origen: origen);
+
 
         _movimientos.Add(movimiento);
     }
@@ -174,10 +184,13 @@ public class CuentaCorriente
             throw new InvalidOperationException(
                 "No se puede anular esta venta porque la cuenta no tiene deuda suficiente para compensarla. Revisá los pagos registrados.");
 
+
         RegistrarCredito(
             importe,
             $"Anulación de venta #{venta.Id}",
-            venta);
+            venta,
+            OrigenMovimientoCuenta.AnulacionVenta);
+
     }
 
 
@@ -256,11 +269,11 @@ public class CuentaCorriente
             throw new InvalidOperationException(
                 "La venta no tiene una deuda registrada en esta cuenta.");
 
+
         var debitoRevertido = _movimientos.Any(m =>
             m.VentaId == venta.Id &&
-            m.EsCredito() &&
-            !m.PagoId.HasValue &&
-            m.Pago is null);
+            m.Origen == OrigenMovimientoCuenta.AnulacionVenta);
+
 
         if (debitoRevertido)
         {
@@ -283,12 +296,15 @@ public class CuentaCorriente
                 "El pago no puede superar la deuda de la cuenta.");
         }
 
+
         var movimiento = new MovimientoCuentaCorriente(
             TipoMovimientoCuenta.Credito,
             importe,
             $"Pago #{pago.Id} aplicado a venta #{venta.Id}",
-            venta,
-            pago);
+            venta: venta,
+            pago: pago,
+            origen: OrigenMovimientoCuenta.Pago);
+
 
         _movimientos.Add(movimiento);
     }
@@ -314,6 +330,131 @@ public class CuentaCorriente
             .Sum(m => m.Importe);
 
         return debitos - creditos;
+    }
+
+    public bool TieneAnulacionDeVenta(int ventaId)
+    {
+        if (ventaId <= 0)
+            throw new ArgumentException(
+                "El identificador de la venta debe ser válido.");
+
+        return _movimientos.Any(m =>
+            m.VentaId == ventaId &&
+            m.Origen == OrigenMovimientoCuenta.AnulacionVenta);
+    }
+
+
+    public void RegistrarNotaCredito(
+        NotaCredito notaCredito,
+        Venta venta)
+    {
+        if (notaCredito is null)
+            throw new ArgumentNullException(nameof(notaCredito));
+
+        if (venta is null)
+            throw new ArgumentNullException(nameof(venta));
+
+        if (venta.Id <= 0)
+            throw new ArgumentException(
+                "La venta debe estar registrada.");
+
+        if (venta.ClienteId != ClienteId)
+            throw new InvalidOperationException(
+                "La venta no pertenece al cliente de esta cuenta.");
+
+        if (Estado == EstadoCuentaCorriente.Cerrada)
+            throw new InvalidOperationException(
+                "No se pueden registrar movimientos en una cuenta cerrada.");
+
+        if (!TieneDebitoDeVenta(venta.Id))
+            throw new InvalidOperationException(
+                "La venta no tiene una deuda registrada en esta cuenta.");
+
+        if (TieneAnulacionDeVenta(venta.Id))
+            throw new InvalidOperationException(
+                "No se puede aplicar una Nota de Crédito a una venta anulada.");
+
+        if (_movimientos.Any(m =>
+            ReferenceEquals(m.DocumentoComercial, notaCredito) ||
+            (notaCredito.Id > 0 &&
+             m.DocumentoComercialId == notaCredito.Id)))
+        {
+            throw new InvalidOperationException(
+                "La Nota de Crédito ya fue aplicada a esta cuenta.");
+        }
+
+        var importe = notaCredito.ImporteTotal;
+
+        if (importe <= 0)
+            throw new InvalidOperationException(
+                "El importe de la Nota de Crédito debe ser positivo.");
+
+        if (importe > ObtenerSaldoPendienteDeVenta(venta.Id))
+            throw new InvalidOperationException(
+                "La Nota de Crédito supera el saldo pendiente de la venta.");
+
+        if (importe > SaldoActual)
+            throw new InvalidOperationException(
+                "La Nota de Crédito supera la deuda de la cuenta.");
+
+        var movimiento = new MovimientoCuentaCorriente(
+            TipoMovimientoCuenta.Credito,
+            importe,
+            $"Nota de Crédito {notaCredito.Numero} aplicada a venta #{venta.Id}",
+            venta: venta,
+            origen: OrigenMovimientoCuenta.NotaCredito,
+            documentoComercial: notaCredito);
+
+        _movimientos.Add(movimiento);
+    }
+
+
+
+    public void RegistrarNotaDebito(NotaDebito notaDebito, Venta venta)
+    {
+        if (notaDebito is null)
+            throw new ArgumentNullException(nameof(notaDebito));
+
+        if (venta is null)
+            throw new ArgumentNullException(nameof(venta));
+
+        if (venta.Id <= 0)
+            throw new ArgumentException("La venta debe estar registrada.");
+
+        if (venta.ClienteId != ClienteId)
+            throw new InvalidOperationException(
+                "La venta no pertenece al cliente de esta cuenta.");
+
+        if (!TieneDebitoDeVenta(venta.Id))
+            throw new InvalidOperationException(
+                "La venta no tiene una deuda registrada en esta cuenta.");
+
+        if (TieneAnulacionDeVenta(venta.Id))
+            throw new InvalidOperationException(
+                "No se puede aplicar una Nota de Débito a una venta anulada.");
+
+        if (_movimientos.Any(m =>
+            ReferenceEquals(m.DocumentoComercial, notaDebito) ||
+            (notaDebito.Id > 0 &&
+             m.DocumentoComercialId == notaDebito.Id)))
+        {
+            throw new InvalidOperationException(
+                "La Nota de Débito ya fue aplicada a esta cuenta.");
+        }
+
+        if (!PuedeRegistrarDeuda(notaDebito.ImporteTotal))
+            throw new InvalidOperationException(
+                "La Nota de Débito supera el límite disponible de la cuenta.");
+
+        var movimiento = new MovimientoCuentaCorriente(
+            TipoMovimientoCuenta.Debito,
+            notaDebito.ImporteTotal,
+            $"Nota de Débito {notaDebito.Numero} aplicada a venta #{venta.Id}",
+            venta: venta,
+            origen: OrigenMovimientoCuenta.NotaDebito,
+            documentoComercial: notaDebito);
+
+        _movimientos.Add(movimiento);
     }
 
 

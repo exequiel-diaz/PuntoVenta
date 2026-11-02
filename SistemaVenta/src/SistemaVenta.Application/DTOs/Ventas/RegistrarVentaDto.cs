@@ -9,7 +9,7 @@ namespace SistemaVenta.Application.DTOs.Ventas
 
     public class RegistrarVentaDto
     {
-        public int ClienteId { get; set; }
+        public int? ClienteId { get; set; }
 
         public ModalidadVenta Modalidad { get; set; }
             = ModalidadVenta.Contado;

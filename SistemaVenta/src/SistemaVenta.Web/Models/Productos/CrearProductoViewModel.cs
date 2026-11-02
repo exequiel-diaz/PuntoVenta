@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using SistemaVenta.Web.Validaciones;
 
 namespace SistemaVenta.Web.Models.Productos
 {
@@ -29,6 +30,8 @@ namespace SistemaVenta.Web.Models.Productos
 
         [Range(0, double.MaxValue,
             ErrorMessage = "El stock mínimo no puede ser negativo.")]
+        [NumeroEntero(
+            ErrorMessage = "El stock mínimo debe ser un número entero.")]
         [Display(Name = "Stock mínimo")]
         public decimal StockMinimo { get; set; }
 

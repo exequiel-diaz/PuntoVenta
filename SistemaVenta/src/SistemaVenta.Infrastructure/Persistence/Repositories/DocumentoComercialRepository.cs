@@ -63,5 +63,50 @@ namespace SistemaVenta.Infrastructure.Repositories
         }
 
 
+        public async Task<decimal> ObtenerTotalNotasCreditoAsync(
+            int facturaId,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.DocumentosComerciales
+                .OfType<NotaCredito>()
+                .Where(n =>
+                    n.FacturaId == facturaId &&
+                    n.Estado == EstadoDocumento.Emitido)
+                .SumAsync(
+                    n => n.ImporteTotal,
+                    cancellationToken);
+        }
+
+        public async Task<decimal> ObtenerTotalNotasDebitoAsync(
+            int facturaId,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.DocumentosComerciales
+                .OfType<NotaDebito>()
+                .Where(n =>
+                    n.FacturaId == facturaId &&
+                    n.Estado == EstadoDocumento.Emitido)
+                .SumAsync(
+                    n => n.ImporteTotal,
+                    cancellationToken);
+        }
+
+
+        public async Task<List<DocumentoComercial>> ObtenerNotasPorFacturaIdAsync(
+            int facturaId,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.DocumentosComerciales
+                .Where(d =>
+                    (d is NotaCredito &&
+                     ((NotaCredito)d).FacturaId == facturaId)
+                    ||
+                    (d is NotaDebito &&
+                     ((NotaDebito)d).FacturaId == facturaId))
+                .OrderByDescending(d => d.FechaEmision)
+                .ToListAsync(cancellationToken);
+        }
+
+
     }
 }

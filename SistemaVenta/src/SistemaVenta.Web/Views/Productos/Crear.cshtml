@@ -77,8 +77,13 @@
     <div class="mb-3">
         <label asp-for="StockMinimo"
                class="form-label"></label>
+
         <input asp-for="StockMinimo"
+               type="number"
+               min="0"
+               step="1"
                class="form-control" />
+
         <span asp-validation-for="StockMinimo"
               class="text-danger"></span>
     </div>

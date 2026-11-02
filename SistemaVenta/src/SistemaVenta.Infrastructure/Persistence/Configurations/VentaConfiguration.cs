@@ -20,7 +20,7 @@ namespace SistemaVenta.Infrastructure.Persistence.Configurations
                 .IsRowVersion();
 
             builder.Property(v => v.ClienteId)
-                .IsRequired();
+                .IsRequired(false);
 
             builder.Property(v => v.Fecha)
                 .IsRequired();

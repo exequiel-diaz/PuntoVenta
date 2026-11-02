@@ -20,5 +20,19 @@ namespace SistemaVenta.Application.Interfaces
         Task AgregarAsync(
             DocumentoComercial documento,
             CancellationToken cancellationToken = default);
+
+        Task<decimal> ObtenerTotalNotasCreditoAsync(
+            int facturaId,
+            CancellationToken cancellationToken = default);
+
+        Task<decimal> ObtenerTotalNotasDebitoAsync(
+            int facturaId,
+            CancellationToken cancellationToken = default);
+
+        Task<List<DocumentoComercial>> ObtenerNotasPorFacturaIdAsync(
+            int facturaId,
+            CancellationToken cancellationToken = default);
+
+
     }
 }

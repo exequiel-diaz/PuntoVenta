@@ -62,11 +62,11 @@ namespace SistemaVenta.Domain.Entities
                     "El costo no puede ser negativo.");
             }
 
-            if (stockMinimo < 0)
+            if (stockMinimo < 0 || stockMinimo != decimal.Truncate(stockMinimo))
             {
                 throw new ArgumentOutOfRangeException(
                     nameof(stockMinimo),
-                    "El stock mínimo no puede ser negativo.");
+                    "El stock mínimo debe ser un número entero no negativo.");
             }
 
             if (categoria is null)
@@ -96,7 +96,7 @@ namespace SistemaVenta.Domain.Entities
                 throw new InvalidOperationException(
                     "No se puede ingresar stock a un producto inactivo.");
 
-            if (cantidad <= 0)
+            if (cantidad <= 0 || cantidad != decimal.Truncate(cantidad))
             {
                 throw new ArgumentOutOfRangeException(
                     nameof(cantidad),
@@ -108,7 +108,7 @@ namespace SistemaVenta.Domain.Entities
 
         public void RestaurarStockPorAnulacion(decimal cantidad)
         {
-            if (cantidad <= 0)
+            if (cantidad <= 0 || cantidad != decimal.Truncate(cantidad))
             {
                 throw new ArgumentOutOfRangeException(
                     nameof(cantidad),
@@ -126,7 +126,7 @@ namespace SistemaVenta.Domain.Entities
                     "No se puede descontar stock de un producto inactivo.");
             }
 
-            if (cantidad <= 0)
+            if (cantidad <= 0 || cantidad != decimal.Truncate(cantidad))
             {
                 throw new ArgumentOutOfRangeException(
                     nameof(cantidad),
@@ -144,7 +144,8 @@ namespace SistemaVenta.Domain.Entities
 
         public bool HayStockDisponible(decimal cantidad)
         {
-            if (cantidad <= 0)
+            if (cantidad <= 0 ||
+                cantidad != decimal.Truncate(cantidad))
             {
                 return false;
             }

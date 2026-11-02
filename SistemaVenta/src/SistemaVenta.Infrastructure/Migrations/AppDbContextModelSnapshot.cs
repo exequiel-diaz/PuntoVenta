@@ -271,12 +271,18 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<int?>("DocumentoComercialId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("Importe")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("Origen")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("PagoId")
                         .HasColumnType("integer");
@@ -290,6 +296,9 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CuentaCorrienteId");
+
+                    b.HasIndex("DocumentoComercialId")
+                        .IsUnique();
 
                     b.HasIndex("PagoId");
 
@@ -492,7 +501,7 @@ namespace SistemaVenta.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ClienteId")
+                    b.Property<int?>("ClienteId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Estado")
@@ -781,6 +790,11 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("SistemaVenta.Domain.Entities.DocumentoComercial", "DocumentoComercial")
+                        .WithMany()
+                        .HasForeignKey("DocumentoComercialId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("SistemaVenta.Domain.Entities.Pago", "Pago")
                         .WithMany()
                         .HasForeignKey("PagoId")
@@ -790,6 +804,8 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("VentaId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("DocumentoComercial");
 
                     b.Navigation("Pago");
 
@@ -832,8 +848,7 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.HasOne("SistemaVenta.Domain.Entities.Cliente", null)
                         .WithMany()
                         .HasForeignKey("ClienteId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("SistemaVenta.Domain.Entities.Factura", b =>

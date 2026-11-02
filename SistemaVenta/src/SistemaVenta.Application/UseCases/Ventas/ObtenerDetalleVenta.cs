@@ -2,6 +2,7 @@
 using SistemaVenta.Application.DTOs.Ventas;
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Application.UseCases.Clientes;
+using SistemaVenta.Domain.Entities;
 
 namespace SistemaVenta.Application.UseCases.Ventas
 {
@@ -37,6 +38,10 @@ namespace SistemaVenta.Application.UseCases.Ventas
 
             var factura = await _documentos.ObtenerFacturaPorVentaIdAsync(ventaId);
 
+            var notas = factura is not null
+                ? await _documentos.ObtenerNotasPorFacturaIdAsync(factura.Id)
+                : new List<DocumentoComercial>();
+
             var clientes = await _listarClientes.EjecutarAsync();
 
             var cliente = venta.ClienteId.HasValue
@@ -56,6 +61,18 @@ namespace SistemaVenta.Application.UseCases.Ventas
                 Estado = venta.Estado,
                 Total = venta.Total,
                 TieneFactura = factura is not null,
+                FacturaId = factura?.Id,
+                NotasComerciales = notas.Select(n => new NotaComercialDto
+                {
+                    Tipo = n is NotaCredito ? "Nota de Crédito" : "Nota de Débito",
+                    Numero = n.Numero,
+                    Motivo = n is NotaCredito nc
+                        ? nc.Motivo
+                        : ((NotaDebito)n).Motivo,
+                    Importe = n is NotaCredito credito
+                        ? credito.ImporteTotal
+                        : ((NotaDebito)n).ImporteTotal
+                }).ToList(),
 
                 Detalles = venta.Detalles
                     .Select(d => new DetalleVentaListadoDto
@@ -67,6 +84,7 @@ namespace SistemaVenta.Application.UseCases.Ventas
                         Subtotal = d.Subtotal
                     })
                     .ToList()
+
             };
         }
     }

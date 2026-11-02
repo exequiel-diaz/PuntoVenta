@@ -21,6 +21,12 @@ public class MovimientoCuentaCorrienteConfiguration
             .HasConversion<int>()
             .IsRequired();
 
+
+        builder.Property(m => m.Origen)
+            .HasConversion<int>()
+            .IsRequired();
+
+
         builder.Property(m => m.Importe)
             .HasPrecision(18, 2)
             .IsRequired();
@@ -47,6 +53,18 @@ public class MovimientoCuentaCorrienteConfiguration
         // Índice para consultar movimientos asociados a un pago.
         builder.HasIndex(m => m.PagoId);
 
+
+        // Relación opcional con el documento comercial
+        // que originó el movimiento.
+        builder.HasOne(m => m.DocumentoComercial)
+            .WithMany()
+            .HasForeignKey(m => m.DocumentoComercialId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Evita asociar el mismo documento comercial
+        // a más de un movimiento de cuenta corriente.
+        builder.HasIndex(m => m.DocumentoComercialId)
+            .IsUnique();
 
     }
 }

@@ -8,8 +8,8 @@ namespace SistemaVenta.Web.ViewModels.Ventas;
 public class RegistrarVentaViewModel
 {
     [Range(1, int.MaxValue,
-        ErrorMessage = "Debe seleccionar un cliente.")]
-    public int ClienteId { get; set; }
+    ErrorMessage = "El cliente seleccionado no es válido.")]
+    public int? ClienteId { get; set; }
 
     [Required(ErrorMessage = "Debe seleccionar una modalidad de venta.")]
     public ModalidadVenta Modalidad { get; set; }

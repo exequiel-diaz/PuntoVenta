@@ -23,6 +23,9 @@
                class="form-label"></label>
 
         <input asp-for="Cantidad"
+               type="number"
+               min="1"
+               step="1"
                class="form-control" />
 
         <span asp-validation-for="Cantidad"

@@ -130,14 +130,24 @@ public class VentasController : Controller
     {
         var clientes = await _listarClientes.EjecutarAsync();
 
-        modelo.ClientesDisponibles = clientes
-            .Where(c => c.Estado == EstadoCliente.Activo)
-            .Select(c => new SelectListItem
+        modelo.ClientesDisponibles = new List<SelectListItem>
+{
+            new SelectListItem
             {
-                Value = c.Id.ToString(),
-                Text = $"{c.Nombre} - {c.Documento}"
-            })
-            .ToList();
+                Value = "",
+                Text = "Consumidor final (sin registrar cliente)"
+            }
+        };
+
+        modelo.ClientesDisponibles.AddRange(
+            clientes
+                .Where(c => c.Estado == EstadoCliente.Activo)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = $"{c.Nombre} - {c.Documento}"
+                })
+        );
 
         var productos = await _listarProductos.EjecutarAsync();
 

@@ -73,7 +73,7 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                         new()
                         {
                             ProductoId = producto.Id,
-                            Cantidad = 1.5m
+                            Cantidad = 2m
                         }
                     }
                 });
@@ -91,7 +91,7 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 .Select(p => p.StockActual)
                 .SingleAsync();
 
-            Assert.Equal(8.5m, stockAntes);
+            Assert.Equal(8m, stockAntes);
 
             // ACT: anular mediante el caso de uso real.
 
@@ -138,8 +138,8 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 movimientos,
                 m => m.Tipo == TipoMovimientoStock.AnulacionVenta);
 
-            Assert.Equal(1.5m, anulacion.Cantidad);
-            Assert.Equal(8.5m, anulacion.StockAnterior);
+            Assert.Equal(2m, anulacion.Cantidad);
+            Assert.Equal(8m, anulacion.StockAnterior);
             Assert.Equal(10m, anulacion.StockPosterior);
 
             // Sin Commit: la transacción se revierte

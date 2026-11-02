@@ -66,7 +66,7 @@ namespace SistemaVenta.Application.Tests.Ventas
 
             venta.AgregarDetalle(
                 producto,
-                cantidad: 1.5m,
+                cantidad: 2m,
                 precioUnitario: 15000m);
 
             venta.Confirmar();
@@ -74,7 +74,7 @@ namespace SistemaVenta.Application.Tests.Ventas
             AsignarId(venta, 1);
 
             // Simulamos el descuento realizado al vender.
-            producto.DisminuirStock(1.5m);
+            producto.DisminuirStock(2m);
 
             _productos.ConfigurarProducto(1, producto);
 
@@ -96,14 +96,13 @@ namespace SistemaVenta.Application.Tests.Ventas
                 TipoMovimientoStock.AnulacionVenta,
                 movimiento.Tipo);
 
-            Assert.Equal(1.5m, movimiento.Cantidad);
-            Assert.Equal(8.5m, movimiento.StockAnterior);
+            Assert.Equal(2m, movimiento.Cantidad);
+            Assert.Equal(8m, movimiento.StockAnterior);
             Assert.Equal(10m, movimiento.StockPosterior);
 
             Assert.True(
                 _unitOfWork.GuardarCambiosFueLlamado);
         }
-
 
         [Theory]
         [InlineData(0)]
@@ -217,14 +216,14 @@ namespace SistemaVenta.Application.Tests.Ventas
             var venta = new Venta(1);
 
             venta.AgregarDetalle(teclado, 2m, 15000m);
-            venta.AgregarDetalle(mouse, 1.5m, 8000m);
+            venta.AgregarDetalle(mouse, 2m, 8000m);
             venta.Confirmar();
 
             AsignarId(venta, 1);
 
             // Simulamos el registro original de la venta.
             teclado.DisminuirStock(2m);
-            mouse.DisminuirStock(1.5m);
+            mouse.DisminuirStock(2m);
 
             _productos.ConfigurarProducto(1, teclado);
             _productos.ConfigurarProducto(2, mouse);
@@ -250,11 +249,10 @@ namespace SistemaVenta.Application.Tests.Ventas
             Assert.Contains(_movimientos.Movimientos,
                 m => m.Producto == mouse &&
                      m.Tipo == TipoMovimientoStock.AnulacionVenta &&
-                     m.Cantidad == 1.5m);
+                     m.Cantidad == 2m);
 
             Assert.True(_unitOfWork.GuardarCambiosFueLlamado);
         }
-
 
         [Fact]
         public async Task AnularVenta_ProductoInactivo_RestauraStock()

@@ -11,11 +11,18 @@ namespace SistemaVenta.Application.Tests.Fakes
 
         public decimal TotalAplicado { get; set; }
 
+        public decimal TotalNotasCredito { get; set; }
+
+        public decimal TotalNotasDebito { get; set; }
+
         // Factura asociada a una venta.
         public Factura? Factura { get; set; }
 
         // Documento agregado durante una prueba.
         public DocumentoComercial? DocumentoAgregado { get; private set; }
+
+        public List<DocumentoComercial> Notas { get; set; } = new();
+
 
         public Task<DocumentoComercial?> ObtenerPorIdAsync(
             int id,
@@ -54,5 +61,35 @@ namespace SistemaVenta.Application.Tests.Fakes
 
             return Task.CompletedTask;
         }
+
+        public Task<decimal> ObtenerTotalNotasCreditoAsync(
+            int facturaId,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(TotalNotasCredito);
+        }
+
+        public Task<decimal> ObtenerTotalNotasDebitoAsync(
+            int facturaId,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(TotalNotasDebito);
+        }
+
+        public Task<List<DocumentoComercial>> ObtenerNotasPorFacturaIdAsync(
+            int facturaId,
+            CancellationToken cancellationToken = default)
+        {
+            var notas = Notas
+                .Where(d =>
+                    d is NotaCredito nc && nc.FacturaId == facturaId ||
+                    d is NotaDebito nd && nd.FacturaId == facturaId)
+                .OrderByDescending(d => d.FechaEmision)
+                .ToList();
+
+            return Task.FromResult(notas);
+        }
+
+
     }
 }
