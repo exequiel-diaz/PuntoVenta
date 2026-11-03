@@ -12,6 +12,7 @@ using SistemaVenta.Infrastructure.Initialization;
 using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Security;
 using System.Threading.RateLimiting;
+using SistemaVenta.Application.UseCases.Pagos;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,6 +63,8 @@ builder.Services.AddScoped<RegistrarDebitoCuentaCorriente>();
 builder.Services.AddScoped<RegistrarCreditoCuentaCorriente>();
 
 builder.Services.AddScoped<EmitirFactura>();
+builder.Services.AddScoped<ObtenerDetalleFactura>();
+builder.Services.AddScoped<ObtenerDetallePago>();
 builder.Services.AddScoped<
     ITransaccionAplicacionPago,
     TransaccionAplicacionPago>(); 

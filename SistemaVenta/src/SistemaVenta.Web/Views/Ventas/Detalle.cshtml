@@ -188,6 +188,41 @@
     </div>
 </div>
 
+
+@if (Model.Estado == SistemaVenta.Domain.Enums.EstadoVenta.Confirmada
+    && Model.EsVentaCuentaCorriente
+    && Model.SaldoPendiente > 0)
+{
+    <div class="card border-primary mb-4">
+
+        <div class="card-header">
+            <h5 class="mb-0">Cuenta Corriente</h5>
+        </div>
+
+        <div class="card-body">
+
+            <p class="mb-3">
+                <strong>Saldo pendiente:</strong>
+                <span class="text-danger fw-bold">
+                    @Model.SaldoPendiente.ToString("C2", cultura)
+                </span>
+            </p>
+
+            <a asp-controller="Pagos"
+               asp-action="RegistrarCobroVenta"
+               asp-route-ventaId="@Model.Id"
+               class="btn btn-success">
+                Registrar cobro
+            </a>
+
+        </div>
+
+    </div>
+}
+
+
+
+
 <!-- ACCIONES -->
 
 <div class="mt-3 d-flex flex-wrap gap-2 align-items-center">
@@ -262,6 +297,13 @@
         {
             <div class="w-100 mt-3">
                 <h5>Documentos comerciales</h5>
+
+                <a asp-controller="Facturas"
+                   asp-action="Detalle"
+                   asp-route-id="@Model.FacturaId"
+                   class="btn btn-outline-primary mt-2">
+                    Ver factura
+                </a>
 
                 <form asp-controller="DocumentosComerciales"
                       asp-action="EmitirNotaCredito"
@@ -393,4 +435,7 @@
         }
     }
 </div>
+
+
+
 

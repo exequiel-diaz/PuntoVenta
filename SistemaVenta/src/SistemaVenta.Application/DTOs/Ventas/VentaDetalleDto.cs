@@ -18,6 +18,9 @@ namespace SistemaVenta.Application.DTOs.Ventas
         public decimal Total { get; set; }
         public bool TieneFactura { get; set; }
         public int? FacturaId { get; set; }
+        public bool EsVentaCuentaCorriente { get; set; }
+
+        public decimal SaldoPendiente { get; set; }
 
         public List<DetalleVentaListadoDto> Detalles { get; set; } = new();
 

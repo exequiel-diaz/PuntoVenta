@@ -1,0 +1,123 @@
+﻿@model SistemaVenta.Application.DTOs.Facturas.FacturaDetalleDto
+
+@{
+    ViewData["Title"] = "Factura";
+}
+
+<style>
+    .factura {
+        max-width: 850px;
+        margin: 0 auto;
+    }
+
+    @@media print {
+        .no-imprimir,
+        header,
+        footer,
+        nav {
+            display: none !important;
+        }
+
+        .factura {
+            max-width: 100%;
+        }
+
+        body {
+            background: white !important;
+        }
+    }
+</style>
+
+<div class="factura">
+
+    <div class="d-flex justify-content-between mb-4 no-imprimir">
+        <a asp-controller="Ventas"
+           asp-action="Detalle"
+           asp-route-id="@Model.VentaId"
+           class="btn btn-secondary">
+            Volver a la venta
+        </a>
+
+        <button type="button"
+                class="btn btn-primary"
+                onclick="window.print()">
+            Imprimir factura
+        </button>
+    </div>
+
+    <div class="card p-4">
+
+        <div class="d-flex justify-content-between border-bottom pb-3 mb-4">
+            <div>
+                <h2>SistemaVenta</h2>
+                <p class="mb-0">Comprobante interno</p>
+                <small>Sin validez fiscal</small>
+            </div>
+
+            <div class="text-end">
+                <h2>Factura @Model.Tipo.ToString().Replace("Factura", "")</h2>
+                <p class="mb-1"><strong>Número:</strong> @Model.Numero</p>
+                <p class="mb-0">
+                    <strong>Fecha:</strong>
+                    @Model.FechaEmision.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                </p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <p class="mb-1">
+                <strong>Cliente:</strong> @Model.NombreCliente
+            </p>
+
+            <p class="mb-1">
+                <strong>Venta:</strong> #@Model.VentaId
+            </p>
+
+            <p class="mb-0">
+                <strong>Estado:</strong> @Model.Estado
+            </p>
+        </div>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio unitario</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var detalle in Model.Detalles)
+                {
+                    <tr>
+                        <td>@detalle.NombreProducto</td>
+                        <td>@detalle.Cantidad</td>
+                        <td>@detalle.PrecioUnitario.ToString("C2")</td>
+                        <td>@detalle.Subtotal.ToString("C2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="text-end mt-3">
+            <h3>Total: @Model.ImporteTotal.ToString("C2")</h3>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Observaciones))
+        {
+            <div class="mt-4">
+                <strong>Observaciones:</strong>
+                <p>@Model.Observaciones</p>
+            </div>
+        }
+
+        <hr />
+
+        <p class="text-center text-muted small mb-0">
+            Documento interno de SistemaVenta.
+            No constituye un comprobante fiscal válido.
+        </p>
+
+    </div>
+</div>

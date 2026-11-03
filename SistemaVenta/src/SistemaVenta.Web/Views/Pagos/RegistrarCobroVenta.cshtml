@@ -1,0 +1,111 @@
+﻿@model SistemaVenta.Web.ViewModels.Pagos.RegistrarCobroVentaViewModel
+
+@{
+    ViewData["Title"] = "Registrar cobro";
+}
+
+<div class="container mt-4">
+
+    <h2>Registrar cobro de venta</h2>
+
+    <p class="text-muted">
+        Venta N.º @Model.VentaId
+    </p>
+
+    <div class="card mt-3">
+        <div class="card-body">
+
+            <form asp-controller="Pagos"
+                  asp-action="RegistrarCobroVenta"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input type="hidden"
+                       asp-for="VentaId" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3">
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Importe"
+                           class="form-label">
+                        Importe a cobrar
+                    </label>
+
+                    <input asp-for="Importe"
+                           type="number"
+                           step="0.01"
+                           min="0.01"
+                           class="form-control" />
+
+                    <span asp-validation-for="Importe"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="FormaPago"
+                           class="form-label">
+                        Forma de pago
+                    </label>
+
+                    <select asp-for="FormaPago"
+                            asp-items="Html.GetEnumSelectList<SistemaVenta.Domain.Enums.FormaPago>()"
+                            class="form-select">
+
+                        <option value="">
+                            Seleccionar forma de pago
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="FormaPago"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Observaciones"
+                           class="form-label">
+                        Observaciones
+                    </label>
+
+                    <textarea asp-for="Observaciones"
+                              class="form-control"
+                              rows="3"
+                              maxlength="500">
+                    </textarea>
+
+                    <span asp-validation-for="Observaciones"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="d-flex gap-2">
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        Registrar cobro
+                    </button>
+
+                    <a asp-controller="Ventas"
+                       asp-action="Detalle"
+                       asp-route-id="@Model.VentaId"
+                       class="btn btn-secondary">
+                        Cancelar
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

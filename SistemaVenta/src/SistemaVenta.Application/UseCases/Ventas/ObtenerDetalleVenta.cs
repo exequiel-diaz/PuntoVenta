@@ -11,15 +11,18 @@ namespace SistemaVenta.Application.UseCases.Ventas
         private readonly IVentaRepository _ventaRepository;
         private readonly ListarClientes _listarClientes;
         private readonly IDocumentoComercialRepository _documentos;
+        private readonly ICuentaCorrienteRepository _cuentaCorrienteRepository;
 
         public ObtenerDetalleVenta(
             IVentaRepository ventaRepository,
             ListarClientes listarClientes,
-            IDocumentoComercialRepository documentos)
+            IDocumentoComercialRepository documentos,
+            ICuentaCorrienteRepository cuentaCorrienteRepository)
         {
             _ventaRepository = ventaRepository;
             _listarClientes = listarClientes;
             _documentos = documentos;
+            _cuentaCorrienteRepository = cuentaCorrienteRepository;
         }
 
         public async Task<VentaDetalleDto?> EjecutarAsync(int ventaId)
@@ -48,6 +51,29 @@ namespace SistemaVenta.Application.UseCases.Ventas
                 ? clientes.FirstOrDefault(c => c.Id == venta.ClienteId.Value)
                 : null;
 
+            var esVentaCuentaCorriente = false;
+            var saldoPendiente = 0m;
+
+            if (venta.ClienteId.HasValue)
+            {
+                var cuenta = await _cuentaCorrienteRepository
+                    .ObtenerPorClienteIdAsync(venta.ClienteId.Value);
+
+                if (cuenta is not null)
+                {
+                    esVentaCuentaCorriente = cuenta.Movimientos.Any(m =>
+                        m.VentaId == venta.Id &&
+                        m.EsDebito() &&
+                        m.Origen == SistemaVenta.Domain.Enums.OrigenMovimientoCuenta.Venta);
+
+                    if (esVentaCuentaCorriente)
+                    {
+                        saldoPendiente =
+                            cuenta.ObtenerSaldoPendienteDeVenta(venta.Id);
+                    }
+                }
+            }
+
             return new VentaDetalleDto
             {
                 Id = venta.Id,
@@ -60,6 +86,8 @@ namespace SistemaVenta.Application.UseCases.Ventas
                 Fecha = venta.Fecha,
                 Estado = venta.Estado,
                 Total = venta.Total,
+                EsVentaCuentaCorriente = esVentaCuentaCorriente,
+                SaldoPendiente = saldoPendiente,
                 TieneFactura = factura is not null,
                 FacturaId = factura?.Id,
                 NotasComerciales = notas.Select(n => new NotaComercialDto

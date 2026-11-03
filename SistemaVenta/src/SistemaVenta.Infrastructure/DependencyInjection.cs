@@ -46,6 +46,10 @@ namespace SistemaVenta.Infrastructure
                 ITransaccionPagoVenta,
                 TransaccionPagoVenta>();
 
+            services.AddScoped<
+                ITransaccionCobroVenta,
+                TransaccionCobroVenta>();
+
             services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 
             services.AddScoped<IUnitOfWork>(
@@ -70,6 +74,7 @@ namespace SistemaVenta.Infrastructure
             services.AddScoped<ActivarCuentaCorriente>();
             services.AddScoped<CerrarCuentaCorriente>();
             services.AddScoped<AplicarPagoVentaCuentaCorriente>();
+            services.AddScoped<RegistrarCobroVentaCuentaCorriente>();
 
             // Módulo de Ventas
             services.AddScoped<IVentaRepository, VentaRepository>();
