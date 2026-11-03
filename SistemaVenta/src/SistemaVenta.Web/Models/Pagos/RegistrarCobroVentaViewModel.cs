@@ -8,6 +8,7 @@ public class RegistrarCobroVentaViewModel
     [Range(1, int.MaxValue,
         ErrorMessage = "La venta debe ser válida.")]
     public int VentaId { get; set; }
+    public decimal SaldoPendiente { get; set; }
 
     [Required(ErrorMessage = "El importe es obligatorio.")]
     [Range(

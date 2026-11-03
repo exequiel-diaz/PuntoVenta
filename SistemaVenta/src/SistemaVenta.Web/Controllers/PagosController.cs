@@ -3,6 +3,7 @@ using SistemaVenta.Application.UseCases.Pagos;
 using SistemaVenta.Application.UseCases.CuentasCorrientes;
 using System.Security.Claims;
 using SistemaVenta.Web.ViewModels.Pagos;
+using SistemaVenta.Application.UseCases.Ventas;
 
 namespace SistemaVenta.Web.Controllers
 {
@@ -10,13 +11,15 @@ namespace SistemaVenta.Web.Controllers
     {
         private readonly ObtenerDetallePago _obtenerDetallePago;
         private readonly RegistrarCobroVentaCuentaCorriente _registrarCobroVenta;
-
+        private readonly ObtenerDetalleVenta _obtenerDetalleVenta;
         public PagosController(
             ObtenerDetallePago obtenerDetallePago,
-            RegistrarCobroVentaCuentaCorriente registrarCobroVenta)
+            RegistrarCobroVentaCuentaCorriente registrarCobroVenta,
+            ObtenerDetalleVenta obtenerDetalleVenta)
         {
             _obtenerDetallePago = obtenerDetallePago;
             _registrarCobroVenta = registrarCobroVenta;
+            _obtenerDetalleVenta = obtenerDetalleVenta;
         }
 
         [HttpGet]
@@ -29,19 +32,37 @@ namespace SistemaVenta.Web.Controllers
 
             return View(pago);
         }
-        
+
         [HttpGet]
-        public IActionResult RegistrarCobroVenta(int ventaId)
+        public async Task<IActionResult> RegistrarCobroVenta(int ventaId)
         {
             if (ventaId <= 0)
             {
+                return BadRequest("La venta debe ser válida.");
+            }
+
+            var venta = await _obtenerDetalleVenta.EjecutarAsync(ventaId);
+
+            if (venta is null)
+            {
+                return NotFound();
+            }
+
+            if (venta.Estado != SistemaVenta.Domain.Enums.EstadoVenta.Confirmada)
+            {
+                return BadRequest("La venta no está confirmada.");
+            }
+
+            if (!venta.EsVentaCuentaCorriente || venta.SaldoPendiente <= 0)
+            {
                 return BadRequest(
-                    "La venta debe ser válida.");
+                    "La venta no tiene una deuda pendiente en Cuenta Corriente.");
             }
 
             var modelo = new RegistrarCobroVentaViewModel
             {
-                VentaId = ventaId
+                VentaId = venta.Id,
+                SaldoPendiente = venta.SaldoPendiente
             };
 
             return View(modelo);
@@ -50,10 +71,18 @@ namespace SistemaVenta.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistrarCobroVenta(
-    RegistrarCobroVentaViewModel modelo)
+            RegistrarCobroVentaViewModel modelo)
         {
             if (!ModelState.IsValid)
             {
+                var ventaConsultada = await _obtenerDetalleVenta
+                    .EjecutarAsync(modelo.VentaId);
+
+                if (ventaConsultada is not null)
+                {
+                    modelo.SaldoPendiente = ventaConsultada.SaldoPendiente;
+                }
+
                 return View(modelo);
             }
 
@@ -88,6 +117,13 @@ namespace SistemaVenta.Web.Controllers
                 ModelState.AddModelError(
                     string.Empty,
                     ex.Message);
+            }
+
+            var venta = await _obtenerDetalleVenta.EjecutarAsync(modelo.VentaId);
+
+            if (venta is not null)
+            {
+                modelo.SaldoPendiente = venta.SaldoPendiente;
             }
 
             return View(modelo);

@@ -28,6 +28,29 @@
                      class="text-danger mb-3">
                 </div>
 
+                <div class="alert alert-info mb-4">
+
+                    <h5 class="alert-heading">
+                        Información de la venta
+                    </h5>
+
+                    <p class="mb-2">
+                        <strong>Venta:</strong>
+                        #@Model.VentaId
+                    </p>
+
+                    <p class="mb-0">
+                        <strong>Saldo pendiente:</strong>
+
+                        <span class="fs-5 fw-bold">
+                            @Model.SaldoPendiente.ToString(
+                            "C2",
+                                                        System.Globalization.CultureInfo.GetCultureInfo("es-AR"))
+                        </span>
+                    </p>
+
+                </div>
+
                 <div class="mb-3">
                     <label asp-for="Importe"
                            class="form-label">
