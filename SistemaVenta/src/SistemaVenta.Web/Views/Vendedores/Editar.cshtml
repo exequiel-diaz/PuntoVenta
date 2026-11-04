@@ -1,0 +1,90 @@
+﻿@model SistemaVenta.Application.DTOs.Vendedores.EditarVendedorDto
+
+@{
+    ViewData["Title"] = "Editar vendedor";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+                    <h4 class="mb-0">Editar vendedor</h4>
+                </div>
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        Modificá los datos del vendedor seleccionado.
+                    </p>
+
+                    <form asp-controller="Vendedores"
+                          asp-action="Editar"
+                          asp-route-id="@Model.Id"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input asp-for="Id" type="hidden" />
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="NombreCompleto"
+                                   class="form-label">
+                                Nombre completo
+                            </label>
+
+                            <input asp-for="NombreCompleto"
+                                   class="form-control"
+                                   required />
+
+                            <span asp-validation-for="NombreCompleto"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="NombreUsuario"
+                                   class="form-label">
+                                Nombre de usuario
+                            </label>
+
+                            <input asp-for="NombreUsuario"
+                                   class="form-control"
+                                   autocomplete="off"
+                                   required />
+
+                            <span asp-validation-for="NombreUsuario"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+
+                            <a asp-controller="Vendedores"
+                               asp-action="Index"
+                               class="btn btn-outline-secondary">
+                                Cancelar
+                            </a>
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+                                Guardar cambios
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -87,8 +87,6 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
             return productos;
         }
 
-
-
         public async Task<List<VentaDiariaDto>> ObtenerVentasDiariasAsync(
             DateTime fechaDesde,
             DateTime fechaHasta)
@@ -122,6 +120,62 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
                     TotalVendido = g.Sum(v => v.Total)
                 })
                 .OrderBy(v => v.Fecha)
+                .ToList();
+
+            return resultado;
+        }
+
+        public async Task<List<VentaPorVendedorDto>> ObtenerVentasPorVendedorAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta)
+        {
+            var estadisticas = await _context.Ventas
+                .AsNoTracking()
+                .Where(v =>
+                    v.Estado == EstadoVenta.Confirmada &&
+                    v.Fecha >= fechaDesde &&
+                    v.Fecha <= fechaHasta)
+                .GroupBy(v => v.VendedorId)
+                .Select(g => new
+                {
+                    VendedorId = g.Key,
+                    CantidadVentas = g.Count(),
+                    TotalVendido = g.Sum(v =>
+                        v.Detalles.Sum(d =>
+                            d.Cantidad * d.PrecioUnitario))
+                })
+                .ToListAsync();
+
+            var usuarios = await _context.Usuarios
+                .AsNoTracking()
+                .Select(u => new
+                {
+                    u.Id,
+                    u.NombreCompleto,
+                    u.Rol,
+                    u.Activo
+                })
+                .ToListAsync();
+
+            var resultado = estadisticas
+                .Select(e =>
+                {
+                    var usuario = usuarios.FirstOrDefault(
+                        u => u.Id == e.VendedorId);
+
+                    return new VentaPorVendedorDto
+                    {
+                        VendedorId = e.VendedorId,
+                        NombreVendedor = usuario?.NombreCompleto
+                            ?? "Sin asignar",
+                        Rol = usuario?.Rol.ToString()
+                            ?? "Sin asignar",
+                        Activo = usuario?.Activo,
+                        CantidadVentas = e.CantidadVentas,
+                        TotalVendido = e.TotalVendido
+                    };
+                })
+                .OrderByDescending(v => v.TotalVendido)
                 .ToList();
 
             return resultado;

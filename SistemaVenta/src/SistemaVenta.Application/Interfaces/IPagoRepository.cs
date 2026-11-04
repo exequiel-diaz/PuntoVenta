@@ -12,5 +12,9 @@ namespace SistemaVenta.Application.Interfaces
         Task AgregarAsync(
             Pago pago,
             CancellationToken cancellationToken = default);
+
+        Task<bool> TienePagosPorUsuarioAsync(
+            int usuarioId,
+            CancellationToken cancellationToken = default);
     }
 }

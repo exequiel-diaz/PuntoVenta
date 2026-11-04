@@ -8,6 +8,7 @@ using SistemaVenta.Application.UseCases.Productos;
 using SistemaVenta.Application.UseCases.Ventas;
 using SistemaVenta.Domain.Enums;
 using SistemaVenta.Web.ViewModels.Ventas;
+using System.Security.Claims;
 
 namespace SistemaVenta.Web.Controllers;
 
@@ -91,7 +92,19 @@ public class VentasController : Controller
             };
 
 
-            var ventaId = await _registrarVenta.EjecutarAsync(solicitud);
+            var usuarioIdTexto = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (!int.TryParse(usuarioIdTexto, out var usuarioId) ||
+                usuarioId <= 0)
+            {
+                return Challenge();
+            }
+
+            var ventaId = await _registrarVenta.EjecutarAsync(
+                solicitud,
+                usuarioId);
+
 
             TempData["MensajeExito"] =
                 $"La venta #{ventaId} se registró correctamente.";

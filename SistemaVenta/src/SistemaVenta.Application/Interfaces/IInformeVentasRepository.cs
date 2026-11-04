@@ -18,6 +18,10 @@ namespace SistemaVenta.Application.Interfaces
             DateTime fechaDesde,
             DateTime fechaHasta);
 
+        Task<List<VentaPorVendedorDto>> ObtenerVentasPorVendedorAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta);
+
 
     }
 }

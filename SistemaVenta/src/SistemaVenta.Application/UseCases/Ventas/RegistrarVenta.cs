@@ -14,6 +14,7 @@ namespace SistemaVenta.Application.UseCases.Ventas
         private readonly IMovimientoStockRepository _movimientos;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICuentaCorrienteRepository _cuentas;
+        private readonly IUsuarioRepository _usuarios;
 
         public RegistrarVenta(
             IVentaRepository ventas,
@@ -21,7 +22,8 @@ namespace SistemaVenta.Application.UseCases.Ventas
             IProductoRepository productos,
             IMovimientoStockRepository movimientos,
             IUnitOfWork unitOfWork,
-            ICuentaCorrienteRepository cuentas)
+            ICuentaCorrienteRepository cuentas,
+            IUsuarioRepository usuarios)
         {
             _ventas = ventas;
             _clientes = clientes;
@@ -29,10 +31,36 @@ namespace SistemaVenta.Application.UseCases.Ventas
             _movimientos = movimientos;
             _unitOfWork = unitOfWork;
             _cuentas = cuentas;
+            _usuarios = usuarios;
         }
 
-        public async Task<int> EjecutarAsync(RegistrarVentaDto solicitud)
+        public async Task<int> EjecutarAsync(
+            RegistrarVentaDto solicitud,
+            int usuarioId)
         {
+
+            if (usuarioId <= 0)
+            {
+                throw new ArgumentException(
+                    "El usuario que registra la venta no es válido.");
+            }
+
+            var usuario = await _usuarios.ObtenerPorIdAsync(usuarioId);
+
+            if (usuario is null || !usuario.Activo)
+            {
+                throw new InvalidOperationException(
+                    "El usuario no existe o está desactivado.");
+            }
+
+            if (usuario.Rol != RolUsuario.Vendedor &&
+                usuario.Rol != RolUsuario.Administrador)
+            {
+                throw new InvalidOperationException(
+                    "El usuario no está autorizado para registrar ventas.");
+            }
+
+
             if (solicitud is null)
             {
                 throw new ArgumentNullException(nameof(solicitud));
@@ -142,6 +170,7 @@ namespace SistemaVenta.Application.UseCases.Ventas
             // 4. Construir la venta
 
             var venta = new Venta(solicitud.ClienteId);
+            venta.AsignarVendedor(usuario.Id);
 
             foreach (var item in productosValidados)
             {

@@ -69,4 +69,24 @@ public class Usuario
 
         PasswordHash = nuevoHash;
     }
+
+
+    public void ActualizarDatos(
+        string nombreUsuario,
+        string nombreCompleto)
+    {
+        if (string.IsNullOrWhiteSpace(nombreUsuario))
+            throw new ArgumentException(
+                "El nombre de usuario es obligatorio.");
+
+        if (string.IsNullOrWhiteSpace(nombreCompleto))
+            throw new ArgumentException(
+                "El nombre completo es obligatorio.");
+
+        NombreUsuario = nombreUsuario.Trim();
+        NombreCompleto = nombreCompleto.Trim();
+    }
+
+
+
 }

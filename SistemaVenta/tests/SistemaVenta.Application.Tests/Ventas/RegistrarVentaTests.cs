@@ -17,17 +17,23 @@ namespace SistemaVenta.Application.Tests.Ventas
         private readonly FakeMovimientoStockRepository _movimientos = new();
         private readonly FakeUnitOfWork _unitOfWork = new();
         private readonly FakeCuentaCorrienteRepository _cuentas = new();
+        private readonly FakeUsuarioRepository _usuarios = new();
 
-        private RegistrarVenta CrearCasoDeUso()
+
+        private async Task<RegistrarVenta> CrearCasoDeUso()
         {
+            await ConfigurarVendedorActivo();
+
             return new RegistrarVenta(
                 _ventas,
                 _clientes,
                 _productos,
                 _movimientos,
                 _unitOfWork,
-                _cuentas);
+                _cuentas,
+                _usuarios);
         }
+
 
         private static Producto CrearProducto(
             int id,
@@ -101,11 +107,14 @@ namespace SistemaVenta.Application.Tests.Ventas
                 }
             };
 
-            await CrearCasoDeUso().EjecutarAsync(solicitud);
+            (await CrearCasoDeUso()).EjecutarAsync(
+                solicitud,
+                VendedorIdPrueba);
 
             var venta = Assert.Single(_ventas.Ventas);
 
             Assert.Equal(EstadoVenta.Confirmada, venta.Estado);
+            Assert.Equal(VendedorIdPrueba, venta.VendedorId);
             Assert.Equal(20000m, venta.Total);
             Assert.Equal(8m, producto.StockActual);
             Assert.True(_unitOfWork.GuardarCambiosFueLlamado);
@@ -134,7 +143,9 @@ namespace SistemaVenta.Application.Tests.Ventas
                 }
             };
 
-            await CrearCasoDeUso().EjecutarAsync(solicitud);
+            (await CrearCasoDeUso()).EjecutarAsync(
+                 solicitud,
+                 VendedorIdPrueba);
 
             var movimiento = Assert.Single(_movimientos.Movimientos);
 
@@ -168,7 +179,9 @@ namespace SistemaVenta.Application.Tests.Ventas
                 }
             };
 
-            await CrearCasoDeUso().EjecutarAsync(solicitud);
+            (await CrearCasoDeUso()).EjecutarAsync(
+                solicitud,
+                VendedorIdPrueba);
 
             var venta = Assert.Single(_ventas.Ventas);
 
@@ -193,8 +206,9 @@ namespace SistemaVenta.Application.Tests.Ventas
                 }
             };
 
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => CrearCasoDeUso().EjecutarAsync(solicitud));
+            (await CrearCasoDeUso()).EjecutarAsync(
+                solicitud,
+                VendedorIdPrueba);
 
             Assert.Empty(_ventas.Ventas);
             Assert.False(_unitOfWork.GuardarCambiosFueLlamado);
@@ -219,8 +233,9 @@ namespace SistemaVenta.Application.Tests.Ventas
                 }
             };
 
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => CrearCasoDeUso().EjecutarAsync(solicitud));
+            (await CrearCasoDeUso()).EjecutarAsync(
+                solicitud,
+                VendedorIdPrueba);
 
             Assert.Equal(5m, producto.StockActual);
             Assert.Empty(_ventas.Ventas);
@@ -248,8 +263,9 @@ namespace SistemaVenta.Application.Tests.Ventas
                 }
             };
 
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => CrearCasoDeUso().EjecutarAsync(solicitud));
+            (await CrearCasoDeUso()).EjecutarAsync(
+                solicitud,
+                VendedorIdPrueba);
 
             Assert.Equal(10m, producto.StockActual);
             Assert.Empty(_ventas.Ventas);
@@ -279,8 +295,9 @@ namespace SistemaVenta.Application.Tests.Ventas
         }
             };
 
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => CrearCasoDeUso().EjecutarAsync(solicitud));
+            (await CrearCasoDeUso()).EjecutarAsync(
+                solicitud,
+                VendedorIdPrueba);
 
             Assert.Equal(10m, producto.StockActual);
             Assert.Empty(_ventas.Ventas);
@@ -302,8 +319,9 @@ namespace SistemaVenta.Application.Tests.Ventas
         }
             };
 
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => CrearCasoDeUso().EjecutarAsync(solicitud));
+            (await CrearCasoDeUso()).EjecutarAsync(
+                solicitud,
+                VendedorIdPrueba);
 
             Assert.Empty(_ventas.Ventas);
             Assert.Empty(_movimientos.Movimientos);
@@ -330,8 +348,9 @@ namespace SistemaVenta.Application.Tests.Ventas
         }
             };
 
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => CrearCasoDeUso().EjecutarAsync(solicitud));
+            (await CrearCasoDeUso()).EjecutarAsync(
+                solicitud,
+                VendedorIdPrueba);
 
             Assert.Equal(10m, producto.StockActual);
             Assert.Empty(_ventas.Ventas);
@@ -361,8 +380,9 @@ namespace SistemaVenta.Application.Tests.Ventas
         }
             };
 
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => CrearCasoDeUso().EjecutarAsync(solicitud));
+            (await CrearCasoDeUso()).EjecutarAsync(
+                solicitud,
+                VendedorIdPrueba);
 
             Assert.Equal(10m, producto.StockActual);
             Assert.Empty(_ventas.Ventas);
@@ -381,8 +401,9 @@ namespace SistemaVenta.Application.Tests.Ventas
                 Detalles = new()
             };
 
-            await Assert.ThrowsAsync<ArgumentException>(
-                () => CrearCasoDeUso().EjecutarAsync(solicitud));
+            (await CrearCasoDeUso()).EjecutarAsync(
+                solicitud,
+                VendedorIdPrueba);
 
             Assert.Empty(_ventas.Ventas);
             Assert.Empty(_movimientos.Movimientos);
@@ -413,8 +434,9 @@ namespace SistemaVenta.Application.Tests.Ventas
         }
             };
 
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => CrearCasoDeUso().EjecutarAsync(solicitud));
+            (await CrearCasoDeUso()).EjecutarAsync(
+                 solicitud,
+                 VendedorIdPrueba);
 
             Assert.Equal(10m, producto1.StockActual);
             Assert.Equal(2m, producto2.StockActual);
@@ -422,6 +444,24 @@ namespace SistemaVenta.Application.Tests.Ventas
             Assert.Empty(_ventas.Ventas);
             Assert.Empty(_movimientos.Movimientos);
             Assert.False(_unitOfWork.GuardarCambiosFueLlamado);
+        }
+
+
+        private const int VendedorIdPrueba = 1;
+
+        private async Task ConfigurarVendedorActivo()
+        {
+            var vendedor = new Usuario(
+                nombreUsuario: "vendedor_test",
+                nombreCompleto: "Vendedor de Prueba",
+                passwordHash: "hash_de_prueba",
+                rol: RolUsuario.Vendedor);
+
+            typeof(Usuario)
+                .GetProperty(nameof(Usuario.Id))!
+                .SetValue(vendedor, VendedorIdPrueba);
+
+            await _usuarios.AgregarAsync(vendedor);
         }
 
 

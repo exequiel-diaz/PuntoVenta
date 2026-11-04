@@ -512,6 +512,9 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("VendedorId")
+                        .HasColumnType("integer");
+
                     b.Property<uint>("xmin")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -521,6 +524,8 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteId");
+
+                    b.HasIndex("VendedorId");
 
                     b.ToTable("Ventas", (string)null);
                 });
@@ -848,6 +853,11 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.HasOne("SistemaVenta.Domain.Entities.Cliente", null)
                         .WithMany()
                         .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SistemaVenta.Domain.Entities.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("VendedorId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

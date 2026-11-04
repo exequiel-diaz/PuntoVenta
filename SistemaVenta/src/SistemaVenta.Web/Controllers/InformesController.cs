@@ -15,15 +15,18 @@ public class InformesController : Controller
     private readonly ObtenerInformeVentasPorPeriodo _obtenerInformeVentas;
     private readonly ObtenerProductosMasVendidos _obtenerProductosMasVendidos;
     private readonly ObtenerVentasDiarias _obtenerVentasDiarias;
+    private readonly ObtenerVentasPorVendedor _obtenerVentasPorVendedor;
 
     public InformesController(
         ObtenerInformeVentasPorPeriodo obtenerInformeVentas, 
         ObtenerProductosMasVendidos obtenerProductosMasVendidos,
-        ObtenerVentasDiarias obtenerVentasDiarias)
+        ObtenerVentasDiarias obtenerVentasDiarias,
+        ObtenerVentasPorVendedor obtenerVentasPorVendedor)
     {
         _obtenerInformeVentas = obtenerInformeVentas;
         _obtenerProductosMasVendidos = obtenerProductosMasVendidos;
         _obtenerVentasDiarias = obtenerVentasDiarias;
+        _obtenerVentasPorVendedor = obtenerVentasPorVendedor;
     }
 
 
@@ -75,13 +78,19 @@ public class InformesController : Controller
         var ventasDiarias = await _obtenerVentasDiarias
             .EjecutarAsync(inicioUtc, finUtcInclusivo);
 
+        var ventasPorVendedor = await _obtenerVentasPorVendedor
+            .EjecutarAsync(inicioUtc, finUtcInclusivo);
+
+
         var modelo = new DashboardInformesViewModel
         {
             FechaDesde = desde,
             FechaHasta = hasta,
             ResumenVentas = resumenVentas,
-            VentasDiarias = ventasDiarias
+            VentasDiarias = ventasDiarias,
+            VentasPorVendedor = ventasPorVendedor
         };
+
 
         return View(modelo);
     }

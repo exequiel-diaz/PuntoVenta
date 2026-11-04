@@ -9,6 +9,9 @@ namespace SistemaVenta.Application.Tests.Fakes
         public List<VentaDiariaDto> VentasDiarias { get; set; }
             = new();
 
+        public List<VentaPorVendedorDto> VentasPorVendedor { get; set; }
+            = new();
+
         public int CantidadConsultas { get; private set; }
 
         public Task<List<VentaDiariaDto>> ObtenerVentasDiariasAsync(
@@ -34,5 +37,15 @@ namespace SistemaVenta.Application.Tests.Fakes
         {
             throw new NotImplementedException();
         }
+
+
+        public Task<List<VentaPorVendedorDto>> ObtenerVentasPorVendedorAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta)
+        {
+            return Task.FromResult(VentasPorVendedor);
+        }
+
+
     }
 }

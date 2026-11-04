@@ -65,16 +65,26 @@
                                 </a>
                             </li>
 
+
                             @if (User.IsInRole(nameof(RolUsuario.Administrador)))
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link"
+                                    <a class="nav-link text-dark"
                                        asp-controller="Informes"
                                        asp-action="Index">
                                         Informes
                                     </a>
                                 </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Vendedores"
+                                       asp-action="Index">
+                                        Vendedores
+                                    </a>
+                                </li>
                             }
+
 
                             <li class="nav-item">
                                 <a class="nav-link text-dark"

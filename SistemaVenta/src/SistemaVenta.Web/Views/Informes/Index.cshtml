@@ -14,7 +14,6 @@
         de tu negocio.
     </p>
 
-
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h5 class="card-title mb-3">Filtrar por período</h5>
@@ -63,9 +62,7 @@
         </div>
     </div>
 
-
     <h4 class="mb-3">Resumen de ventas</h4>
-
 
     <p class="text-muted">
         Período:
@@ -73,7 +70,6 @@
         -
         @Model.FechaHasta.ToString("dd/MM/yyyy")
     </p>
-
 
     <div class="row g-3 mb-5">
 
@@ -121,9 +117,6 @@
 
     </div>
 
-
-
-
     <div class="card shadow-sm mt-4">
         <div class="card-body">
             <h5 class="card-title">Evolución de ventas</h5>
@@ -137,8 +130,102 @@
         </div>
     </div>
 
-    <h4 class="mt-5 mb-3">Informes disponibles</h4>
+    <div class="card shadow-sm mt-4 mb-4">
+        <div class="card-body">
 
+            <h5 class="card-title mb-2">
+                Ventas por vendedor
+            </h5>
+
+            <p class="text-muted">
+                Cantidad de ventas y facturación por responsable
+                durante el período seleccionado.
+            </p>
+
+            @if (Model.VentasPorVendedor.Count == 0)
+            {
+                <div class="alert alert-info mb-0">
+                    No se registraron ventas confirmadas
+                    durante este período.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Vendedor</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th class="text-end">Ventas</th>
+                                <th class="text-end">Facturación</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var vendedor in Model.VentasPorVendedor)
+                            {
+                                <tr>
+                                    <td>@vendedor.NombreVendedor</td>
+
+                                    <td>@vendedor.Rol</td>
+
+                                    <td>
+                                        @if (vendedor.Activo == true)
+                                        {
+                                            <span class="badge bg-success">
+                                                Activo
+                                            </span>
+                                        }
+                                        else if (vendedor.Activo == false)
+                                        {
+                                            <span class="badge bg-secondary">
+                                                Inactivo
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                Sin asignar
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <td class="text-end">
+                                        @vendedor.CantidadVentas
+                                    </td>
+
+                                    <td class="text-end">
+                                        @vendedor.TotalVendido.ToString("C2", cultura)
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+
+                        <tfoot class="table-light fw-bold">
+                            <tr>
+                                <td colspan="3">Total</td>
+
+                                <td class="text-end">
+                                    @Model.VentasPorVendedor.Sum(v => v.CantidadVentas)
+                                </td>
+
+                                <td class="text-end">
+                                    @Model.VentasPorVendedor.Sum(v => v.TotalVendido).ToString("C2", cultura)
+                                </td>
+                            </tr>
+                        </tfoot>
+
+                    </table>
+                </div>
+            }
+
+        </div>
+    </div>
+
+    <h4 class="mt-5 mb-3">Informes disponibles</h4>
 
     <div class="row g-4">
 
@@ -191,7 +278,6 @@
         </div>
 
     </div>
-
 
 </div>
 

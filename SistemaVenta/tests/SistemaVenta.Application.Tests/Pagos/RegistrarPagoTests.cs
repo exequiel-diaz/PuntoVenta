@@ -151,6 +151,15 @@ public class RegistrarPagoTests
         {
             return Task.FromResult<Pago?>(null);
         }
+
+
+        public Task<bool> TienePagosPorUsuarioAsync(
+            int usuarioId,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(false);
+        }
+
     }
 
 }

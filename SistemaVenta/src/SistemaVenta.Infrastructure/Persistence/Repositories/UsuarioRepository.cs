@@ -41,5 +41,35 @@ namespace SistemaVenta.Infrastructure.Repositories
             return await _context.Usuarios
                 .AnyAsync(u => u.Rol == RolUsuario.Administrador);
         }
+
+
+        public async Task<List<Usuario>> ObtenerVendedoresAsync()
+        {
+            return await _context.Usuarios
+                .AsNoTracking()
+                .Where(u => u.Rol == RolUsuario.Vendedor)
+                .OrderBy(u => u.NombreCompleto)
+                .ToListAsync();
+        }
+
+
+        public Task ActualizarAsync(Usuario usuario)
+        {
+            _context.Usuarios.Update(usuario);
+
+            return Task.CompletedTask;
+        }
+
+
+        public Task EliminarAsync(Usuario usuario)
+        {
+            ArgumentNullException.ThrowIfNull(usuario);
+
+            _context.Usuarios.Remove(usuario);
+
+            return Task.CompletedTask;
+        }
+
+
     }
 }

@@ -10,5 +10,14 @@ namespace SistemaVenta.Application.Interfaces
         Task<IReadOnlyList<Venta>> ObtenerTodosAsync();
 
         Task AgregarAsync(Venta venta);
+
+        Task<IReadOnlyList<Venta>> ObtenerPorPeriodoAsync(
+            DateTime desde,
+            DateTime hasta);
+
+
+        Task<bool> TieneVentasPorVendedorAsync(int vendedorId);
+
+
     }
 }

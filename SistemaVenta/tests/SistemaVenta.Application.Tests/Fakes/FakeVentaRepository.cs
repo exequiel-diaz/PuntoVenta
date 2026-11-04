@@ -46,5 +46,35 @@ namespace SistemaVenta.Application.Tests.Fakes
         }
 
 
+        public Task<IReadOnlyList<Venta>> ObtenerPorPeriodoAsync(
+            DateTime desde,
+            DateTime hasta)
+        {
+            if (desde >= hasta)
+            {
+                throw new ArgumentException(
+                    "La fecha inicial debe ser anterior a la fecha final.");
+            }
+
+            IReadOnlyList<Venta> resultado = _ventas
+                .Where(v =>
+                    v.Fecha >= desde &&
+                    v.Fecha < hasta)
+                .OrderByDescending(v => v.Fecha)
+                .ToList();
+
+            return Task.FromResult(resultado);
+        }
+
+
+        public Task<bool> TieneVentasPorVendedorAsync(int vendedorId)
+        {
+            bool tieneVentas = _ventas.Any(v =>
+                v.VendedorId == vendedorId);
+
+            return Task.FromResult(tieneVentas);
+        }
+
+
     }
 }

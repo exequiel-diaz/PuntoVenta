@@ -39,6 +39,19 @@ namespace SistemaVenta.Infrastructure.Persistence.Configurations
                 .HasForeignKey(v => v.ClienteId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+
+            // Relación Venta -> Vendedor.
+            // Una venta puede pertenecer a un vendedor.
+            // Un vendedor puede tener muchas ventas.
+            builder.Property(v => v.VendedorId)
+                .IsRequired(false);
+
+            builder.HasOne<Usuario>()
+                .WithMany()
+                .HasForeignKey(v => v.VendedorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
             // Relación Venta -> Detalles.
             builder.HasMany(v => v.Detalles)
                 .WithOne()

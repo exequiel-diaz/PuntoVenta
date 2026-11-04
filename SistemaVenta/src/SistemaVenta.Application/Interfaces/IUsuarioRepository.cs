@@ -12,4 +12,9 @@ public interface IUsuarioRepository
 
     Task AgregarAsync(Usuario usuario);
     Task<bool> ExisteAdministradorAsync();
+    Task<List<Usuario>> ObtenerVendedoresAsync();
+    Task EliminarAsync(Usuario usuario);
+    Task ActualizarAsync(Usuario usuario);
+
+
 }

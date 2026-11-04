@@ -43,4 +43,50 @@ public class FakeUsuarioRepository : IUsuarioRepository
             _usuarios.Any(u =>
                 u.Rol == RolUsuario.Administrador));
     }
+
+
+    public Task ActualizarAsync(Usuario usuario)
+    {
+        var indice = _usuarios.FindIndex(u => u.Id == usuario.Id);
+
+        if (indice == -1)
+            throw new InvalidOperationException(
+                "El usuario no existe.");
+
+        _usuarios[indice] = usuario;
+
+        return Task.CompletedTask;
+    }
+
+
+    public Task<List<Usuario>> ObtenerVendedoresAsync()
+    {
+        var vendedores = _usuarios
+            .Where(u => u.Rol == RolUsuario.Vendedor)
+            .OrderBy(u => u.NombreCompleto)
+            .ToList();
+
+        return Task.FromResult(vendedores);
+    }
+
+
+    public Task EliminarAsync(Usuario usuario)
+    {
+        ArgumentNullException.ThrowIfNull(usuario);
+
+        var usuarioExistente = _usuarios
+            .FirstOrDefault(u => u.Id == usuario.Id);
+
+        if (usuarioExistente == null)
+        {
+            throw new InvalidOperationException(
+                "El usuario no existe.");
+        }
+
+        _usuarios.Remove(usuarioExistente);
+
+        return Task.CompletedTask;
+    }
+
+
 }

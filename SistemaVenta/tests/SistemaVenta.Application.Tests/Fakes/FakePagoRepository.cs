@@ -23,5 +23,17 @@ namespace SistemaVenta.Application.Tests.Fakes
             return Task.FromResult(
                 Pagos.FirstOrDefault(p => p.Id == id));
         }
+
+
+        public Task<bool> TienePagosPorUsuarioAsync(
+            int usuarioId,
+            CancellationToken cancellationToken = default)
+        {
+            bool tienePagos = Pagos.Any(p =>
+                p.UsuarioId == usuarioId);
+
+            return Task.FromResult(tienePagos);
+        }
+
     }
 }

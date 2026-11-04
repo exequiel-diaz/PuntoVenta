@@ -6,6 +6,7 @@ using SistemaVenta.Application.UseCases.Productos;
 using SistemaVenta.Application.UseCases.Stock;
 using SistemaVenta.Application.UseCases.Ventas;
 using SistemaVenta.Application.UseCases.Informes;
+using SistemaVenta.Application.UseCases.Vendedores;
 
 
 namespace SistemaVenta.Application
@@ -47,7 +48,14 @@ namespace SistemaVenta.Application
             services.AddScoped<ObtenerInformeVentasPorPeriodo>();
             services.AddScoped<ObtenerProductosMasVendidos>();
             services.AddScoped<ObtenerVentasDiarias>();
+            services.AddScoped<ObtenerVentasPorVendedor>();
 
+            // módl de vendedore
+            services.AddScoped<ObtenerVendedores>();
+            services.AddScoped<CrearVendedor>();
+            services.AddScoped<EditarVendedor>();
+            services.AddScoped<CambiarEstadoVendedor>();
+            services.AddScoped<EliminarVendedor>();
 
             return services;
         }

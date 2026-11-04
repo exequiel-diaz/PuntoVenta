@@ -35,5 +35,18 @@ namespace SistemaVenta.Infrastructure.Repositories
                 pago,
                 cancellationToken);
         }
+
+
+        public async Task<bool> TienePagosPorUsuarioAsync(
+            int usuarioId,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.Pagos
+                .AsNoTracking()
+                .AnyAsync(
+                    p => p.UsuarioId == usuarioId,
+                    cancellationToken);
+        }
+
     }
 }

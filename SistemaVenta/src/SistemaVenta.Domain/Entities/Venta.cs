@@ -8,6 +8,7 @@ namespace SistemaVenta.Domain.Entities
         public int Id { get; private set; }
 
         public int? ClienteId { get; private set; }
+        public int? VendedorId { get; private set; }
 
         public DateTime Fecha { get; private set; }
 
@@ -105,6 +106,25 @@ namespace SistemaVenta.Domain.Entities
             }
 
             Estado = EstadoVenta.Anulada;
+        }
+
+
+        public void AsignarVendedor(int vendedorId)
+        {
+            if (vendedorId <= 0)
+                throw new ArgumentException(
+                    "El vendedor debe ser válido.",
+                    nameof(vendedorId));
+
+            if (Estado != EstadoVenta.Pendiente)
+                throw new InvalidOperationException(
+                    "Solo se puede asignar un vendedor a una venta pendiente.");
+
+            if (VendedorId.HasValue)
+                throw new InvalidOperationException(
+                    "La venta ya tiene un vendedor asignado.");
+
+            VendedorId = vendedorId;
         }
 
 

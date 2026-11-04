@@ -31,6 +31,36 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
                 .ToListAsync();
         }
 
+
+        public async Task<IReadOnlyList<Venta>> ObtenerPorPeriodoAsync(
+            DateTime desde,
+            DateTime hasta)
+        {
+            if (desde >= hasta)
+            {
+                throw new ArgumentException(
+                    "La fecha inicial debe ser anterior a la fecha final.");
+            }
+
+            return await _context.Ventas
+                .AsNoTracking()
+                .Include(v => v.Detalles)
+                .Where(v =>
+                    v.Fecha >= desde &&
+                    v.Fecha < hasta)
+                .OrderByDescending(v => v.Fecha)
+                .ToListAsync();
+        }
+
+
+        public async Task<bool> TieneVentasPorVendedorAsync(int vendedorId)
+        {
+            return await _context.Ventas
+                .AsNoTracking()
+                .AnyAsync(v => v.VendedorId == vendedorId);
+        }
+
+
         public async Task AgregarAsync(Venta venta)
         {
             await _context.Ventas.AddAsync(venta);
