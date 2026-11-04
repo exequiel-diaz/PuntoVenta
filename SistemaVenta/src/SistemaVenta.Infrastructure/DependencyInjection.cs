@@ -81,6 +81,13 @@ namespace SistemaVenta.Infrastructure
             services.AddScoped<RegistrarVenta>();
             services.AddScoped<VendedorPruebaInicializador>();
 
+
+            // Módulo de Informes
+            services.AddScoped<
+                IInformeVentasRepository,
+                InformeVentasRepository>();
+
+
             return services;
         }
     }

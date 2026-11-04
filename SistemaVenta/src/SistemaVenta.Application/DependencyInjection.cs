@@ -5,6 +5,7 @@ using SistemaVenta.Application.UseCases.Pagos;
 using SistemaVenta.Application.UseCases.Productos;
 using SistemaVenta.Application.UseCases.Stock;
 using SistemaVenta.Application.UseCases.Ventas;
+using SistemaVenta.Application.UseCases.Informes;
 
 
 namespace SistemaVenta.Application
@@ -41,6 +42,12 @@ namespace SistemaVenta.Application
             services.AddScoped<AnularVenta>();
 
             services.AddScoped<RegistrarPago>();
+
+            // Módulo de Informes
+            services.AddScoped<ObtenerInformeVentasPorPeriodo>();
+            services.AddScoped<ObtenerProductosMasVendidos>();
+            services.AddScoped<ObtenerVentasDiarias>();
+
 
             return services;
         }

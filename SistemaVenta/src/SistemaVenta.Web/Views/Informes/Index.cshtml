@@ -1,0 +1,270 @@
+﻿@model SistemaVenta.Web.Models.Informes.DashboardInformesViewModel
+
+@{
+    ViewData["Title"] = "Panel de Informes";
+    var cultura = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-2">Panel de Informes</h2>
+
+    <p class="text-muted mb-4">
+        Consultá las estadísticas y el rendimiento
+        de tu negocio.
+    </p>
+
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Filtrar por período</h5>
+
+            <form asp-controller="Informes"
+                  asp-action="Index"
+                  method="get">
+
+                <div class="row g-3 align-items-end">
+
+                    <div class="col-md-4">
+                        <label for="fechaDesde" class="form-label">
+                            Fecha desde
+                        </label>
+
+                        <input type="date"
+                               id="fechaDesde"
+                               name="fechaDesde"
+                               class="form-control"
+                               value="@Model.FechaDesde.ToString("yyyy-MM-dd")"
+                               required />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="fechaHasta" class="form-label">
+                            Fecha hasta
+                        </label>
+
+                        <input type="date"
+                               id="fechaHasta"
+                               name="fechaHasta"
+                               class="form-control"
+                               value="@Model.FechaHasta.ToString("yyyy-MM-dd")"
+                               required />
+                    </div>
+
+                    <div class="col-md-4">
+                        <button type="submit"
+                                class="btn btn-primary w-100">
+                            Aplicar filtros
+                        </button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <h4 class="mb-3">Resumen de ventas</h4>
+
+
+    <p class="text-muted">
+        Período:
+        @Model.FechaDesde.ToString("dd/MM/yyyy")
+        -
+        @Model.FechaHasta.ToString("dd/MM/yyyy")
+    </p>
+
+
+    <div class="row g-3 mb-5">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">
+                        Cantidad de ventas
+                    </h6>
+
+                    <h3 class="mb-0">
+                        @Model.ResumenVentas.CantidadVentas
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">
+                        Total vendido
+                    </h6>
+
+                    <h3 class="mb-0">
+                        @Model.ResumenVentas.TotalVendido.ToString("C2", cultura)
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">
+                        Ticket promedio
+                    </h6>
+
+                    <h3 class="mb-0">
+                        @Model.ResumenVentas.TicketPromedio.ToString("C2", cultura)
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Evolución de ventas</h5>
+            <p class="text-muted">
+                Total vendido por día durante el período seleccionado.
+            </p>
+
+            <div style="position: relative; height: 320px;">
+                <canvas id="graficoVentasDiarias"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="mt-5 mb-3">Informes disponibles</h4>
+
+
+    <div class="row g-4">
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        Ventas por período
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Consultá la cantidad de ventas,
+                        el total vendido y el ticket
+                        promedio de un período.
+                    </p>
+
+                    <a asp-controller="Informes"
+                       asp-action="VentasPorPeriodo"
+                       class="btn btn-primary">
+                        Ver informe
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        Productos más vendidos
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Conocé cuáles son los productos
+                        con mayor cantidad de unidades
+                        vendidas.
+                    </p>
+
+                    <a asp-controller="Informes"
+                       asp-action="ProductosMasVendidos"
+                       class="btn btn-primary">
+                        Ver ranking
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <script>
+        const ventasDiarias = @Html.Raw(
+                    System.Text.Json.JsonSerializer.Serialize(
+                            Model.VentasDiarias.Select(v => new
+                            {
+                                    fecha = v.Fecha.ToString("dd/MM/yyyy"),
+                                    total = v.TotalVendido
+                            })
+                    )
+            );
+
+    const etiquetas = ventasDiarias.map(v => v.fecha);
+    const totales = ventasDiarias.map(v => v.total);
+
+        const canvas = document.getElementById('graficoVentasDiarias');
+
+        new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: etiquetas,
+                datasets: [{
+                    label: 'Total vendido',
+                    data: totales,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$ ' + Number(value).toLocaleString('es-AR');
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const importe = context.parsed.y ?? 0;
+
+                            return 'Total vendido: ' +
+                                new Intl.NumberFormat('es-AR', {
+                                    style: 'currency',
+                                    currency: 'ARS'
+                                }).format(importe);
+                        }
+                    }
+                }
+            }
+        }
+
+        });
+    </script>
+}

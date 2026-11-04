@@ -1,0 +1,97 @@
+﻿@model SistemaVenta.Application.DTOs.Informes.InformeVentasPorPeriodoDto
+
+@{
+    ViewData["Title"] = "Informe de Ventas";
+    var cultura = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Informe de Ventas</h2>
+
+
+    <form asp-controller="Informes"
+          asp-action="VentasPorPeriodo"
+          method="get"
+          class="card shadow-sm mb-4">
+
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-5">
+                    <label for="fechaDesde" class="form-label">
+                        Fecha desde
+                    </label>
+
+                    <input type="date"
+                           id="fechaDesde"
+                           name="fechaDesde"
+                           class="form-control"
+                           value="@Model.FechaDesde.ToString("yyyy-MM-dd")"
+                           required />
+                </div>
+
+                <div class="col-md-5">
+                    <label for="fechaHasta" class="form-label">
+                        Fecha hasta
+                    </label>
+
+                    <input type="date"
+                           id="fechaHasta"
+                           name="fechaHasta"
+                           class="form-control"
+                           value="@Model.FechaHasta.ToString("yyyy-MM-dd")"
+                           required />
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        Filtrar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+
+
+    <div class="alert alert-info">
+        <strong>Período:</strong>
+        @Model.FechaDesde.ToString("dd/MM/yyyy")
+        -
+        @Model.FechaHasta.ToString("dd/MM/yyyy")
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Cantidad de ventas</h6>
+                    <h3>@Model.CantidadVentas</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Total vendido</h6>
+                    <h3>@Model.TotalVendido.ToString("C2", cultura)</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Ticket promedio</h6>
+                    <h3>@Model.TicketPromedio.ToString("C2", cultura)</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
