@@ -20,6 +20,7 @@ namespace SistemaVenta.Web.Controllers
         private readonly EditarProducto _editarProducto;
         private readonly DesactivarProducto _desactivarProducto;
         private readonly ActivarProducto _activarProducto;
+        private readonly EliminarProducto _eliminarProducto;
         public ProductosController(
             ListarProductos listarProductos,
             CrearProducto crearProducto,
@@ -28,7 +29,8 @@ namespace SistemaVenta.Web.Controllers
             RegistrarIngresoStock registrarIngresoStock,
             EditarProducto editarProducto,
             DesactivarProducto desactivarProducto,
-            ActivarProducto activarProducto)
+            ActivarProducto activarProducto,
+            EliminarProducto eliminarProducto)
         {
             _listarProductos = listarProductos;
             _crearProducto = crearProducto;
@@ -38,6 +40,7 @@ namespace SistemaVenta.Web.Controllers
             _editarProducto = editarProducto;
             _desactivarProducto = desactivarProducto;
             _activarProducto = activarProducto;
+            _eliminarProducto = eliminarProducto;
         }
         public async Task<IActionResult> Index()
         {
@@ -68,23 +71,38 @@ namespace SistemaVenta.Web.Controllers
             if (!ModelState.IsValid)
             {
                 await CargarCategoriasAsync(model);
-
                 return View(model);
             }
 
-            await _crearProducto.EjecutarAsync(
-                model.CodigoInterno,
-                model.Nombre,
-                model.Descripcion,
-                model.PrecioVenta,
-                model.Costo,
-                model.StockMinimo,
-                model.CategoriaId);
+            try
+            {
+                await _crearProducto.EjecutarAsync(
+                    model.CodigoInterno,
+                    model.Nombre,
+                    model.Descripcion,
+                    model.PrecioVenta,
+                    model.Costo,
+                    model.StockMinimo,
+                    model.CategoriaId);
 
-            return RedirectToAction(nameof(Index));
+                TempData["MensajeExito"] =
+                    "El producto fue creado correctamente.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    ex.Message);
+
+                await CargarCategoriasAsync(model);
+
+                return View(model);
+            }
         }
 
-        
+
         private async Task CargarCategoriasAsync(
             CrearProductoViewModel model)
         {
@@ -233,6 +251,27 @@ namespace SistemaVenta.Web.Controllers
         public async Task<IActionResult> Activar(int id)
         {
             await _activarProducto.EjecutarAsync(id);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Administrador)]
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            try
+            {
+                await _eliminarProducto.EjecutarAsync(id);
+
+                TempData["MensajeExito"] =
+                    "El producto fue eliminado correctamente.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["MensajeError"] = ex.Message;
+            }
 
             return RedirectToAction(nameof(Index));
         }

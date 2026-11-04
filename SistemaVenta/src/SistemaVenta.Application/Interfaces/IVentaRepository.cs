@@ -15,9 +15,8 @@ namespace SistemaVenta.Application.Interfaces
             DateTime desde,
             DateTime hasta);
 
-
         Task<bool> TieneVentasPorVendedorAsync(int vendedorId);
 
-
+        Task<bool> TieneVentasPorProductoAsync(int productoId);
     }
 }

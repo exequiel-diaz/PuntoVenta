@@ -37,6 +37,20 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
         {
             await _context.Productos.AddAsync(producto);
         }
-    
+
+
+        public Task EliminarAsync(Producto producto)
+        {
+            _context.Productos.Remove(producto);
+
+            return Task.CompletedTask;
+        }
+
+        public async Task<bool> ExisteCodigoInternoAsync(string codigoInterno)
+        {
+            return await _context.Productos
+                .AnyAsync(p => p.CodigoInterno == codigoInterno);
+        }
+
     }
 }

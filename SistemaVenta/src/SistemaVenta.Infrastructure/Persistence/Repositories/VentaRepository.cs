@@ -61,6 +61,14 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
         }
 
 
+        public async Task<bool> TieneVentasPorProductoAsync(int productoId)
+        {
+            return await _context.Ventas
+                .AsNoTracking()
+                .AnyAsync(v => v.Detalles.Any(d => d.ProductoId == productoId));
+        }
+
+
         public async Task AgregarAsync(Venta venta)
         {
             await _context.Ventas.AddAsync(venta);

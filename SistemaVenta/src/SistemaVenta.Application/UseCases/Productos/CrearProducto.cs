@@ -42,6 +42,14 @@ namespace SistemaVenta.Application.UseCases.Productos
                     "La categoría seleccionada no existe.");
             }
 
+            codigoInterno = codigoInterno.Trim();
+
+            if (await _productoRepository.ExisteCodigoInternoAsync(codigoInterno))
+            {
+                throw new InvalidOperationException(
+                    "Ya existe un producto registrado con ese código interno.");
+            }
+
             var producto = new Producto(
                 codigoInterno,
                 nombre,

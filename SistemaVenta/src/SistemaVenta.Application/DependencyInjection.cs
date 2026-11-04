@@ -24,6 +24,7 @@ namespace SistemaVenta.Application
             services.AddScoped<EditarProducto>();
             services.AddScoped<DesactivarProducto>();
             services.AddScoped<ActivarProducto>();
+            services.AddScoped<EliminarProducto>();
 
             services.AddScoped<ListarCategorias>();
             services.AddScoped<CrearCategoria>();
