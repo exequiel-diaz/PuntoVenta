@@ -17,6 +17,9 @@ namespace SistemaVenta.Application
             this IServiceCollection services)
         {
             services.AddScoped<RegistrarIngresoStock>();
+            services.AddScoped<RegistrarSalidaStock>();
+            services.AddScoped<CorregirInventario>();
+
 
             services.AddScoped<ListarProductos>();
             services.AddScoped<CrearProducto>();

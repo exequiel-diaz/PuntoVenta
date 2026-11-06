@@ -21,6 +21,10 @@ namespace SistemaVenta.Web.Controllers
         private readonly DesactivarProducto _desactivarProducto;
         private readonly ActivarProducto _activarProducto;
         private readonly EliminarProducto _eliminarProducto;
+
+        private readonly RegistrarSalidaStock _registrarSalidaStock;
+        private readonly CorregirInventario _corregirInventario;
+
         public ProductosController(
             ListarProductos listarProductos,
             CrearProducto crearProducto,
@@ -30,7 +34,9 @@ namespace SistemaVenta.Web.Controllers
             EditarProducto editarProducto,
             DesactivarProducto desactivarProducto,
             ActivarProducto activarProducto,
-            EliminarProducto eliminarProducto)
+            EliminarProducto eliminarProducto,
+            RegistrarSalidaStock registrarSalidaStock,
+            CorregirInventario corregirInventario)
         {
             _listarProductos = listarProductos;
             _crearProducto = crearProducto;
@@ -41,6 +47,8 @@ namespace SistemaVenta.Web.Controllers
             _desactivarProducto = desactivarProducto;
             _activarProducto = activarProducto;
             _eliminarProducto = eliminarProducto;
+            _registrarSalidaStock = registrarSalidaStock;
+            _corregirInventario = corregirInventario;
         }
         public async Task<IActionResult> Index()
         {
@@ -291,6 +299,126 @@ namespace SistemaVenta.Web.Controllers
 
             return View(producto);
         }
+
+
+        [HttpGet]
+        [Authorize(Roles = Roles.Administrador)]
+        public async Task<IActionResult> RegistrarSalida(int id)
+        {
+            var producto = await _obtenerProducto.EjecutarAsync(id);
+
+            if (producto is null)
+                return NotFound();
+
+            var model = new RegistrarSalidaStockViewModel
+            {
+                ProductoId = producto.Id,
+                NombreProducto = producto.Nombre,
+                StockActual = producto.StockActual
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Administrador)]
+        public async Task<IActionResult> RegistrarSalida(
+            RegistrarSalidaStockViewModel model)
+        {
+            var producto = await _obtenerProducto
+                .EjecutarAsync(model.ProductoId);
+
+            if (producto is null)
+                return NotFound();
+
+            model.NombreProducto = producto.Nombre;
+            model.StockActual = producto.StockActual;
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            try
+            {
+                await _registrarSalidaStock.EjecutarAsync(
+                    model.ProductoId,
+                    model.Cantidad,
+                    model.TipoSalida,
+                    model.Motivo);
+
+                TempData["MensajeExito"] =
+                    "La salida de stock se registró correctamente.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex) when (
+                ex is ArgumentException ||
+                ex is InvalidOperationException)
+            {
+                ModelState.AddModelError("", ex.Message);
+                return View(model);
+            }
+        }
+
+        [HttpGet]
+        [Authorize(Roles = Roles.Administrador)]
+        public async Task<IActionResult> CorregirStock(int id)
+        {
+            var producto = await _obtenerProducto.EjecutarAsync(id);
+
+            if (producto is null)
+                return NotFound();
+
+            var model = new CorregirInventarioViewModel
+            {
+                ProductoId = producto.Id,
+                NombreProducto = producto.Nombre,
+                StockActual = producto.StockActual,
+                StockContado = producto.StockActual
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = Roles.Administrador)]
+        public async Task<IActionResult> CorregirStock(
+            CorregirInventarioViewModel model)
+        {
+            var producto = await _obtenerProducto
+                .EjecutarAsync(model.ProductoId);
+
+            if (producto is null)
+                return NotFound();
+
+            model.NombreProducto = producto.Nombre;
+            model.StockActual = producto.StockActual;
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            try
+            {
+                await _corregirInventario.EjecutarAsync(
+                    model.ProductoId,
+                    model.StockContado,
+                    model.Motivo);
+
+                TempData["MensajeExito"] =
+                    "El inventario se corrigió correctamente.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex) when (
+                ex is ArgumentException ||
+                ex is InvalidOperationException)
+            {
+                ModelState.AddModelError("", ex.Message);
+                return View(model);
+            }
+        }
+
 
     }
 }

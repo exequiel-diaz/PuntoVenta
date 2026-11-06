@@ -1,0 +1,83 @@
+﻿@model SistemaVenta.Web.Models.Productos.RegistrarSalidaStockViewModel
+
+@{
+    ViewData["Title"] = "Registrar salida de stock";
+}
+
+<h2>Registrar salida de stock</h2>
+
+<div class="alert alert-info">
+    <strong>Producto:</strong> @Model.NombreProducto
+    <div>
+        <strong>Stock disponible:</strong> @Model.StockActual
+    </div>
+</div>
+
+<form asp-action="RegistrarSalida" method="post">
+
+    @Html.AntiForgeryToken()
+
+    <input asp-for="ProductoId" type="hidden" />
+
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label asp-for="TipoSalida" class="form-label">
+            Tipo de salida
+        </label>
+
+        <select asp-for="TipoSalida" class="form-select">
+            <option value="">Seleccionar...</option>
+            <option value="Rotura">Rotura</option>
+            <option value="Perdida">Pérdida</option>
+            <option value="DevolucionProveedor">
+                Devolución a proveedor
+            </option>
+        </select>
+
+        <span asp-validation-for="TipoSalida"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Cantidad" class="form-label">
+            Cantidad a descontar
+        </label>
+
+        <input asp-for="Cantidad"
+               type="number"
+               min="1"
+               step="1"
+               class="form-control" />
+
+        <span asp-validation-for="Cantidad"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Motivo" class="form-label">
+            Descripción del motivo
+        </label>
+
+        <textarea asp-for="Motivo"
+                  rows="3"
+                  class="form-control"
+                  placeholder="Ej.: 2 unidades dañadas durante el traslado."></textarea>
+
+        <span asp-validation-for="Motivo"
+              class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-danger">
+        Confirmar salida
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

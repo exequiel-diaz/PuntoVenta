@@ -1,0 +1,70 @@
+﻿@model SistemaVenta.Web.Models.Productos.CorregirInventarioViewModel
+
+@{
+    ViewData["Title"] = "Corregir inventario";
+}
+
+<h2>Corregir inventario</h2>
+
+<div class="alert alert-info">
+    <strong>Producto:</strong> @Model.NombreProducto
+    <div>
+        <strong>Stock registrado:</strong> @Model.StockActual
+    </div>
+</div>
+
+<p class="text-muted">
+    Ingresá la cantidad total de unidades encontradas
+    durante el recuento físico.
+</p>
+
+<form asp-action="CorregirStock" method="post">
+
+    @Html.AntiForgeryToken()
+
+    <input asp-for="ProductoId" type="hidden" />
+
+    <div asp-validation-summary="ModelOnly"
+         class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label asp-for="StockContado" class="form-label">
+            Stock físico contado
+        </label>
+
+        <input asp-for="StockContado"
+               type="number"
+               min="0"
+               step="1"
+               class="form-control" />
+
+        <span asp-validation-for="StockContado"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Motivo" class="form-label">
+            Justificación
+        </label>
+
+        <textarea asp-for="Motivo"
+                  rows="3"
+                  class="form-control"
+                  placeholder="Ej.: Diferencia detectada durante inventario físico."></textarea>
+
+        <span asp-validation-for="Motivo"
+              class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-warning">
+        Confirmar corrección
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Cancelar
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

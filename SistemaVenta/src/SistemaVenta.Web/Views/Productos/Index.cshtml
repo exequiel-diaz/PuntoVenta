@@ -88,6 +88,20 @@
                                class="btn btn-sm btn-outline-primary">
                                 Ingresar stock
                             </a>
+
+
+                            <a asp-action="RegistrarSalida"
+                               asp-route-id="@producto.Id"
+                               class="btn btn-sm btn-outline-danger">
+                                Registrar salida
+                            </a>
+
+                            <a asp-action="CorregirStock"
+                               asp-route-id="@producto.Id"
+                               class="btn btn-sm btn-outline-warning">
+                                Corregir inventario
+                            </a>
+
                         }
 
                         <a asp-action="Editar"
