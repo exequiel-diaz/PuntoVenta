@@ -1,10 +1,26 @@
 ﻿@model SistemaVenta.Web.ViewModels.Ventas.RegistrarVentaViewModel
+@using System.Text.Json
 
 @{
     ViewData["Title"] = "Registrar venta";
 
-    var preciosJson = System.Text.Json.JsonSerializer.Serialize(
-        Model.PreciosProductos);
+    var preciosJson = JsonSerializer.Serialize(Model.PreciosProductos);
+
+    var productosJson = JsonSerializer.Serialize(
+        Model.ProductosDisponibles.Select(p => new
+        {
+            id = p.Value,
+            texto = p.Text
+        })
+    );
+
+    var clientesJson = JsonSerializer.Serialize(
+        Model.ClientesDisponibles.Select(c => new
+        {
+            id = c.Value,
+            texto = c.Text
+        })
+    );
 }
 
 <h2 class="mb-4">Registrar venta</h2>
@@ -26,17 +42,36 @@
     <div asp-validation-summary="ModelOnly"
          class="text-danger mb-3"></div>
 
-    <!-- CLIENTE -->
+    <!-- BUSCADOR DE CLIENTES -->
 
     <div class="mb-4">
-        <label asp-for="ClienteId" class="form-label">
+        <label for="buscar-cliente" class="form-label">
             Cliente
         </label>
 
-        <select asp-for="ClienteId"
-                asp-items="Model.ClientesDisponibles"
-                class="form-select">
-        </select>
+        <div class="position-relative buscador"
+             data-tipo="cliente">
+
+            <input type="search"
+                   id="buscar-cliente"
+                   class="form-control campo-busqueda"
+                   placeholder="Buscar por nombre, razón social o documento..."
+                   autocomplete="off"
+                   role="combobox"
+                   aria-autocomplete="list"
+                   aria-expanded="false"
+                   aria-controls="opciones-cliente" />
+
+            <input asp-for="ClienteId"
+                   type="hidden"
+                   class="valor-seleccionado" />
+
+            <div id="opciones-cliente"
+                 class="list-group position-absolute w-100 shadow-sm opciones"
+                 role="listbox"
+                 style="display:none; z-index:1050; max-height:250px; overflow-y:auto;">
+            </div>
+        </div>
 
         <span asp-validation-for="ClienteId"
               class="text-danger"></span>
@@ -47,7 +82,6 @@
         </small>
     </div>
 
-
     <!-- MODALIDAD DE VENTA -->
 
     <div class="mb-4">
@@ -55,9 +89,12 @@
             Modalidad de venta
         </label>
 
-        <select asp-for="Modalidad" class="form-select">
+        <select asp-for="Modalidad"
+                class="form-select">
+
             <option value="1">Contado</option>
             <option value="2">Cuenta corriente</option>
+
         </select>
 
         <span asp-validation-for="Modalidad"
@@ -69,10 +106,9 @@
         </small>
     </div>
 
-
     <hr />
 
-    <!-- PRODUCTOS -->
+    <!-- DETALLE DE PRODUCTOS -->
 
     <h4 class="mb-3">Detalle de productos</h4>
 
@@ -82,21 +118,39 @@
         {
             <div class="row mb-3 detalle-venta">
 
-                <!-- PRODUCTO -->
+                <!-- BUSCADOR DE PRODUCTOS -->
 
                 <div class="col-md-4">
-                    <label class="form-label">
+
+                    <label class="form-label"
+                           for="buscar-producto-@i">
                         Producto
                     </label>
 
-                    <select asp-for="Detalles[i].ProductoId"
-                            asp-items="Model.ProductosDisponibles"
-                            class="form-select">
+                    <div class="position-relative buscador"
+                         data-tipo="producto">
 
-                        <option value="0">
-                            Seleccione un producto
-                        </option>
-                    </select>
+                        <input type="search"
+                               id="buscar-producto-@i"
+                               class="form-control campo-busqueda"
+                               placeholder="Buscar producto por nombre..."
+                               autocomplete="off"
+                               role="combobox"
+                               aria-autocomplete="list"
+                               aria-expanded="false"
+                               aria-controls="opciones-producto-@i" />
+
+                        <input asp-for="Detalles[i].ProductoId"
+                               type="hidden"
+                               class="valor-seleccionado" />
+
+                        <div id="opciones-producto-@i"
+                             class="list-group position-absolute w-100 shadow-sm opciones"
+                             role="listbox"
+                             style="display:none; z-index:1050; max-height:250px; overflow-y:auto;">
+                        </div>
+
+                    </div>
 
                     <span asp-validation-for="Detalles[i].ProductoId"
                           class="text-danger"></span>
@@ -105,6 +159,7 @@
                 <!-- CANTIDAD -->
 
                 <div class="col-md-2">
+
                     <label class="form-label">
                         Cantidad
                     </label>
@@ -113,7 +168,7 @@
                            type="number"
                            min="1"
                            step="1"
-                           class="form-control" />
+                           class="form-control cantidad" />
 
                     <span asp-validation-for="Detalles[i].Cantidad"
                           class="text-danger"></span>
@@ -122,6 +177,7 @@
                 <!-- PRECIO UNITARIO -->
 
                 <div class="col-md-2">
+
                     <label class="form-label">
                         Precio unitario
                     </label>
@@ -134,6 +190,7 @@
                 <!-- SUBTOTAL -->
 
                 <div class="col-md-2">
+
                     <label class="form-label">
                         Subtotal
                     </label>
@@ -146,11 +203,13 @@
                 <!-- QUITAR -->
 
                 <div class="col-md-2 d-flex align-items-end">
+
                     <button type="button"
                             class="btn btn-outline-danger w-100"
                             onclick="eliminarDetalle(this)">
                         Quitar
                     </button>
+
                 </div>
 
             </div>
@@ -163,15 +222,19 @@
     <button type="button"
             class="btn btn-outline-primary mb-4"
             onclick="agregarDetalle()">
+
         + Agregar producto
+
     </button>
 
     <hr />
 
-    <!-- TOTAL -->
+    <!-- TOTAL ESTIMADO -->
 
     <div class="d-flex justify-content-end mb-4">
+
         <div class="text-end">
+
             <h5>Total estimado</h5>
 
             <h3 id="total-venta">
@@ -182,7 +245,9 @@
                 El importe definitivo se calcula
                 al confirmar la venta.
             </small>
+
         </div>
+
     </div>
 
     <!-- BOTONES -->
@@ -204,39 +269,45 @@
 
 </form>
 
-<!-- PLANTILLA PARA AGREGAR PRODUCTOS -->
+<!-- PLANTILLA PARA NUEVOS PRODUCTOS -->
 
 <template id="plantilla-detalle">
 
     <div class="row mb-3 detalle-venta">
 
-        <!-- PRODUCTO -->
-
         <div class="col-md-4">
+
             <label class="form-label">
                 Producto
             </label>
 
-            <select name="Detalles[__index__].ProductoId"
-                    class="form-select">
+            <div class="position-relative buscador"
+                 data-tipo="producto">
 
-                <option value="0">
-                    Seleccione un producto
-                </option>
+                <input type="search"
+                       class="form-control campo-busqueda"
+                       placeholder="Buscar producto por nombre..."
+                       autocomplete="off"
+                       role="combobox"
+                       aria-autocomplete="list"
+                       aria-expanded="false" />
 
-                @foreach (var producto in Model.ProductosDisponibles)
-                {
-                    <option value="@producto.Value">
-                        @producto.Text
-                    </option>
-                }
+                <input type="hidden"
+                       name="Detalles[__index__].ProductoId"
+                       value="0"
+                       class="valor-seleccionado" />
 
-            </select>
+                <div class="list-group position-absolute w-100 shadow-sm opciones"
+                     role="listbox"
+                     style="display:none; z-index:1050; max-height:250px; overflow-y:auto;">
+                </div>
+
+            </div>
+
         </div>
 
-        <!-- CANTIDAD -->
-
         <div class="col-md-2">
+
             <label class="form-label">
                 Cantidad
             </label>
@@ -246,12 +317,12 @@
                    value="1"
                    min="1"
                    step="1"
-                   class="form-control" />
+                   class="form-control cantidad" />
+
         </div>
 
-        <!-- PRECIO UNITARIO -->
-
         <div class="col-md-2">
+
             <label class="form-label">
                 Precio unitario
             </label>
@@ -259,11 +330,11 @@
             <input type="text"
                    class="form-control precio-unitario"
                    readonly />
+
         </div>
 
-        <!-- SUBTOTAL -->
-
         <div class="col-md-2">
+
             <label class="form-label">
                 Subtotal
             </label>
@@ -271,16 +342,17 @@
             <input type="text"
                    class="form-control subtotal"
                    readonly />
+
         </div>
 
-        <!-- QUITAR -->
-
         <div class="col-md-2 d-flex align-items-end">
+
             <button type="button"
                     class="btn btn-outline-danger w-100"
                     onclick="eliminarDetalle(this)">
                 Quitar
             </button>
+
         </div>
 
     </div>
@@ -293,14 +365,27 @@
 
     <script>
 
-        // PRECIOS RECIBIDOS DESDE EL SERVIDOR
+        // DATOS RECIBIDOS DESDE EL CONTROLADOR
 
         const preciosProductos = @Html.Raw(preciosJson);
+        const productos = @Html.Raw(productosJson);
+        const clientes = @Html.Raw(clientesJson);
 
         const formatoMoneda = new Intl.NumberFormat("es-AR", {
             style: "currency",
             currency: "ARS"
         });
+
+        // NORMALIZAR TEXTO PARA BUSCAR SIN IMPORTAR TILDES
+
+        function normalizar(texto) {
+
+            return String(texto ?? "")
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLocaleLowerCase("es-AR")
+                .trim();
+        }
 
         // CALCULAR PRECIOS, SUBTOTALES Y TOTAL
 
@@ -314,8 +399,8 @@
 
             filas.forEach(fila => {
 
-                const selectorProducto = fila.querySelector(
-                    'select[name$=".ProductoId"]'
+                const campoProducto = fila.querySelector(
+                    'input[name$=".ProductoId"]'
                 );
 
                 const campoCantidad = fila.querySelector(
@@ -330,16 +415,15 @@
                     ".subtotal"
                 );
 
-                const productoId = selectorProducto.value;
+                const productoId = campoProducto.value;
 
                 const precio = Number(
                     preciosProductos[productoId] ?? 0
                 );
 
-                const cantidadTexto = campoCantidad.value
-                    .replace(",", ".");
-
-                const cantidad = Number(cantidadTexto);
+                const cantidad = Number(
+                    campoCantidad.value.replace(",", ".")
+                );
 
                 const subtotal =
                     Number.isFinite(cantidad) && cantidad > 0
@@ -359,7 +443,311 @@
                 formatoMoneda.format(total);
         }
 
-        // AGREGAR UNA FILA
+        // CERRAR SUGERENCIAS
+
+        function cerrarOpciones(buscador) {
+
+            const lista = buscador.querySelector(".opciones");
+            const entrada = buscador.querySelector(".campo-busqueda");
+
+            lista.style.display = "none";
+            entrada.setAttribute("aria-expanded", "false");
+        }
+
+        // INICIALIZAR BUSCADOR DE CLIENTES O PRODUCTOS
+
+        function inicializarBuscador(buscador) {
+
+            const entrada = buscador.querySelector(".campo-busqueda");
+            const oculto = buscador.querySelector(".valor-seleccionado");
+            const lista = buscador.querySelector(".opciones");
+
+            const esCliente = buscador.dataset.tipo === "cliente";
+
+            const datos = esCliente ? clientes : productos;
+
+            let resultados = [];
+            let indiceActivo = -1;
+
+            function seleccionar(opcion) {
+
+                oculto.value = opcion.id;
+                entrada.value = opcion.texto;
+
+                cerrarOpciones(buscador);
+                calcularTotales();
+            }
+
+            function mostrarOpciones() {
+
+                const texto = normalizar(entrada.value);
+
+                resultados = datos
+                    .filter(item =>
+                        normalizar(item.texto).includes(texto)
+                    )
+                    .slice(0, 12);
+
+                lista.replaceChildren();
+
+                indiceActivo = -1;
+
+                if (resultados.length === 0) {
+
+                    const mensaje = document.createElement("div");
+
+                    mensaje.className =
+                        "list-group-item text-muted";
+
+                    mensaje.textContent =
+                        "No se encontraron coincidencias.";
+
+                    lista.appendChild(mensaje);
+
+                } else {
+
+                    resultados.forEach((item, indice) => {
+
+                        const boton = document.createElement("button");
+
+                        boton.type = "button";
+
+                        boton.className =
+                            "list-group-item list-group-item-action text-start";
+
+                        boton.setAttribute("role", "option");
+
+                        boton.textContent = item.texto;
+
+                        boton.addEventListener("mousedown", evento => {
+                            evento.preventDefault();
+                        });
+
+                        boton.addEventListener("click", () => {
+                            seleccionar(item);
+                        });
+
+                        lista.appendChild(boton);
+                    });
+                }
+
+                lista.style.display = "block";
+                entrada.setAttribute("aria-expanded", "true");
+            }
+
+            function actualizarResaltado() {
+
+                const botones = lista.querySelectorAll(
+                    'button[role="option"]'
+                );
+
+                botones.forEach((boton, indice) => {
+
+                    const activo = indice === indiceActivo;
+
+                    boton.classList.toggle("active", activo);
+
+                    boton.setAttribute(
+                        "aria-selected",
+                        String(activo)
+                    );
+
+                    if (activo) {
+                        boton.scrollIntoView({
+                            block: "nearest"
+                        });
+                    }
+                });
+            }
+
+            // RECUPERAR VALOR SI EL SERVIDOR DEVUELVE EL FORMULARIO
+
+            const seleccionActual = datos.find(
+                item => String(item.id) === String(oculto.value)
+            );
+
+            if (seleccionActual) {
+
+                entrada.value = seleccionActual.texto;
+
+            } else if (esCliente) {
+
+                const consumidorFinal = datos.find(
+                    item => item.id === ""
+                );
+
+                if (consumidorFinal) {
+                    entrada.value = consumidorFinal.texto;
+                }
+            }
+
+            // FILTRAR MIENTRAS SE ESCRIBE
+
+            entrada.addEventListener("input", () => {
+
+                oculto.value = esCliente ? "" : "0";
+
+                calcularTotales();
+                mostrarOpciones();
+            });
+
+            entrada.addEventListener("focus", mostrarOpciones);
+
+            // NAVEGACIÓN CON TECLADO
+
+            entrada.addEventListener("keydown", evento => {
+
+                if (evento.key === "Escape") {
+
+                    cerrarOpciones(buscador);
+                    return;
+                }
+
+                if (evento.key === "ArrowDown" ||
+                    evento.key === "ArrowUp") {
+
+                    evento.preventDefault();
+
+                    if (lista.style.display === "none") {
+                        mostrarOpciones();
+                    }
+
+                    if (resultados.length === 0) {
+                        return;
+                    }
+
+                    if (evento.key === "ArrowDown") {
+
+                        indiceActivo =
+                            (indiceActivo + 1) % resultados.length;
+
+                    } else {
+
+                        indiceActivo =
+                            (indiceActivo - 1 + resultados.length)
+                            % resultados.length;
+                    }
+
+                    actualizarResaltado();
+                }
+
+                if (evento.key === "Enter" &&
+                    lista.style.display !== "none" &&
+                    indiceActivo >= 0) {
+
+                    evento.preventDefault();
+
+                    seleccionar(resultados[indiceActivo]);
+                }
+            });
+
+            // NO CONSERVAR UN ID SI SE ESCRIBIÓ SIN SELECCIONAR
+
+            entrada.addEventListener("blur", () => {
+
+                const seleccion = datos.find(
+                    item => String(item.id) === String(oculto.value)
+                );
+
+                if (!seleccion) {
+
+                    if (esCliente) {
+
+                        const consumidorFinal = datos.find(
+                            item => item.id === ""
+                        );
+
+                        entrada.value =
+                            consumidorFinal?.texto ?? "";
+
+                    } else {
+
+                        entrada.value = "";
+                    }
+                }
+
+                cerrarOpciones(buscador);
+            });
+        }
+
+        // REINDEXAR LOS PRODUCTOS DEL FORMULARIO
+
+        function reindexarDetalles() {
+
+            const filas = document.querySelectorAll(
+                "#contenedor-detalles .detalle-venta"
+            );
+
+            filas.forEach((fila, indice) => {
+
+                fila.querySelectorAll("[name]").forEach(campo => {
+
+                    campo.name = campo.name.replace(
+                        /Detalles\[\d+\]/g,
+                        `Detalles[${indice}]`
+                    );
+                });
+
+                fila.querySelectorAll("[id]").forEach(campo => {
+
+                    campo.id = campo.id
+                        .replace(
+                            /Detalles_\d+__/g,
+                            `Detalles_${indice}__`
+                        )
+                        .replace(
+                            /buscar-producto-\d+/g,
+                            `buscar-producto-${indice}`
+                        )
+                        .replace(
+                            /opciones-producto-\d+/g,
+                            `opciones-producto-${indice}`
+                        );
+                });
+
+                fila.querySelectorAll("label[for]").forEach(label => {
+
+                    label.htmlFor = label.htmlFor
+                        .replace(
+                            /Detalles_\d+__/g,
+                            `Detalles_${indice}__`
+                        )
+                        .replace(
+                            /buscar-producto-\d+/g,
+                            `buscar-producto-${indice}`
+                        );
+                });
+
+                fila.querySelectorAll("[aria-controls]").forEach(campo => {
+
+                    campo.setAttribute(
+                        "aria-controls",
+                        campo.getAttribute("aria-controls")
+                            .replace(
+                                /opciones-producto-\d+/g,
+                                `opciones-producto-${indice}`
+                            )
+                    );
+                });
+
+                fila.querySelectorAll("[data-valmsg-for]").forEach(elemento => {
+
+                    const nombre = elemento.getAttribute(
+                        "data-valmsg-for"
+                    );
+
+                    elemento.setAttribute(
+                        "data-valmsg-for",
+                        nombre.replace(
+                            /Detalles\[\d+\]/g,
+                            `Detalles[${indice}]`
+                        )
+                    );
+                });
+            });
+        }
+
+        // AGREGAR PRODUCTO
 
         function agregarDetalle() {
 
@@ -385,11 +773,19 @@
                 html
             );
 
+            const nuevaFila = contenedor.lastElementChild;
+
+            inicializarBuscador(
+                nuevaFila.querySelector(".buscador")
+            );
+
             reindexarDetalles();
             calcularTotales();
+
+            nuevaFila.querySelector(".campo-busqueda").focus();
         }
 
-        // ELIMINAR UNA FILA
+        // ELIMINAR PRODUCTO
 
         function eliminarDetalle(boton) {
 
@@ -398,9 +794,11 @@
             );
 
             if (filas.length <= 1) {
+
                 alert(
                     "La venta debe tener al menos un producto."
                 );
+
                 return;
             }
 
@@ -410,116 +808,96 @@
             calcularTotales();
         }
 
-        // ACTUALIZAR ÍNDICES DE LOS DETALLES
+        // VALIDAR PRODUCTOS REPETIDOS Y NO SELECCIONADOS
 
-        function reindexarDetalles() {
+        function validarProductos() {
 
-            const filas = document.querySelectorAll(
-                "#contenedor-detalles .detalle-venta"
+            const seleccionados = new Set();
+
+            const campos = document.querySelectorAll(
+                '#contenedor-detalles input[name$=".ProductoId"]'
             );
 
-            filas.forEach((fila, indice) => {
+            for (const campo of campos) {
 
-                fila.querySelectorAll("[name]").forEach(
-                    campo => {
+                const id = campo.value;
 
-                        campo.name = campo.name.replace(
-                            /Detalles\[\d+\]/,
-                            `Detalles[${indice}]`
-                        );
-                    }
-                );
+                if (!id || id === "0") {
 
-                fila.querySelectorAll("[id]").forEach(
-                    campo => {
-
-                        campo.id = campo.id.replace(
-                            /Detalles_\d+__/,
-                            `Detalles_${indice}__`
-                        );
-                    }
-                );
-
-                fila.querySelectorAll(
-                    "[data-valmsg-for]"
-                ).forEach(elemento => {
-
-                    const nombre = elemento.getAttribute(
-                        "data-valmsg-for"
-                    );
-
-                    elemento.setAttribute(
-                        "data-valmsg-for",
-                        nombre.replace(
-                            /Detalles\[\d+\]/,
-                            `Detalles[${indice}]`
-                        )
-                    );
-                });
-            });
-        }
-
-        //VALIDAR SI SE REPITE ALGUN PRODUCTO
-
-        function validarProductosRepetidos() {
-
-            const productosSeleccionados = new Set();
-
-            const selectores = document.querySelectorAll(
-                '#contenedor-detalles select[name$=".ProductoId"]'
-            );
-
-            for (const selector of selectores) {
-
-                const productoId = selector.value;
-
-                // Ignoramos la opción "Seleccione un producto".
-                if (!productoId || productoId === "0") {
-                    continue;
+                    return "Seleccioná un producto en cada fila.";
                 }
 
-                if (productosSeleccionados.has(productoId)) {
-                    return false;
+                if (seleccionados.has(id)) {
+
+                    return "No podés seleccionar el mismo producto " +
+                           "más de una vez en la venta.";
                 }
 
-                productosSeleccionados.add(productoId);
+                seleccionados.add(id);
             }
 
-            return true;
+            return null;
         }
 
-        // ESCUCHAR CAMBIOS EN PRODUCTOS Y CANTIDADES
+        // INICIALIZAR BUSCADORES
+
+        document.querySelectorAll(".buscador").forEach(
+            inicializarBuscador
+        );
+
+        // ACTUALIZAR TOTAL CUANDO CAMBIA UNA CANTIDAD
 
         document.getElementById("contenedor-detalles")
-            .addEventListener(
-                "input",
-                calcularTotales
-            );
+            .addEventListener("input", calcularTotales);
 
-        document.getElementById("contenedor-detalles")
-            .addEventListener(
-                "change",
-                calcularTotales
-            );
+        // CERRAR LISTAS AL HACER CLIC FUERA
 
+        document.addEventListener("pointerdown", evento => {
+
+            document.querySelectorAll(".buscador").forEach(
+                buscador => {
+
+                    if (!buscador.contains(evento.target)) {
+                        cerrarOpciones(buscador);
+                    }
+                }
+            );
+        });
+
+        // VALIDACIONES ANTES DE ENVIAR
 
         document.getElementById("formulario-venta")
-            .addEventListener("submit", function (evento) {
+            .addEventListener("submit", evento => {
 
-                if (!validarProductosRepetidos()) {
+                const error = validarProductos();
+
+                if (error) {
+
+                    evento.preventDefault();
+                    alert(error);
+                    return;
+                }
+
+                const cliente = document.querySelector(
+                    '#formulario-venta input[name="ClienteId"]'
+                );
+
+                const modalidad = document.querySelector(
+                    '#formulario-venta select[name="Modalidad"]'
+                );
+
+                if (modalidad.value === "2" && !cliente.value) {
 
                     evento.preventDefault();
 
                     alert(
-                        "No podés seleccionar el mismo producto " +
-                        "más de una vez en la venta."
+                        "Para una venta a cuenta corriente " +
+                        "seleccioná un cliente registrado."
                     );
                 }
             });
 
-
-
-        // CALCULAR AL CARGAR LA PÁGINA
+        // CÁLCULO INICIAL
 
         calcularTotales();
 
