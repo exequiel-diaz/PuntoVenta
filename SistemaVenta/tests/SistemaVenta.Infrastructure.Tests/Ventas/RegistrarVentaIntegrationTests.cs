@@ -60,8 +60,15 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
             producto1.AumentarStock(10m);
             producto2.AumentarStock(8m);
 
+            var vendedor = new Usuario(
+                 nombreUsuario: $"vendedor_{Guid.NewGuid():N}",
+                 nombreCompleto: "Vendedor de prueba",
+                 passwordHash: "hash-de-prueba",
+                 rol: RolUsuario.Vendedor);
+
             context.Clientes.Add(cliente);
             context.Productos.AddRange(producto1, producto2);
+            context.Usuarios.Add(vendedor);
 
             await context.SaveChangesAsync();
 
@@ -78,12 +85,13 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 new MovimientoStockRepository(context);
 
             var registrarVenta = new RegistrarVenta(
-                new VentaRepository(context),
-                new ClienteRepository(context),
-                new ProductoRepository(context),
-                new MovimientoStockRepository(context),
-                context,
-                new CuentaCorrienteRepository(context));
+                 new VentaRepository(context),
+                 new ClienteRepository(context),
+                 new ProductoRepository(context),
+                 new MovimientoStockRepository(context),
+                 context,
+                 new CuentaCorrienteRepository(context),
+                 new UsuarioRepository(context));
 
             var solicitud = new RegistrarVentaDto
             {
@@ -104,7 +112,7 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
             };
 
             // ACT
-            await registrarVenta.EjecutarAsync(solicitud);
+            await registrarVenta.EjecutarAsync(solicitud, vendedor.Id);
 
             // Limpiamos el seguimiento para consultar
             // los datos guardados realmente en PostgreSQL.
@@ -134,6 +142,7 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
 
             Assert.Equal(35000m, ventaGuardada.Total);
             Assert.Equal(2, ventaGuardada.Detalles.Count);
+            Assert.Equal(vendedor.Id, ventaGuardada.VendedorId);
 
             // ASSERT: inventario.
             var teclado = productosGuardados.Single(
@@ -332,14 +341,16 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
             await transaccion.RollbackAsync();
         }
 
+
         [Fact]
         public async Task RegistrarVenta_SiHayConflictoConcurrencia_NoDebeGuardarVentaParcial()
         {
             int clienteId = 0;
             int categoriaId = 0;
             int productoId = 0;
+            int vendedorId = 0;
 
-            // ARRANGE: datos iniciales confirmados en PostgreSQL.
+            // ARRANGE: preparar datos confirmados en PostgreSQL.
             await using (var preparacion = _factory.CreateDbContext([]))
             {
                 var cliente = new ClienteFisico(
@@ -365,14 +376,23 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
 
                 producto.AumentarStock(10m);
 
+                // Usuario válido para registrar ventas.
+                var vendedor = new Usuario(
+                    nombreUsuario: $"vendedor_{Guid.NewGuid():N}",
+                    nombreCompleto: "Vendedor concurrencia",
+                    passwordHash: "hash-de-prueba",
+                    rol: RolUsuario.Vendedor);
+
                 preparacion.Clientes.Add(cliente);
                 preparacion.Productos.Add(producto);
+                preparacion.Usuarios.Add(vendedor);
 
                 await preparacion.SaveChangesAsync();
 
                 clienteId = cliente.Id;
                 categoriaId = categoria.Id;
                 productoId = producto.Id;
+                vendedorId = vendedor.Id;
             }
 
             try
@@ -383,8 +403,8 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 await using var contextoB =
                     _factory.CreateDbContext([]);
 
-                // Ambos vendedores leen el producto antes
-                // de que cualquiera registre una venta.
+                // Ambos contextos cargan el mismo producto
+                // antes de registrar las ventas.
                 var productoA = await contextoA.Productos
                     .SingleAsync(p => p.Id == productoId);
 
@@ -394,21 +414,25 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 Assert.Equal(10m, productoA.StockActual);
                 Assert.Equal(10m, productoB.StockActual);
 
+                // RegistrarVenta A con repositorio de usuarios.
                 var registrarVentaA = new RegistrarVenta(
                     new VentaRepository(contextoA),
                     new ClienteRepository(contextoA),
                     new ProductoRepository(contextoA),
                     new MovimientoStockRepository(contextoA),
                     contextoA,
-                    new CuentaCorrienteRepository(contextoA));
+                    new CuentaCorrienteRepository(contextoA),
+                    new UsuarioRepository(contextoA));
 
+                // RegistrarVenta B con repositorio de usuarios.
                 var registrarVentaB = new RegistrarVenta(
                     new VentaRepository(contextoB),
                     new ClienteRepository(contextoB),
                     new ProductoRepository(contextoB),
                     new MovimientoStockRepository(contextoB),
                     contextoB,
-                    new CuentaCorrienteRepository(contextoB));
+                    new CuentaCorrienteRepository(contextoB),
+                    new UsuarioRepository(contextoB));
 
                 var solicitudA = new RegistrarVentaDto
                 {
@@ -436,15 +460,20 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
             }
                 };
 
-                // ACT: el vendedor A confirma su venta.
-                await registrarVentaA.EjecutarAsync(solicitudA);
+                // ACT: el vendedor A registra la venta.
+                await registrarVentaA.EjecutarAsync(
+                    solicitudA,
+                    vendedorId);
 
-                // El vendedor B conserva la versión anterior
-                // del producto en su propio contexto.
+                // El contexto B conserva una versión anterior
+                // del producto, por lo que debe existir
+                // un conflicto de concurrencia.
                 await Assert.ThrowsAsync<ConflictoConcurrenciaException>(
-                    () => registrarVentaB.EjecutarAsync(solicitudB));
+                    () => registrarVentaB.EjecutarAsync(
+                        solicitudB,
+                        vendedorId));
 
-                // ASSERT: consultar desde un contexto nuevo.
+                // ASSERT: verificar datos persistidos.
                 await using var verificacion =
                     _factory.CreateDbContext([]);
 
@@ -460,12 +489,17 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                     .Where(v => v.ClienteId == clienteId)
                     .ToListAsync();
 
-                // Solo debe existir la venta del vendedor A.
+                // Solo debe persistir la venta A.
                 var ventaGuardada = Assert.Single(ventas);
 
                 Assert.Equal(
                     EstadoVenta.Confirmada,
                     ventaGuardada.Estado);
+
+                // Verificar que la venta tenga vendedor.
+                Assert.Equal(
+                    vendedorId,
+                    ventaGuardada.VendedorId);
 
                 var detalleGuardado =
                     Assert.Single(ventaGuardada.Detalles);
@@ -489,7 +523,7 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
             }
             finally
             {
-                // Limpieza de los datos creados por la prueba.
+                // Limpiar los datos creados por la prueba.
                 await using var limpieza =
                     _factory.CreateDbContext([]);
 
@@ -504,6 +538,15 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                         .Where(d => ventasIds.Contains(d.VentaId))
                         .ExecuteDeleteAsync();
 
+                    // Eliminar primero los movimientos
+                    // asociados a los productos de la prueba.
+                    if (productoId > 0)
+                    {
+                        await limpieza.MovimientosStock
+                            .Where(m => m.Producto.Id == productoId)
+                            .ExecuteDeleteAsync();
+                    }
+
                     await limpieza.Ventas
                         .Where(v => v.ClienteId == clienteId)
                         .ExecuteDeleteAsync();
@@ -511,10 +554,6 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
 
                 if (productoId > 0)
                 {
-                    await limpieza.MovimientosStock
-                        .Where(m => m.Producto.Id == productoId)
-                        .ExecuteDeleteAsync();
-
                     await limpieza.Productos
                         .Where(p => p.Id == productoId)
                         .ExecuteDeleteAsync();
@@ -533,14 +572,24 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                         .Where(c => c.Id == clienteId)
                         .ExecuteDeleteAsync();
                 }
+
+                // Eliminar el vendedor después de las ventas,
+                // porque estas pueden referenciarlo.
+                if (vendedorId > 0)
+                {
+                    await limpieza.Usuarios
+                        .Where(u => u.Id == vendedorId)
+                        .ExecuteDeleteAsync();
+                }
             }
         }
+
 
 
         [Fact]
         public async Task RegistrarVentaACredito_DebeGuardarVentaYDebitoVinculados()
         {
-            // ARRANGE
+            // ARRANGE: base de datos de prueba.
             await using var context = _factory.CreateDbContext([]);
 
             await using var transaccion =
@@ -568,11 +617,21 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
 
             producto.AumentarStock(10m);
 
+            // Crear un vendedor activo y autorizado.
+            var vendedor = new Usuario(
+                nombreUsuario: $"vendedor_{Guid.NewGuid():N}",
+                nombreCompleto: "Vendedor de crédito",
+                passwordHash: "hash-de-prueba",
+                rol: RolUsuario.Vendedor);
+
+            // Guardar los datos iniciales.
             context.Clientes.Add(cliente);
             context.Productos.Add(producto);
+            context.Usuarios.Add(vendedor);
 
             await context.SaveChangesAsync();
 
+            // Crear una cuenta corriente con límite de $125.000.
             var cuenta = new CuentaCorriente(
                 cliente.Id,
                 125000m);
@@ -581,14 +640,17 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
 
             await context.SaveChangesAsync();
 
+            // Crear el caso de uso con todas sus dependencias.
             var registrarVenta = new RegistrarVenta(
                 new VentaRepository(context),
                 new ClienteRepository(context),
                 new ProductoRepository(context),
                 new MovimientoStockRepository(context),
                 context,
-                new CuentaCorrienteRepository(context));
+                new CuentaCorrienteRepository(context),
+                new UsuarioRepository(context));
 
+            // Preparar la solicitud de venta.
             var solicitud = new RegistrarVentaDto
             {
                 ClienteId = cliente.Id,
@@ -603,10 +665,13 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
         }
             };
 
-            // ACT
-            int ventaId = await registrarVenta.EjecutarAsync(solicitud);
+            // ACT: registrar la venta indicando el vendedor.
+            int ventaId = await registrarVenta.EjecutarAsync(
+                solicitud,
+                vendedor.Id);
 
-            // Consultar los datos realmente guardados.
+            // Limpiar el seguimiento para consultar
+            // los datos realmente persistidos en PostgreSQL.
             context.ChangeTracker.Clear();
 
             var ventaGuardada = await context.Ventas
@@ -623,28 +688,49 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
             var debito = Assert.Single(
                 cuentaGuardada.Movimientos);
 
-            // ASSERT
+            // ASSERT: verificar la venta.
             Assert.Equal(
                 EstadoVenta.Confirmada,
                 ventaGuardada.Estado);
 
-            Assert.Equal(50000m, ventaGuardada.Total);
+            Assert.Equal(
+                vendedor.Id,
+                ventaGuardada.VendedorId);
 
-            Assert.Equal(8m, productoGuardado.StockActual);
+            Assert.Equal(
+                50000m,
+                ventaGuardada.Total);
 
+            Assert.Single(ventaGuardada.Detalles);
+
+            // Verificar la actualización del stock.
+            Assert.Equal(
+                8m,
+                productoGuardado.StockActual);
+
+            // Verificar el movimiento de cuenta corriente.
             Assert.True(debito.EsDebito());
 
-            Assert.Equal(50000m, debito.Importe);
+            Assert.Equal(
+                50000m,
+                debito.Importe);
 
-            Assert.Equal(ventaId, debito.VentaId);
+            Assert.Equal(
+                ventaId,
+                debito.VentaId);
 
-            Assert.Equal(50000m, cuentaGuardada.SaldoActual);
+            // Verificar la deuda generada.
+            Assert.Equal(
+                50000m,
+                cuentaGuardada.SaldoActual);
 
+            // Verificar el crédito disponible.
             Assert.Equal(
                 75000m,
                 cuentaGuardada.LimiteDeuda - cuentaGuardada.SaldoActual);
 
-            // La transacción se revierte al finalizar.
+            // No se confirma la transacción.
+            // Al finalizar, PostgreSQL revierte los datos de prueba.
         }
 
 

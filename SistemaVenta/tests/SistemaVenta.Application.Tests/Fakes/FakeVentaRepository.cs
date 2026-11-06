@@ -76,5 +76,17 @@ namespace SistemaVenta.Application.Tests.Fakes
         }
 
 
+        public Task<bool> TieneVentasPorProductoAsync(int productoId)
+        {
+            bool tieneVentas = _ventas.Any(venta =>
+                venta.Detalles.Any(detalle =>
+                    detalle.ProductoId == productoId ||
+                    detalle.Producto.Id == productoId));
+
+            return Task.FromResult(tieneVentas);
+        }
+
+
+
     }
 }

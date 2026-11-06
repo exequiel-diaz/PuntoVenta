@@ -138,10 +138,11 @@ public class RegistrarCobroVentaCuentaCorrienteIntegrationTests
         // Sin Commit: se revierten los datos de prueba.
     }
 
+
     [Fact]
     public async Task RegistrarCobroVenta_NoDebeGuardarPagoSiSuperaDeuda()
     {
-        // Arrange
+        // ARRANGE
         await using var aplicacion =
             new SistemaVentaWebApplicationFactory();
 
@@ -154,9 +155,13 @@ public class RegistrarCobroVentaCuentaCorrienteIntegrationTests
         var registrarCobro = scope.ServiceProvider
             .GetRequiredService<RegistrarCobroVentaCuentaCorriente>();
 
+        // Los datos creados por la prueba se revierten al finalizar.
+        await using var transaccion =
+            await contexto.Database.BeginTransactionAsync();
+
         var identificador = Guid.NewGuid().ToString("N");
 
-        // Crear cliente.
+        // 1. Crear cliente.
         var cliente = new ClienteFisico(
             "Cliente",
             "Prueba",
@@ -168,7 +173,7 @@ public class RegistrarCobroVentaCuentaCorrienteIntegrationTests
         contexto.Clientes.Add(cliente);
         await contexto.SaveChangesAsync();
 
-        // Crear producto.
+        // 2. Crear categoría y producto.
         var categoria = new Categoria(
             $"Categoría {identificador}");
 
@@ -185,16 +190,20 @@ public class RegistrarCobroVentaCuentaCorrienteIntegrationTests
         contexto.Productos.Add(producto);
         await contexto.SaveChangesAsync();
 
-        // Crear venta confirmada.
+        // 3. Crear y confirmar venta de $50.000.
         var venta = new Venta(cliente.Id);
 
-        venta.AgregarDetalle(producto, 1, 50000m);
+        venta.AgregarDetalle(
+            producto,
+            1,
+            50000m);
+
         venta.Confirmar();
 
         contexto.Ventas.Add(venta);
         await contexto.SaveChangesAsync();
 
-        // Registrar deuda.
+        // 4. Registrar deuda en cuenta corriente.
         var cuenta = new CuentaCorriente(
             cliente.Id,
             100000m);
@@ -207,7 +216,7 @@ public class RegistrarCobroVentaCuentaCorrienteIntegrationTests
         contexto.CuentasCorrientes.Add(cuenta);
         await contexto.SaveChangesAsync();
 
-        // Crear vendedor.
+        // 5. Crear vendedor.
         var usuario = new Usuario(
             $"test_{identificador[..20]}",
             "Vendedor de prueba",
@@ -217,10 +226,13 @@ public class RegistrarCobroVentaCuentaCorrienteIntegrationTests
         contexto.Usuarios.Add(usuario);
         await contexto.SaveChangesAsync();
 
-        // Guardamos el número de pagos existentes.
-        var pagosAntes = await contexto.Pagos.CountAsync();
+        // 6. Consultar los pagos asociados a esta venta.
+        var pagosAntes = await contexto.Pagos
+            .CountAsync(p => p.AplicacionesVentas
+                .Any(a => a.VentaId == venta.Id));
 
-        // Act: intentamos cobrar más de lo adeudado.
+        // ACT
+        // Intentamos cobrar $60.000 cuando la deuda es $50.000.
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => registrarCobro.EjecutarAsync(
                 venta.Id,
@@ -228,28 +240,42 @@ public class RegistrarCobroVentaCuentaCorrienteIntegrationTests
                 FormaPago.Efectivo,
                 usuario.Id));
 
-        // Consultamos nuevamente PostgreSQL.
+        // Volver a consultar los datos desde PostgreSQL.
         contexto.ChangeTracker.Clear();
 
-        var pagosDespues = await contexto.Pagos.CountAsync();
+        // 7. Consultar nuevamente los pagos de ESTA venta.
+        var pagosDespues = await contexto.Pagos
+            .CountAsync(p => p.AplicacionesVentas
+                .Any(a => a.VentaId == venta.Id));
 
+        // 8. Recuperar la cuenta corriente.
         var cuentaRecuperada = await contexto.CuentasCorrientes
             .Include(c => c.Movimientos)
             .SingleAsync(c => c.Id == cuenta.Id);
 
-        // Assert: no se guardó ningún pago adicional.
+        // ASSERT
+
+        // No debe existir ningún pago aplicado a esta venta.
         Assert.Equal(pagosAntes, pagosDespues);
+        Assert.Equal(0, pagosDespues);
 
-        // La deuda permanece intacta.
-        Assert.Equal(50000m, cuentaRecuperada.SaldoActual);
-
+        // La deuda debe continuar siendo $50.000.
         Assert.Equal(
             50000m,
-            cuentaRecuperada.ObtenerSaldoPendienteDeVenta(venta.Id));
+            cuentaRecuperada.SaldoActual);
 
+        // El saldo pendiente de esta venta no debe cambiar.
+        Assert.Equal(
+            50000m,
+            cuentaRecuperada.ObtenerSaldoPendienteDeVenta(
+                venta.Id));
+
+        // No debe generarse ningún movimiento de crédito.
         Assert.DoesNotContain(
             cuentaRecuperada.Movimientos,
             m => m.EsCredito());
+
+        // Sin Commit: se revierten los datos de prueba.
     }
 
 }

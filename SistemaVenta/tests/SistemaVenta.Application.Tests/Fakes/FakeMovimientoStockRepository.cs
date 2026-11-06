@@ -12,8 +12,6 @@ namespace SistemaVenta.Application.Tests.Fakes
         public IReadOnlyList<MovimientoStock> Movimientos =>
             _movimientos.AsReadOnly();
 
-        // Conservamos esta propiedad para no romper
-        // las pruebas existentes.
         public MovimientoStock? MovimientoAgregado =>
             _movimientos.LastOrDefault();
 
@@ -22,6 +20,14 @@ namespace SistemaVenta.Application.Tests.Fakes
             _movimientos.Add(movimiento);
 
             return Task.CompletedTask;
+        }
+
+        public Task<bool> TieneMovimientosPorProductoAsync(int productoId)
+        {
+            bool tieneMovimientos = _movimientos
+                .Any(m => m.Producto.Id == productoId);
+
+            return Task.FromResult(tieneMovimientos);
         }
     }
 }

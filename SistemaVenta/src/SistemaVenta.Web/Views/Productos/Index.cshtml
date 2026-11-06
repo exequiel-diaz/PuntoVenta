@@ -32,7 +32,19 @@
     </a>
 }
 
-<table class="table">
+<div class="mb-3">
+    <label for="buscadorProductos" class="form-label">
+        Buscar producto
+    </label>
+
+    <input type="search"
+           id="buscadorProductos"
+           class="form-control"
+           placeholder="Buscar por nombre, código o categoría..."
+           autocomplete="off" />
+</div>
+
+<table class="table" id="tablaProductos">
     <thead>
         <tr>
             <th>Código</th>
@@ -125,5 +137,56 @@
                 </td>
             </tr>
         }
+    
+    
+        <tr id="sinResultados" style="display: none;">
+            <td colspan="7" class="text-center text-muted py-4">
+                No se encontraron productos que coincidan con la búsqueda.
+            </td>
+        </tr>
     </tbody>
 </table>
+
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const buscador = document.getElementById("buscadorProductos");
+            const tabla = document.getElementById("tablaProductos");
+            const filas = tabla.querySelectorAll("tbody tr:not(#sinResultados)");
+            const sinResultados = document.getElementById("sinResultados");
+
+            buscador.addEventListener("input", function () {
+
+                const texto = buscador.value
+                    .trim()
+                    .toLocaleLowerCase();
+
+                let encontrados = 0;
+
+                filas.forEach(function (fila) {
+
+                    const codigo = fila.cells[0].textContent.toLocaleLowerCase();
+                    const nombre = fila.cells[1].textContent.toLocaleLowerCase();
+                    const categoria = fila.cells[2].textContent.toLocaleLowerCase();
+
+                    const coincide =
+                        codigo.includes(texto) ||
+                        nombre.includes(texto) ||
+                        categoria.includes(texto);
+
+                    fila.style.display = coincide ? "" : "none";
+
+                    if (coincide) {
+                        encontrados++;
+                    }
+                });
+
+                sinResultados.style.display =
+                    encontrados === 0 ? "" : "none";
+            });
+        });
+    </script>
+}
+
