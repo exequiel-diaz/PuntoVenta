@@ -35,108 +35,227 @@
     Nuevo cliente empresa
 </a>
 
-<table class="table table-striped table-bordered">
-    <thead>
-        <tr>
-            <th>Nombre / Razón social</th>
-            <th>Tipo</th>
-            <th>Documento</th>
-            <th>Email</th>
-            <th>Teléfono</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-            <th>Cuenta Corriente</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var cliente in Model)
-        {
+<!-- BUSCADOR DE CLIENTES -->
+<div class="mb-3">
+    <label for="buscarCliente" class="form-label">
+        Buscar cliente
+    </label>
+
+    <input type="search"
+           id="buscarCliente"
+           class="form-control"
+           placeholder="Buscar por nombre, razón social, DNI, CUIT, email o teléfono..."
+           autocomplete="off" />
+</div>
+
+<p id="contadorClientes" class="text-muted small"></p>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered align-middle"
+           id="tablaClientes">
+
+        <thead>
             <tr>
-                <td>@cliente.Nombre</td>
-                <td>@cliente.Tipo</td>
-                <td>@cliente.Documento</td>
-                <td>@cliente.Email</td>
-                <td>@cliente.Telefono</td>
-                <td>
-                    @if (cliente.Estado == EstadoCliente.Activo)
-                    {
-                        <span class="badge bg-success">Activo</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary">Inactivo</span>
-                    }
-                </td>
-                <td>
-                    @if (cliente.Tipo == "Físico")
-                    {
-                        <a asp-controller="Clientes"
-                           asp-action="EditarFisico"
-                           asp-route-id="@cliente.Id"
-                           class="btn btn-sm btn-outline-primary me-1">
-                            Editar
-                        </a>
-                    }
-                    else if (cliente.Tipo == "Empresa")
-                    {
-                        <a asp-controller="Clientes"
-                           asp-action="EditarEmpresa"
-                           asp-route-id="@cliente.Id"
-                           class="btn btn-sm btn-outline-primary me-1">
-                            Editar
-                        </a>
-                    }
-
-
-                    @if (cliente.Estado == EstadoCliente.Activo)
-                    {
-                        <form asp-controller="Clientes"
-                              asp-action="Desactivar"
-                              asp-route-id="@cliente.Id"
-                              method="post"
-                              class="d-inline">
-
-                            @Html.AntiForgeryToken()
-
-                            <button type="submit"
-                                    class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('¿Desactivar este cliente?');">
-                                Desactivar
-                            </button>
-                        </form>
-                    }
-                    else
-                    {
-                        <form asp-controller="Clientes"
-                              asp-action="Activar"
-                              asp-route-id="@cliente.Id"
-                              method="post"
-                              class="d-inline">
-
-                            @Html.AntiForgeryToken()
-
-                            <button type="submit"
-                                    class="btn btn-sm btn-outline-success">
-                                Activar
-                            </button>
-                        </form>
-                    }
-
-                </td>
-                <td>
-                    <a asp-controller="CuentaCorriente"
-                       asp-action="Index"
-                       asp-route-clienteId="@cliente.Id"
-                       class="btn btn-outline-primary btn-sm">
-                        Cuenta corriente
-                    </a>
-                </td>
+                <th>Nombre / Razón social</th>
+                <th>Tipo</th>
+                <th>Documento</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+                <th>Cuenta Corriente</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+
+        <tbody>
+            @foreach (var cliente in Model)
+            {
+                <tr class="fila-cliente">
+                    <td class="dato-busqueda">
+                        @cliente.Nombre
+                    </td>
+
+                    <td class="dato-busqueda">
+                        @cliente.Tipo
+                    </td>
+
+                    <td class="dato-busqueda">
+                        @cliente.Documento
+                    </td>
+
+                    <td class="dato-busqueda">
+                        @cliente.Email
+                    </td>
+
+                    <td class="dato-busqueda">
+                        @cliente.Telefono
+                    </td>
+
+                    <td>
+                        @if (cliente.Estado == EstadoCliente.Activo)
+                        {
+                            <span class="badge bg-success">
+                                Activo
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">
+                                Inactivo
+                            </span>
+                        }
+                    </td>
+
+                    <td>
+                        @if (cliente.Tipo == "Físico")
+                        {
+                            <a asp-controller="Clientes"
+                               asp-action="EditarFisico"
+                               asp-route-id="@cliente.Id"
+                               class="btn btn-sm btn-outline-primary me-1">
+                                Editar
+                            </a>
+                        }
+                        else if (cliente.Tipo == "Empresa")
+                        {
+                            <a asp-controller="Clientes"
+                               asp-action="EditarEmpresa"
+                               asp-route-id="@cliente.Id"
+                               class="btn btn-sm btn-outline-primary me-1">
+                                Editar
+                            </a>
+                        }
+
+                        @if (cliente.Estado == EstadoCliente.Activo)
+                        {
+                            <form asp-controller="Clientes"
+                                  asp-action="Desactivar"
+                                  asp-route-id="@cliente.Id"
+                                  method="post"
+                                  class="d-inline">
+
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('¿Desactivar este cliente?');">
+                                    Desactivar
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-controller="Clientes"
+                                  asp-action="Activar"
+                                  asp-route-id="@cliente.Id"
+                                  method="post"
+                                  class="d-inline">
+
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-success">
+                                    Activar
+                                </button>
+                            </form>
+                        }
+                    </td>
+
+                    <td>
+                        <a asp-controller="CuentaCorriente"
+                           asp-action="Index"
+                           asp-route-clienteId="@cliente.Id"
+                           class="btn btn-outline-primary btn-sm">
+                            Cuenta corriente
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 @if (!Model.Any())
 {
     <p>No hay clientes registrados.</p>
+}
+else
+{
+    <p id="sinResultados"
+       class="text-muted"
+       style="display: none;">
+        No se encontraron clientes que coincidan con la búsqueda.
+    </p>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const buscador =
+                document.getElementById("buscarCliente");
+
+            const filas = Array.from(
+                document.querySelectorAll(
+                    "#tablaClientes tbody .fila-cliente"
+                )
+            );
+
+            const contador =
+                document.getElementById("contadorClientes");
+
+            const sinResultados =
+                document.getElementById("sinResultados");
+
+            function normalizar(texto) {
+                return texto
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .trim();
+            }
+
+            function filtrarClientes() {
+
+                const busqueda =
+                    normalizar(buscador.value);
+
+                let visibles = 0;
+
+                filas.forEach(fila => {
+
+                    const datos = Array.from(
+                        fila.querySelectorAll(".dato-busqueda")
+                    )
+                    .map(celda => celda.textContent)
+                    .join(" ");
+
+                    const coincide =
+                        normalizar(datos).includes(busqueda);
+
+                    fila.style.display =
+                        coincide ? "" : "none";
+
+                    if (coincide) {
+                        visibles++;
+                    }
+                });
+
+                contador.textContent =
+                    `Mostrando ${visibles} de ${filas.length} clientes`;
+
+                if (sinResultados) {
+                    sinResultados.style.display =
+                        visibles === 0 ? "block" : "none";
+                }
+            }
+
+            buscador.addEventListener(
+                "input",
+                filtrarClientes
+            );
+
+            filtrarClientes();
+        });
+    </script>
 }

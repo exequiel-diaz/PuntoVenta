@@ -6,7 +6,7 @@ using SistemaVenta.Web.Models.Categorias;
 
 namespace SistemaVenta.Web.Controllers
 {
-    [Authorize]
+    [Authorize(Roles ="Administrador")]
     public class CategoriasController : Controller
     {
         private readonly ListarCategorias _listarCategorias;
