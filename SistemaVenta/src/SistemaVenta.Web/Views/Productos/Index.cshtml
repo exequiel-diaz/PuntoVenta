@@ -71,6 +71,16 @@
                 <td>
                     @if (esAdministrador)
                     {
+
+                        <a asp-controller="Productos"
+                           asp-action="CodigoBarras"
+                           asp-route-id="@producto.Id"
+                           class="btn btn-sm btn-outline-dark mb-1">
+
+                            Código de barras
+
+                        </a>
+
                         @if (producto.Estado == "Activo")
                         {
                             <a asp-action="IngresarStock"

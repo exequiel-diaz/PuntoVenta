@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SistemaVenta.Application.DTOs.Ventas;
@@ -7,6 +8,7 @@ using SistemaVenta.Application.UseCases.Clientes;
 using SistemaVenta.Application.UseCases.Productos;
 using SistemaVenta.Application.UseCases.Ventas;
 using SistemaVenta.Domain.Enums;
+using SistemaVenta.Web.Security;
 using SistemaVenta.Web.ViewModels.Ventas;
 using System.Security.Claims;
 
@@ -202,6 +204,7 @@ public class VentasController : Controller
 
 
     [HttpPost]
+    [Authorize(Roles =Roles.Administrador)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Anular(int id)
     {

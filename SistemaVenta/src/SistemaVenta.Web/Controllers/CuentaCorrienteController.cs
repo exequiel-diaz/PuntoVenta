@@ -1,6 +1,8 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaVenta.Application.UseCases.CuentasCorrientes;
+using SistemaVenta.Web.Security;
 using SistemaVenta.Web.ViewModels.CuentasCorrientes;
 
 namespace SistemaVenta.Web.Controllers;
@@ -134,6 +136,7 @@ public class CuentaCorrienteController : Controller
 
 
     [HttpGet]
+    [Authorize(Roles =Roles.Administrador)]
     public async Task<IActionResult> ModificarLimite(int clienteId)
     {
         if (clienteId <= 0)
@@ -161,6 +164,7 @@ public class CuentaCorrienteController : Controller
 
 
     [HttpPost]
+    [Authorize(Roles =Roles.Administrador)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ModificarLimite(
         ModificarLimiteDeudaViewModel modelo)

@@ -237,6 +237,7 @@ namespace SistemaVenta.Web.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles=Roles.Administrador)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Desactivar(int id)
         {
@@ -247,6 +248,7 @@ namespace SistemaVenta.Web.Controllers
 
         
         [HttpPost]
+        [Authorize(Roles =Roles.Administrador)]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Activar(int id)
         {
@@ -277,6 +279,18 @@ namespace SistemaVenta.Web.Controllers
         }
 
 
+
+        [HttpGet]
+        [Authorize(Roles = Roles.Administrador)]
+        public async Task<IActionResult> CodigoBarras(int id)
+        {
+            var producto = await _obtenerProducto.EjecutarAsync(id);
+
+            if (producto is null)
+                return NotFound();
+
+            return View(producto);
+        }
 
     }
 }
