@@ -2,11 +2,18 @@
 
 @using SistemaVenta.Web.Security
 
+
 @{
     ViewData["Title"] = "Productos";
 
     bool esAdministrador = User.IsInRole(Roles.Administrador);
+
+    int productosParaReponer = Model.Count(p =>
+        p.Estado == "Activo" &&
+        (p.EstadoStock == "StockBajo" ||
+         p.EstadoStock == "SinStock"));
 }
+
 
 <h1>Productos</h1>
 
@@ -24,13 +31,50 @@
     </div>
 }
 
+
 @if (esAdministrador)
 {
-    <a asp-action="Crear"
-       class="btn btn-primary mb-3">
-        Nuevo producto
-    </a>
+    <div class="mb-3">
+
+        <a asp-action="Crear"
+           class="btn btn-primary">
+            Nuevo producto
+        </a>
+
+        <a asp-action="StockBajo"
+           class="btn btn-outline-warning">
+
+            Alertas de stock
+
+            @if (productosParaReponer > 0)
+            {
+                <span class="badge bg-danger ms-1">
+                    @productosParaReponer
+                </span>
+            }
+
+        </a>
+
+    </div>
+
+    @if (productosParaReponer > 0)
+    {
+        <div class="alert alert-warning">
+
+            <strong>Atención:</strong>
+
+            Hay @productosParaReponer producto(s)
+            que necesitan reposición.
+
+            <a asp-action="StockBajo"
+               class="alert-link">
+                Ver productos
+            </a>
+
+        </div>
+    }
 }
+
 
 <div class="mb-3">
     <label for="buscadorProductos" class="form-label">

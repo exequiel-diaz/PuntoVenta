@@ -57,7 +57,27 @@ namespace SistemaVenta.Web.Controllers
             return View(productos);
         }
 
-    
+
+        [HttpGet]
+        [Authorize(Roles = Roles.Administrador)]
+        public async Task<IActionResult> StockBajo()
+        {
+            var productos = await _listarProductos.EjecutarAsync();
+
+            var productosParaReponer = productos
+                .Where(p =>
+                    p.Estado == "Activo" &&
+                    (p.EstadoStock == "StockBajo" ||
+                     p.EstadoStock == "SinStock"))
+                .OrderBy(p => p.StockActual > 0)
+                .ThenBy(p => p.Nombre)
+                .ToList();
+
+            return View(productosParaReponer);
+        }
+
+
+
         [HttpGet]
         [Authorize(Roles = Roles.Administrador)]
         public async Task<IActionResult> Crear()

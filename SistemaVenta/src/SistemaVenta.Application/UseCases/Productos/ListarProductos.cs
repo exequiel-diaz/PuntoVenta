@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 using SistemaVenta.Application.DTOs.Productos;
 using SistemaVenta.Application.Interfaces;
 
@@ -33,6 +29,11 @@ namespace SistemaVenta.Application.UseCases.Productos
                     Categoria = p.Categoria.Nombre,
                     PrecioVenta = p.PrecioVenta,
                     StockActual = p.StockActual,
+                    StockMinimo = p.StockMinimo,
+
+                    // Reutilizamos la lógica del dominio.
+                    EstadoStock = p.ObtenerEstadoStock().ToString(),
+
                     Estado = p.Estado.ToString()
                 })
                 .ToList();
