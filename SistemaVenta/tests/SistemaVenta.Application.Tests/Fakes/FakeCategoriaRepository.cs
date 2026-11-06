@@ -1,5 +1,6 @@
 ﻿using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Domain.Entities;
+using System.Collections.Generic;
 
 namespace SistemaVenta.Application.Tests.Fakes
 {
@@ -35,5 +36,22 @@ namespace SistemaVenta.Application.Tests.Fakes
 
             return Task.CompletedTask;
         }
+
+        public Task EliminarAsync(Categoria categoria)
+        {
+            // Reemplazar _categorias por el nombre de la colección
+            // que ya utiliza tu FakeCategoriaRepository.
+            _categorias.Remove(categoria.Id);
+
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> TieneProductosAsync(int categoriaId)
+        {
+            // Implementación provisional para pruebas que
+            // no necesitan simular productos asociados.
+            return Task.FromResult(false);
+        }
+
     }
 }

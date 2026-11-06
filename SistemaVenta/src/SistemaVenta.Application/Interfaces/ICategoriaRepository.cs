@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 using SistemaVenta.Domain.Entities;
 
 namespace SistemaVenta.Application.Interfaces
@@ -10,7 +6,13 @@ namespace SistemaVenta.Application.Interfaces
     public interface ICategoriaRepository
     {
         Task<IReadOnlyList<Categoria>> ObtenerTodasAsync();
-        Task AgregarAsync(Categoria categoria);
+
         Task<Categoria?> ObtenerPorIdAsync(int id);
+
+        Task AgregarAsync(Categoria categoria);
+
+        Task EliminarAsync(Categoria categoria);
+
+        Task<bool> TieneProductosAsync(int categoriaId);
     }
 }

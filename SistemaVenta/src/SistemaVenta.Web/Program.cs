@@ -4,15 +4,16 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using SistemaVenta.Application;
 using SistemaVenta.Application.Interfaces;
+using SistemaVenta.Application.UseCases.Categorias;
 using SistemaVenta.Application.UseCases.CuentasCorrientes;
 using SistemaVenta.Application.UseCases.DocumentosComerciales;
 using SistemaVenta.Application.UseCases.Facturas;
+using SistemaVenta.Application.UseCases.Pagos;
 using SistemaVenta.Infrastructure;
 using SistemaVenta.Infrastructure.Initialization;
 using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Security;
 using System.Threading.RateLimiting;
-using SistemaVenta.Application.UseCases.Pagos;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,6 +59,14 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(
     builder.Configuration);
+
+builder.Services.AddScoped<ListarCategorias>();
+builder.Services.AddScoped<CrearCategoria>();
+builder.Services.AddScoped<EditarCategoria>();
+builder.Services.AddScoped<ActivarCategoria>();
+builder.Services.AddScoped<DesactivarCategoria>();
+builder.Services.AddScoped<EliminarCategoria>();
+builder.Services.AddScoped<ObtenerCategoria>();
 
 builder.Services.AddScoped<RegistrarDebitoCuentaCorriente>();
 builder.Services.AddScoped<RegistrarCreditoCuentaCorriente>();

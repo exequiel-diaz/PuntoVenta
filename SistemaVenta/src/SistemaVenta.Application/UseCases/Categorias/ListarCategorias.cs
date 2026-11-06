@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 using SistemaVenta.Application.DTOs.Categorias;
 using SistemaVenta.Application.Interfaces;
 
@@ -27,7 +23,9 @@ namespace SistemaVenta.Application.UseCases.Categorias
                 .Select(c => new CategoriaListadoDto
                 {
                     Id = c.Id,
-                    Nombre = c.Nombre
+                    Nombre = c.Nombre,
+                    Descripcion = c.Descripcion,
+                    Activa = c.Activa
                 })
                 .ToList();
         }

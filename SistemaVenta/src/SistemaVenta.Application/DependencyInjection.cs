@@ -28,6 +28,10 @@ namespace SistemaVenta.Application
 
             services.AddScoped<ListarCategorias>();
             services.AddScoped<CrearCategoria>();
+            services.AddScoped<EditarCategoria>();
+            services.AddScoped<ActivarCategoria>();
+            services.AddScoped<DesactivarCategoria>();
+            services.AddScoped<EliminarCategoria>();
 
             services.AddScoped<CrearClienteFisico>();
             services.AddScoped<CrearClienteEmpresa>();
