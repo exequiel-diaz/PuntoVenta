@@ -18,7 +18,10 @@ namespace SistemaVenta.Application
         {
             services.AddScoped<RegistrarIngresoStock>();
             services.AddScoped<RegistrarSalidaStock>();
+
             services.AddScoped<CorregirInventario>();
+            services.AddScoped<ObtenerInformeInventario>();
+            services.AddScoped<ObtenerInformeMovimientosStock>();
 
 
             services.AddScoped<ListarProductos>();

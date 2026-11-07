@@ -277,6 +277,53 @@
             </div>
         </div>
 
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        Inventario actual
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Consultá las existencias, el stock mínimo,
+                        los productos agotados y el valor potencial
+                        de venta del inventario.
+                    </p>
+
+                    <a asp-controller="Informes"
+                       asp-action="InventarioActual"
+                       class="btn btn-primary">
+                        Ver inventario
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        Movimientos de stock
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Consultá el historial de ingresos, ventas,
+                        salidas, ajustes y correcciones de inventario.
+                    </p>
+
+                    <a asp-controller="Informes"
+                       asp-action="MovimientosStock"
+                       class="btn btn-primary">
+                        Ver movimientos
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
     </div>
 
 </div>

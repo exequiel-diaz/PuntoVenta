@@ -17,16 +17,24 @@ public class InformesController : Controller
     private readonly ObtenerVentasDiarias _obtenerVentasDiarias;
     private readonly ObtenerVentasPorVendedor _obtenerVentasPorVendedor;
 
+    private readonly ObtenerInformeInventario _obtenerInventario;
+    private readonly ObtenerInformeMovimientosStock _obtenerMovimientos;
+
+
     public InformesController(
         ObtenerInformeVentasPorPeriodo obtenerInformeVentas, 
         ObtenerProductosMasVendidos obtenerProductosMasVendidos,
         ObtenerVentasDiarias obtenerVentasDiarias,
-        ObtenerVentasPorVendedor obtenerVentasPorVendedor)
+        ObtenerVentasPorVendedor obtenerVentasPorVendedor,
+        ObtenerInformeInventario obtenerInventario,
+        ObtenerInformeMovimientosStock obtenerMovimientos)
     {
         _obtenerInformeVentas = obtenerInformeVentas;
         _obtenerProductosMasVendidos = obtenerProductosMasVendidos;
         _obtenerVentasDiarias = obtenerVentasDiarias;
         _obtenerVentasPorVendedor = obtenerVentasPorVendedor;
+        _obtenerInventario = obtenerInventario;
+        _obtenerMovimientos = obtenerMovimientos;
     }
 
 
@@ -161,6 +169,63 @@ public class InformesController : Controller
             cantidad);
 
         return View(productos);
+    }
+
+
+    [HttpGet]
+    public async Task<IActionResult> InventarioActual()
+    {
+        var productos = await _obtenerInventario.EjecutarAsync();
+
+        return View(productos);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> MovimientosStock(
+        DateTime? fechaDesde,
+        DateTime? fechaHasta)
+    {
+        var zonaArgentina = TimeZoneInfo.FindSystemTimeZoneById(
+            "America/Argentina/Buenos_Aires");
+
+        var hoyArgentina = TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.UtcNow,
+            zonaArgentina).Date;
+
+        var desde = fechaDesde?.Date ?? hoyArgentina.AddDays(-30);
+        var hasta = fechaHasta?.Date ?? hoyArgentina;
+
+        if (desde > hasta)
+        {
+            return BadRequest(
+                "La fecha inicial no puede superar la fecha final.");
+        }
+
+        // Evitamos consultar intervalos excesivamente grandes.
+        if ((hasta - desde).TotalDays > 366)
+        {
+            return BadRequest(
+                "El período no puede superar 366 días.");
+        }
+
+        var inicioUtc = TimeZoneInfo.ConvertTimeToUtc(
+            DateTime.SpecifyKind(
+                desde, DateTimeKind.Unspecified),
+            zonaArgentina);
+
+        var finUtcExclusivo = TimeZoneInfo.ConvertTimeToUtc(
+            DateTime.SpecifyKind(
+                hasta.AddDays(1), DateTimeKind.Unspecified),
+            zonaArgentina);
+
+        var movimientos = await _obtenerMovimientos.EjecutarAsync(
+            inicioUtc,
+            finUtcExclusivo);
+
+        ViewBag.FechaDesde = desde;
+        ViewBag.FechaHasta = hasta;
+
+        return View(movimientos);
     }
 
 

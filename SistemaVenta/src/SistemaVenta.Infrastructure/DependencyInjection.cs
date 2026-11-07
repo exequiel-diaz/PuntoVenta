@@ -28,6 +28,12 @@ namespace SistemaVenta.Infrastructure
 
             services.AddScoped<IProductoRepository, ProductoRepository>();
 
+
+            services.AddScoped<
+                IInformeInventarioRepository,
+                InformeInventarioRepository>();
+
+
             services.AddScoped<
                 IMovimientoStockRepository,
                 MovimientoStockRepository>();
