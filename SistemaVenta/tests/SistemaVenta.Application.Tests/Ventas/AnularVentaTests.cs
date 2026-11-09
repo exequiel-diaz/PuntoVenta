@@ -17,7 +17,7 @@ namespace SistemaVenta.Application.Tests.Ventas
         private readonly FakeUnitOfWork _unitOfWork = new();
         private readonly FakeDocumentoComercialRepository _documentos = new();
         private readonly FakeCuentaCorrienteRepository _cuentas = new();
-
+        private const int UsuarioAdministradorId = 1;
 
         private AnularVenta CrearCasoDeUso()
         {
@@ -82,7 +82,7 @@ namespace SistemaVenta.Application.Tests.Ventas
             await _ventas.AgregarAsync(venta);
 
             // Act
-            await CrearCasoDeUso().EjecutarAsync(1);
+            await CrearCasoDeUso().EjecutarAsync(1, UsuarioAdministradorId);
 
             // Assert
             Assert.Equal(EstadoVenta.Anulada, venta.Estado);
@@ -110,7 +110,7 @@ namespace SistemaVenta.Application.Tests.Ventas
         public async Task AnularVenta_IdInvalido_NoGuardaCambios(int ventaId)
         {
             await Assert.ThrowsAsync<ArgumentException>(
-                () => CrearCasoDeUso().EjecutarAsync(ventaId));
+                () => CrearCasoDeUso().EjecutarAsync(ventaId, UsuarioAdministradorId));
 
             Assert.Empty(_movimientos.Movimientos);
             Assert.False(_unitOfWork.GuardarCambiosFueLlamado);
@@ -120,7 +120,7 @@ namespace SistemaVenta.Application.Tests.Ventas
         public async Task AnularVenta_VentaInexistente_NoGuardaCambios()
         {
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => CrearCasoDeUso().EjecutarAsync(99));
+                () => CrearCasoDeUso().EjecutarAsync(99, UsuarioAdministradorId));
 
             Assert.Empty(_movimientos.Movimientos);
             Assert.False(_unitOfWork.GuardarCambiosFueLlamado);
@@ -136,7 +136,7 @@ namespace SistemaVenta.Application.Tests.Ventas
             await _ventas.AgregarAsync(venta);
 
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => CrearCasoDeUso().EjecutarAsync(1));
+                () => CrearCasoDeUso().EjecutarAsync(1, UsuarioAdministradorId));
 
             Assert.Equal(EstadoVenta.Pendiente, venta.Estado);
             Assert.Empty(_movimientos.Movimientos);
@@ -178,7 +178,7 @@ namespace SistemaVenta.Application.Tests.Ventas
             var casoDeUso = CrearCasoDeUso();
 
             // Primera anulación.
-            await casoDeUso.EjecutarAsync(1);
+            await casoDeUso.EjecutarAsync(1, UsuarioAdministradorId);
 
             Assert.Equal(10m, producto.StockActual);
             Assert.Equal(EstadoVenta.Anulada, venta.Estado);
@@ -186,7 +186,7 @@ namespace SistemaVenta.Application.Tests.Ventas
 
             // Segunda anulación.
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => casoDeUso.EjecutarAsync(1));
+                () => casoDeUso.EjecutarAsync(1, UsuarioAdministradorId));
 
             // No debe volver a ingresar stock.
             Assert.Equal(10m, producto.StockActual);
@@ -231,7 +231,7 @@ namespace SistemaVenta.Application.Tests.Ventas
             await _ventas.AgregarAsync(venta);
 
             // Act
-            await CrearCasoDeUso().EjecutarAsync(1);
+            await CrearCasoDeUso().EjecutarAsync(1, UsuarioAdministradorId);
 
             // Assert
             Assert.Equal(EstadoVenta.Anulada, venta.Estado);
@@ -286,7 +286,7 @@ namespace SistemaVenta.Application.Tests.Ventas
             await _ventas.AgregarAsync(venta);
 
             // Act
-            await CrearCasoDeUso().EjecutarAsync(1);
+            await CrearCasoDeUso().EjecutarAsync(1, UsuarioAdministradorId);
 
             // Assert
             Assert.Equal(EstadoVenta.Anulada, venta.Estado);
@@ -340,7 +340,7 @@ namespace SistemaVenta.Application.Tests.Ventas
 
             // Act y Assert
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => CrearCasoDeUso().EjecutarAsync(1));
+                () => CrearCasoDeUso().EjecutarAsync(1, UsuarioAdministradorId));
 
             Assert.Equal(EstadoVenta.Confirmada, venta.Estado);
             Assert.Equal(8m, producto1.StockActual);
@@ -396,7 +396,7 @@ namespace SistemaVenta.Application.Tests.Ventas
             // Act
             var excepcion =
                 await Assert.ThrowsAsync<InvalidOperationException>(
-                    () => CrearCasoDeUso().EjecutarAsync(venta.Id));
+                    () => CrearCasoDeUso().EjecutarAsync(venta.Id, UsuarioAdministradorId));
 
             // Assert
             Assert.Equal(

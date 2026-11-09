@@ -58,6 +58,13 @@ public class InformeInventarioRepository
                 m.StockAnterior,
                 m.StockPosterior,
                 m.Motivo,
+                m.UsuarioId,
+                m.VentaId,
+
+                Responsable = m.Usuario != null
+                    ? m.Usuario.NombreCompleto
+                    : "No registrado",
+
                 CodigoInterno = m.Producto.CodigoInterno,
                 Producto = m.Producto.Nombre
             })
@@ -66,6 +73,9 @@ public class InformeInventarioRepository
         return registros.Select(m => new MovimientoStockInformeDto
         {
             Id = m.Id,
+            UsuarioId = m.UsuarioId,
+            Responsable = m.Responsable,
+            VentaId = m.VentaId,
             Fecha = m.Fecha,
             Tipo = m.Tipo.ToString(),
             Cantidad = m.Cantidad,

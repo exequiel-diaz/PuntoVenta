@@ -38,4 +38,14 @@ public class CuentaCorrienteRepository : ICuentaCorrienteRepository
     {
         await _context.CuentasCorrientes.AddAsync(cuenta);
     }
+
+    public async Task<IReadOnlyList<CuentaCorriente>> ObtenerTodasAsync()
+    {
+        return await _context.CuentasCorrientes
+            .AsNoTracking()
+            .Include(c => c.Movimientos)
+            .OrderBy(c => c.ClienteId)
+            .ToListAsync();
+    }
+
 }

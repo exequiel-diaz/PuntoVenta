@@ -10,6 +10,8 @@ using SistemaVenta.Application.UseCases.Ventas;
 using SistemaVenta.Infrastructure.Security;
 using SistemaVenta.Application.UseCases.Usuarios;
 using SistemaVenta.Infrastructure.Initialization;
+using SistemaVenta.Infrastructure.Informes;
+using QuestPDF.Infrastructure;
 
 
 namespace SistemaVenta.Infrastructure
@@ -32,6 +34,10 @@ namespace SistemaVenta.Infrastructure
             services.AddScoped<
                 IInformeInventarioRepository,
                 InformeInventarioRepository>();
+
+            services.AddScoped<
+                IGeneradorInformeMovimientosPdf,
+                GeneradorInformeMovimientosPdf>();
 
 
             services.AddScoped<

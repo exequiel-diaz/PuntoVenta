@@ -342,9 +342,19 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("VentaId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ProductoId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.HasIndex("VentaId");
 
                     b.ToTable("MovimientosStock", (string)null);
                 });
@@ -825,7 +835,21 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("SistemaVenta.Domain.Entities.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SistemaVenta.Domain.Entities.Venta", "Venta")
+                        .WithMany()
+                        .HasForeignKey("VentaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Producto");
+
+                    b.Navigation("Usuario");
+
+                    b.Navigation("Venta");
                 });
 
             modelBuilder.Entity("SistemaVenta.Domain.Entities.Pago", b =>

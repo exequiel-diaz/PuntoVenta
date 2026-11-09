@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SistemaVenta.Application.UseCases.Informes;
 using SistemaVenta.Domain.Enums;
 using SistemaVenta.Web.Models.Informes;
+using SistemaVenta.Application.Interfaces;
 
 
 
@@ -19,7 +20,7 @@ public class InformesController : Controller
 
     private readonly ObtenerInformeInventario _obtenerInventario;
     private readonly ObtenerInformeMovimientosStock _obtenerMovimientos;
-
+    private readonly IGeneradorInformeMovimientosPdf _generadorMovimientosPdf;
 
     public InformesController(
         ObtenerInformeVentasPorPeriodo obtenerInformeVentas, 
@@ -27,7 +28,8 @@ public class InformesController : Controller
         ObtenerVentasDiarias obtenerVentasDiarias,
         ObtenerVentasPorVendedor obtenerVentasPorVendedor,
         ObtenerInformeInventario obtenerInventario,
-        ObtenerInformeMovimientosStock obtenerMovimientos)
+        ObtenerInformeMovimientosStock obtenerMovimientos,
+        IGeneradorInformeMovimientosPdf generadorMovimientosPdf)
     {
         _obtenerInformeVentas = obtenerInformeVentas;
         _obtenerProductosMasVendidos = obtenerProductosMasVendidos;
@@ -35,6 +37,7 @@ public class InformesController : Controller
         _obtenerVentasPorVendedor = obtenerVentasPorVendedor;
         _obtenerInventario = obtenerInventario;
         _obtenerMovimientos = obtenerMovimientos;
+        _generadorMovimientosPdf = generadorMovimientosPdf;
     }
 
 
@@ -180,10 +183,13 @@ public class InformesController : Controller
         return View(productos);
     }
 
+
     [HttpGet]
     public async Task<IActionResult> MovimientosStock(
         DateTime? fechaDesde,
-        DateTime? fechaHasta)
+        DateTime? fechaHasta,
+        string periodo = "personalizado",
+        DateTime? fechaSemana = null)
     {
         var zonaArgentina = TimeZoneInfo.FindSystemTimeZoneById(
             "America/Argentina/Buenos_Aires");
@@ -192,8 +198,46 @@ public class InformesController : Controller
             DateTime.UtcNow,
             zonaArgentina).Date;
 
-        var desde = fechaDesde?.Date ?? hoyArgentina.AddDays(-30);
-        var hasta = fechaHasta?.Date ?? hoyArgentina;
+        DateTime desde;
+        DateTime hasta;
+
+        // Calcula el lunes de la semana que contiene una fecha.
+        static DateTime ObtenerLunes(DateTime fecha)
+        {
+            int diasDesdeLunes =
+                ((int)fecha.DayOfWeek + 6) % 7;
+
+            return fecha.Date.AddDays(-diasDesdeLunes);
+        }
+
+        switch (periodo)
+        {
+            case "estaSemana":
+                desde = ObtenerLunes(hoyArgentina);
+                hasta = desde.AddDays(6);
+                break;
+
+            case "semanaAnterior":
+                desde = ObtenerLunes(hoyArgentina).AddDays(-7);
+                hasta = desde.AddDays(6);
+                break;
+
+            case "elegirSemana":
+                var fechaSeleccionada =
+                    fechaSemana?.Date ?? hoyArgentina;
+
+                desde = ObtenerLunes(fechaSeleccionada);
+                hasta = desde.AddDays(6);
+                break;
+
+            case "personalizado":
+                desde = fechaDesde?.Date ?? hoyArgentina.AddDays(-30);
+                hasta = fechaHasta?.Date ?? hoyArgentina;
+                break;
+
+            default:
+                return BadRequest("El período seleccionado no es válido.");
+        }
 
         if (desde > hasta)
         {
@@ -201,7 +245,96 @@ public class InformesController : Controller
                 "La fecha inicial no puede superar la fecha final.");
         }
 
-        // Evitamos consultar intervalos excesivamente grandes.
+        if ((hasta - desde).TotalDays > 366)
+        {
+            return BadRequest(
+                "El período no puede superar 366 días.");
+        }
+
+        // Interpretar las fechas como días de Argentina.
+        var inicioUtc = TimeZoneInfo.ConvertTimeToUtc(
+            DateTime.SpecifyKind(
+                desde, DateTimeKind.Unspecified),
+            zonaArgentina);
+
+        var finUtcExclusivo = TimeZoneInfo.ConvertTimeToUtc(
+            DateTime.SpecifyKind(
+                hasta.AddDays(1), DateTimeKind.Unspecified),
+            zonaArgentina);
+
+        var movimientos = await _obtenerMovimientos.EjecutarAsync(
+            inicioUtc,
+            finUtcExclusivo);
+
+        ViewBag.FechaDesde = desde;
+        ViewBag.FechaHasta = hasta;
+        ViewBag.Periodo = periodo;
+        ViewBag.FechaSemana = fechaSemana?.Date ?? hoyArgentina;
+
+        return View(movimientos);
+    }
+
+
+
+    [HttpGet]
+    public async Task<IActionResult> DescargarMovimientosStockPdf(
+        DateTime? fechaDesde,
+        DateTime? fechaHasta,
+        string periodo = "personalizado",
+        DateTime? fechaSemana = null)
+    {
+        var zonaArgentina = TimeZoneInfo.FindSystemTimeZoneById(
+            "America/Argentina/Buenos_Aires");
+
+        var hoyArgentina = TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.UtcNow,
+            zonaArgentina).Date;
+
+        static DateTime ObtenerLunes(DateTime fecha)
+        {
+            int diasDesdeLunes =
+                ((int)fecha.DayOfWeek + 6) % 7;
+
+            return fecha.Date.AddDays(-diasDesdeLunes);
+        }
+
+        DateTime desde;
+        DateTime hasta;
+
+        switch (periodo)
+        {
+            case "estaSemana":
+                desde = ObtenerLunes(hoyArgentina);
+                hasta = desde.AddDays(6);
+                break;
+
+            case "semanaAnterior":
+                desde = ObtenerLunes(hoyArgentina).AddDays(-7);
+                hasta = desde.AddDays(6);
+                break;
+
+            case "elegirSemana":
+                desde = ObtenerLunes(
+                    fechaSemana?.Date ?? hoyArgentina);
+                hasta = desde.AddDays(6);
+                break;
+
+            case "personalizado":
+                desde = fechaDesde?.Date ?? hoyArgentina.AddDays(-30);
+                hasta = fechaHasta?.Date ?? hoyArgentina;
+                break;
+
+            default:
+                return BadRequest(
+                    "El período seleccionado no es válido.");
+        }
+
+        if (desde > hasta)
+        {
+            return BadRequest(
+                "La fecha inicial no puede superar la fecha final.");
+        }
+
         if ((hasta - desde).TotalDays > 366)
         {
             return BadRequest(
@@ -222,10 +355,18 @@ public class InformesController : Controller
             inicioUtc,
             finUtcExclusivo);
 
-        ViewBag.FechaDesde = desde;
-        ViewBag.FechaHasta = hasta;
+        var pdf = _generadorMovimientosPdf.Generar(
+            movimientos,
+            desde,
+            hasta);
 
-        return View(movimientos);
+        var nombreArchivo =
+            $"MovimientosStock_{desde:yyyyMMdd}_{hasta:yyyyMMdd}.pdf";
+
+        return File(
+            pdf,
+            "application/pdf",
+            nombreArchivo);
     }
 
 

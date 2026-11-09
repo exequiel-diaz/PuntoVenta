@@ -9,9 +9,15 @@ public class CuentaCorrienteDetalleDto
 
     public int ClienteId { get; set; }
 
-    public decimal LimiteDeuda { get; set; }
+    public string Cliente { get; set; } = string.Empty;
+
+    public string Documento { get; set; } = string.Empty;
 
     public decimal SaldoActual { get; set; }
+
+    public decimal LimiteDeuda { get; set; }
+
+    public decimal CreditoDisponible { get; set; }
 
     public DateTime FechaApertura { get; set; }
 

@@ -1,4 +1,5 @@
-﻿using SistemaVenta.Domain.Entities;
+﻿
+using SistemaVenta.Domain.Entities;
 
 namespace SistemaVenta.Application.Interfaces;
 
@@ -9,6 +10,8 @@ public interface ICuentaCorrienteRepository
     Task<CuentaCorriente?> ObtenerPorClienteIdAsync(int clienteId);
 
     Task<bool> ExistePorClienteIdAsync(int clienteId);
+
+    Task<IReadOnlyList<CuentaCorriente>> ObtenerTodasAsync();
 
     Task AgregarAsync(CuentaCorriente cuenta);
 }

@@ -5,6 +5,9 @@
 
     DateTime desde = ViewBag.FechaDesde;
     DateTime hasta = ViewBag.FechaHasta;
+    DateTime fechaSemana = ViewBag.FechaSemana;
+
+    string periodo = ViewBag.Periodo ?? "personalizado";
 
     var zonaArgentina = TimeZoneInfo.FindSystemTimeZoneById(
         "America/Argentina/Buenos_Aires");
@@ -29,6 +32,51 @@
             <div class="row g-3 align-items-end">
 
                 <div class="col-md-4">
+                    <label for="periodo" class="form-label">
+                        Período
+                    </label>
+
+                    <select id="periodo"
+                            name="periodo"
+                            class="form-select">
+
+                        <option value="personalizado"
+                                selected="@(periodo == "personalizado")">
+                            Personalizado
+                        </option>
+
+                        <option value="estaSemana"
+                                selected="@(periodo == "estaSemana")">
+                            Esta semana
+                        </option>
+
+                        <option value="semanaAnterior"
+                                selected="@(periodo == "semanaAnterior")">
+                            Semana anterior
+                        </option>
+
+                        <option value="elegirSemana"
+                                selected="@(periodo == "elegirSemana")">
+                            Elegir semana
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-4"
+                     id="contenedorFechaSemana">
+
+                    <label for="fechaSemana" class="form-label">
+                        Fecha de la semana
+                    </label>
+
+                    <input type="date"
+                           id="fechaSemana"
+                           name="fechaSemana"
+                           value="@fechaSemana.ToString("yyyy-MM-dd")"
+                           class="form-control" />
+                </div>
+
+                <div class="col-md-4 filtro-personalizado">
                     <label for="fechaDesde" class="form-label">
                         Desde
                     </label>
@@ -37,11 +85,10 @@
                            id="fechaDesde"
                            name="fechaDesde"
                            value="@desde.ToString("yyyy-MM-dd")"
-                           class="form-control"
-                           required />
+                           class="form-control" />
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-4 filtro-personalizado">
                     <label for="fechaHasta" class="form-label">
                         Hasta
                     </label>
@@ -50,8 +97,7 @@
                            id="fechaHasta"
                            name="fechaHasta"
                            value="@hasta.ToString("yyyy-MM-dd")"
-                           class="form-control"
-                           required />
+                           class="form-control" />
                 </div>
 
                 <div class="col-md-4">
@@ -63,16 +109,43 @@
 
             </div>
         </form>
-
     </div>
 </div>
 
 <div class="card mb-4">
     <div class="card-body">
+
+        <h6 class="text-muted">
+            Período consultado
+        </h6>
+
+        <p class="mb-3">
+            <strong>
+                @desde.ToString("dd/MM/yyyy")
+                -
+                @hasta.ToString("dd/MM/yyyy")
+            </strong>
+        </p>
+
         <h6>Total de movimientos en el período</h6>
-        <h3>@Model.Count</h3>
+        <h3 class="mb-0">@Model.Count</h3>
+
     </div>
 </div>
+
+
+<div class="d-flex justify-content-end mb-3">
+    <a asp-controller="Informes"
+       asp-action="DescargarMovimientosStockPdf"
+       asp-route-periodo="@periodo"
+       asp-route-fechaDesde="@desde.ToString("yyyy-MM-dd")"
+       asp-route-fechaHasta="@hasta.ToString("yyyy-MM-dd")"
+       asp-route-fechaSemana="@fechaSemana.ToString("yyyy-MM-dd")"
+       class="btn btn-outline-danger">
+        Descargar PDF
+    </a>
+</div>
+
 
 @if (!Model.Any())
 {
@@ -96,16 +169,18 @@ else
                     <th class="text-end">Anterior</th>
                     <th class="text-end">Posterior</th>
                     <th>Motivo</th>
+                    <th>Responsable</th>
+                    <th>Operación</th>
                 </tr>
             </thead>
 
             <tbody>
-
                 @foreach (var movimiento in Model)
                 {
                     var fechaLocal = TimeZoneInfo.ConvertTimeFromUtc(
                     DateTime.SpecifyKind(
-                    movimiento.Fecha, DateTimeKind.Utc),
+                    movimiento.Fecha,
+                    DateTimeKind.Utc),
                     zonaArgentina);
 
                     <tr>
@@ -113,17 +188,11 @@ else
                             @fechaLocal.ToString("dd/MM/yyyy HH:mm")
                         </td>
 
-                        <td>
-                            @movimiento.CodigoInterno
-                        </td>
+                        <td>@movimiento.CodigoInterno</td>
 
-                        <td>
-                            @movimiento.Producto
-                        </td>
+                        <td>@movimiento.Producto</td>
 
-                        <td>
-                            @movimiento.Tipo
-                        </td>
+                        <td>@movimiento.Tipo</td>
 
                         <td class="text-end">
                             @movimiento.Cantidad.ToString("N0", cultura)
@@ -142,10 +211,27 @@ else
                                                 ? "-"
                                                 : movimiento.Motivo)
                 </td>
-            </tr>
-                        }
 
+                        <td>@movimiento.Responsable</td>
+
+                        <td>
+                    @if (movimiento.VentaId.HasValue)
+                            {
+                                <a asp-controller="Ventas"
+                                   asp-action="Detalle"
+                                   asp-route-id="@movimiento.VentaId.Value">
+                                    Venta #@movimiento.VentaId.Value
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                    </tr>
+                }
             </tbody>
+
         </table>
     </div>
 }
@@ -155,3 +241,61 @@ else
    class="btn btn-secondary">
     Volver a informes
 </a>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const selectorPeriodo =
+                document.getElementById("periodo");
+
+            const contenedorSemana =
+                document.getElementById("contenedorFechaSemana");
+
+            const camposPersonalizados =
+                document.querySelectorAll(".filtro-personalizado");
+
+            const fechaDesde =
+                document.getElementById("fechaDesde");
+
+            const fechaHasta =
+                document.getElementById("fechaHasta");
+
+            const fechaSemana =
+                document.getElementById("fechaSemana");
+
+            function actualizarFiltros() {
+                const periodo = selectorPeriodo.value;
+
+                const esPersonalizado =
+                    periodo === "personalizado";
+
+                const esElegirSemana =
+                    periodo === "elegirSemana";
+
+                camposPersonalizados.forEach(campo => {
+                    campo.classList.toggle(
+                        "d-none",
+                        !esPersonalizado);
+                });
+
+                contenedorSemana.classList.toggle(
+                    "d-none",
+                    !esElegirSemana);
+
+                fechaDesde.disabled = !esPersonalizado;
+                fechaHasta.disabled = !esPersonalizado;
+                fechaSemana.disabled = !esElegirSemana;
+
+                fechaDesde.required = esPersonalizado;
+                fechaHasta.required = esPersonalizado;
+                fechaSemana.required = esElegirSemana;
+            }
+
+            selectorPeriodo.addEventListener(
+                "change",
+                actualizarFiltros);
+
+            actualizarFiltros();
+        });
+    </script>
+}

@@ -1,12 +1,13 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using SistemaVenta.Application.UseCases.Categorias;
 using SistemaVenta.Application.UseCases.Clientes;
+using SistemaVenta.Application.UseCases.CuentasCorrientes;
+using SistemaVenta.Application.UseCases.Informes;
 using SistemaVenta.Application.UseCases.Pagos;
 using SistemaVenta.Application.UseCases.Productos;
 using SistemaVenta.Application.UseCases.Stock;
-using SistemaVenta.Application.UseCases.Ventas;
-using SistemaVenta.Application.UseCases.Informes;
 using SistemaVenta.Application.UseCases.Vendedores;
+using SistemaVenta.Application.UseCases.Ventas;
 
 
 namespace SistemaVenta.Application
@@ -67,6 +68,8 @@ namespace SistemaVenta.Application
             services.AddScoped<EditarVendedor>();
             services.AddScoped<CambiarEstadoVendedor>();
             services.AddScoped<EliminarVendedor>();
+
+            services.AddScoped<ListarCuentasCorrientes>();
 
             return services;
         }

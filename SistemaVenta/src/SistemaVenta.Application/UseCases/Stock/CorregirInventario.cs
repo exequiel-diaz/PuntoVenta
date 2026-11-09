@@ -24,7 +24,8 @@ namespace SistemaVenta.Application.UseCases.Stock
         public async Task EjecutarAsync(
             int productoId,
             decimal stockContado,
-            string motivo)
+            string motivo,
+            int? usuarioId = null)
         {
             if (stockContado < 0 ||
                 stockContado != decimal.Truncate(stockContado))
@@ -70,7 +71,8 @@ namespace SistemaVenta.Application.UseCases.Stock
                 Math.Abs(diferencia),
                 anterior,
                 producto.StockActual,
-                motivo);
+                motivo:motivo,
+                usuarioId: usuarioId);
 
             await _movimientos.AgregarAsync(movimiento);
             await _unitOfWork.GuardarCambiosAsync();

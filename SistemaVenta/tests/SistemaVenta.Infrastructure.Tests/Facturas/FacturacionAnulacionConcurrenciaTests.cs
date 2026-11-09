@@ -17,6 +17,7 @@ namespace SistemaVenta.Infrastructure.Tests.Facturas
     {
         private readonly TestDbContextFactory _factory = new();
 
+
         [Fact]
         public async Task FacturarPrimero_ImpideAnularLaVenta()
         {
@@ -24,6 +25,7 @@ namespace SistemaVenta.Infrastructure.Tests.Facturas
             int clienteId = 0;
             int productoId = 0;
             int categoriaId = 0;
+            int administradorId = 0;
 
             // ARRANGE: preparar datos persistidos.
             await using (var preparacion = _factory.CreateDbContext([]))
@@ -50,14 +52,27 @@ namespace SistemaVenta.Infrastructure.Tests.Facturas
 
                 producto.AumentarStock(10m);
 
+                // Crear un administrador válido para la anulación.
+                var administrador = new Usuario(
+                    nombreUsuario: $"admin_{Guid.NewGuid():N}",
+                    nombreCompleto: "Administrador de prueba",
+                    passwordHash: "hash-de-prueba",
+                    rol: RolUsuario.Administrador);
+
                 preparacion.Clientes.Add(cliente);
                 preparacion.Productos.Add(producto);
+                preparacion.Usuarios.Add(administrador);
 
                 await preparacion.SaveChangesAsync();
 
                 clienteId = cliente.Id;
                 productoId = producto.Id;
                 categoriaId = categoria.Id;
+                administradorId = administrador.Id;
+
+                Assert.True(
+                    administradorId > 0,
+                    "El administrador debe tener un ID válido.");
 
                 var venta = new Venta(clienteId);
 
@@ -104,10 +119,12 @@ namespace SistemaVenta.Infrastructure.Tests.Facturas
                     ventaId,
                     TipoFactura.B);
 
-                // La anulación debe ser rechazada.
+                // La anulación debe rechazarse porque ya está facturada.
                 var excepcion =
                     await Assert.ThrowsAsync<InvalidOperationException>(
-                        () => anularVenta.EjecutarAsync(ventaId));
+                        () => anularVenta.EjecutarAsync(
+                            ventaId,
+                            administradorId));
 
                 Assert.Equal(
                     "No se puede anular una venta que ya tiene una factura registrada.",
@@ -144,7 +161,7 @@ namespace SistemaVenta.Infrastructure.Tests.Facturas
             }
             finally
             {
-                // Limpieza en orden de dependencias.
+                // Limpieza respetando las claves foráneas.
                 await using var limpieza =
                     _factory.CreateDbContext([]);
 
@@ -153,6 +170,11 @@ namespace SistemaVenta.Infrastructure.Tests.Facturas
                     await limpieza.DocumentosComerciales
                         .OfType<Factura>()
                         .Where(f => f.VentaId == ventaId)
+                        .ExecuteDeleteAsync();
+
+                    // Primero eliminar movimientos relacionados con la venta.
+                    await limpieza.MovimientosStock
+                        .Where(m => m.VentaId == ventaId)
                         .ExecuteDeleteAsync();
 
                     await limpieza.DetallesVenta
@@ -186,6 +208,14 @@ namespace SistemaVenta.Infrastructure.Tests.Facturas
                 {
                     await limpieza.Clientes
                         .Where(c => c.Id == clienteId)
+                        .ExecuteDeleteAsync();
+                }
+
+                // Eliminar al administrador después de sus movimientos.
+                if (administradorId > 0)
+                {
+                    await limpieza.Usuarios
+                        .Where(u => u.Id == administradorId)
                         .ExecuteDeleteAsync();
                 }
             }

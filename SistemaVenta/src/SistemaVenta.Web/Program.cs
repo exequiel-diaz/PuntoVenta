@@ -14,9 +14,11 @@ using SistemaVenta.Infrastructure.Initialization;
 using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Security;
 using System.Threading.RateLimiting;
-
+//using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+//QuestPDF.Settings.License = LicenseType.Community;
+
 
 builder.Services
     .AddAuthentication(
@@ -70,6 +72,8 @@ builder.Services.AddScoped<ObtenerCategoria>();
 
 builder.Services.AddScoped<RegistrarDebitoCuentaCorriente>();
 builder.Services.AddScoped<RegistrarCreditoCuentaCorriente>();
+builder.Services.AddScoped<ObtenerDetalleCuentaCorriente>();
+builder.Services.AddScoped<ListarVentasPendientesCuentaCorriente>();
 
 builder.Services.AddScoped<EmitirFactura>();
 builder.Services.AddScoped<ObtenerDetalleFactura>();

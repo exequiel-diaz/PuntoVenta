@@ -46,6 +46,23 @@ namespace SistemaVenta.Infrastructure.Persistence.Configurations
                 .WithMany()
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
+
+
+            builder.HasOne(m => m.Usuario)
+                .WithMany()
+                .HasForeignKey(m => m.UsuarioId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(m => m.Venta)
+                .WithMany()
+                .HasForeignKey(m => m.VentaId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(m => m.UsuarioId);
+            builder.HasIndex(m => m.VentaId);
+
         }
     }
 }

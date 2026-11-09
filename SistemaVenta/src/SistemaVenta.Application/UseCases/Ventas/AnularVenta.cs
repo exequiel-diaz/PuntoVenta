@@ -34,7 +34,7 @@ namespace SistemaVenta.Application.UseCases.Ventas
             _cuentas = cuentas;
         }
 
-        public async Task EjecutarAsync(int ventaId)
+        public async Task EjecutarAsync(int ventaId, int usuarioId)
         {
             // 1. Validar identificador
 
@@ -44,6 +44,15 @@ namespace SistemaVenta.Application.UseCases.Ventas
                     "El identificador de la venta debe ser válido.",
                     nameof(ventaId));
             }
+
+
+            if (usuarioId <= 0)
+            {
+                throw new ArgumentException(
+                    "El usuario responsable no es válido.",
+                    nameof(usuarioId));
+            }
+
 
             await _transaccion.EjecutarAsync(
                 ventaId,
@@ -131,7 +140,9 @@ namespace SistemaVenta.Application.UseCases.Ventas
                             cantidad: item.Cantidad,
                             stockAnterior: stockAnterior,
                             stockPosterior: stockPosterior,
-                            motivo: $"Anulación de venta #{venta.Id}");
+                            motivo: $"Anulación de venta #{venta.Id}",
+                            usuarioId: usuarioId,
+                            venta: venta);
 
                         await _movimientos.AgregarAsync(movimiento);
                     }

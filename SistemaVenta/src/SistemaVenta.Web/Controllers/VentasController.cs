@@ -210,7 +210,18 @@ public class VentasController : Controller
     {
         try
         {
-            await _anularVenta.EjecutarAsync(id);
+
+            var usuarioIdTexto = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (!int.TryParse(usuarioIdTexto, out var usuarioId) ||
+                usuarioId <= 0)
+            {
+                return Challenge();
+            }
+
+            await _anularVenta.EjecutarAsync(id, usuarioId);
+
 
             TempData["MensajeExito"] =
                 $"La venta #{id} se anuló correctamente.";

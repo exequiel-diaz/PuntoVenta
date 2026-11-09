@@ -20,4 +20,11 @@ public class MovimientoStockInformeDto
     public decimal StockPosterior { get; set; }
 
     public string Motivo { get; set; } = "";
+
+    public int? UsuarioId { get; set; }
+
+    public string Responsable { get; set; } = "No registrado";
+
+    public int? VentaId { get; set; }
+
 }

@@ -1,0 +1,142 @@
+﻿@model SistemaVenta.Application.DTOs.CuentasCorrientes.CuentaCorrienteDetalleDto
+
+@{
+    ViewData["Title"] = "Detalle de Cuenta Corriente";
+
+    var cultura = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+
+    var zonaArgentina = TimeZoneInfo.FindSystemTimeZoneById(
+        "America/Argentina/Buenos_Aires");
+}
+
+<div class="container-fluid mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Cuenta Corriente</h2>
+            <h5>@Model.Cliente</h5>
+            <span class="text-muted">
+                Documento: @Model.Documento
+            </span>
+        </div>
+
+        <a asp-action="Index"
+           class="btn btn-outline-secondary">
+            Volver
+        </a>
+    </div>
+
+    <div class="row mb-4">
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>Saldo actual</h6>
+                    <h3 class="@(Model.SaldoActual > 0 ? "text-danger" : "text-success")">
+                        @Model.SaldoActual.ToString("C", cultura)
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>Límite de deuda</h6>
+                    <h3>
+                        @Model.LimiteDeuda.ToString("C", cultura)
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>Crédito disponible</h6>
+                    <h3>
+                        @Model.CreditoDisponible.ToString("C", cultura)
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Historial de movimientos</strong>
+            <span class="badge bg-secondary">
+                @Model.Estado
+            </span>
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Concepto</th>
+                            <th>Origen</th>
+                            <th>Debe</th>
+                            <th>Haber</th>
+                            <th>Saldo</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var movimiento in Model.Movimientos)
+                        {
+                            var fechaLocal = TimeZoneInfo.ConvertTimeFromUtc(
+                            DateTime.SpecifyKind(
+                            movimiento.Fecha,
+                            DateTimeKind.Utc),
+                            zonaArgentina);
+
+                            <tr>
+                                <td>
+                                    @fechaLocal.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+
+                                <td>@movimiento.Descripcion</td>
+
+                                <td>@movimiento.Origen</td>
+
+                                <td class="text-danger">
+                                    @(movimiento.Debe > 0
+                                                                    ? movimiento.Debe.ToString("C", cultura)
+                                                                    : "-")
+                                                                      </td>
+
+                                <td class="text-success">
+                                    @(movimiento.Haber > 0
+                                                                    ? movimiento.Haber.ToString("C", cultura)
+                                                                    : "-")
+                            </td>
+
+                                <td>
+                                    <strong>
+                                        @movimiento.SaldoAcumulado.ToString("C", cultura)
+                                    </strong>
+                                </td>
+                            </tr>
+                                                }
+                    </tbody>
+
+                </table>
+            </div>
+
+            @if (!Model.Movimientos.Any())
+            {
+                <div class="alert alert-info">
+                    Esta cuenta corriente todavía no tiene movimientos.
+                </div>
+            }
+
+        </div>
+    </div>
+</div>

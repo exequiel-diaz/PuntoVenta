@@ -25,7 +25,8 @@ namespace SistemaVenta.Application.UseCases.Stock
             int productoId,
             decimal cantidad,
             string tipoSalida,
-            string motivo)
+            string motivo,
+            int? usuarioId=null)
         {
             if (tipoSalida != "Rotura" &&
                 tipoSalida != "Perdida" &&
@@ -63,7 +64,8 @@ namespace SistemaVenta.Application.UseCases.Stock
                 cantidad,
                 anterior,
                 producto.StockActual,
-                $"{tipoSalida}: {motivo}");
+                motivo: $"{tipoSalida}: {motivo}",
+                usuarioId: usuarioId);
 
             await _movimientos.AgregarAsync(movimiento);
             await _unitOfWork.GuardarCambiosAsync();

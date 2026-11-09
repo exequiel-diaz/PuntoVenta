@@ -1,0 +1,118 @@
+﻿@model IReadOnlyList<SistemaVenta.Application.DTOs.CuentasCorrientes.CuentaCorrienteResumenDto>
+
+@{
+    ViewData["Title"] = "Cuentas Corrientes";
+    var cultura = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+}
+
+<div class="container-fluid mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Cuentas Corrientes</h2>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>Clientes con deuda</h6>
+                    <h3>@Model.Count(c => c.SaldoActual > 0)</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>Total pendiente</h6>
+                    <h3>
+                        @(Model.Sum(c => Math.Max(c.SaldoActual, 0))
+                            .ToString("C", cultura))
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6>Cuentas registradas</h6>
+                    <h3>@Model.Count</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <input type="text"
+                   id="buscarCliente"
+                   class="form-control mb-3"
+                   placeholder="Buscar por cliente o documento..." />
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle"
+                       id="tablaCuentas">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Documento</th>
+                            <th>Saldo</th>
+                            <th>Límite</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var cuenta in Model)
+                        {
+                            <tr>
+                                <td>@cuenta.Cliente</td>
+                                <td>@cuenta.Documento</td>
+                                <td>
+                                    @cuenta.SaldoActual.ToString("C", cultura)
+                                </td>
+                                <td>
+                                    @cuenta.LimiteDeuda.ToString("C", cultura)
+                                </td>
+                                <td>@cuenta.Estado</td>
+                                <td>
+                                    <a asp-controller="CuentasCorrientes"
+                                       asp-action="Detalle"
+                                       asp-route-id="@cuenta.Id"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Ver detalle
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("buscarCliente")
+            .addEventListener("input", function () {
+
+                const filtro = this.value.toLowerCase();
+
+                const filas = document.querySelectorAll(
+                    "#tablaCuentas tbody tr");
+
+                filas.forEach(fila => {
+                    const texto = fila.textContent.toLowerCase();
+
+                    fila.style.display =
+                        texto.includes(filtro) ? "" : "none";
+                });
+            });
+    </script>
+}

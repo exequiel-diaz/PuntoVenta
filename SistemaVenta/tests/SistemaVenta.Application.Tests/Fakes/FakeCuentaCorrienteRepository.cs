@@ -42,6 +42,13 @@ public class FakeCuentaCorrienteRepository : ICuentaCorrienteRepository
         return Task.CompletedTask;
     }
 
+    public Task<IReadOnlyList<CuentaCorriente>> ObtenerTodasAsync()
+    {
+        IReadOnlyList<CuentaCorriente> cuentas = _cuentas.Values.ToList();
+
+        return Task.FromResult(cuentas);
+    }
+
     public void ConfigurarCuenta(int id, CuentaCorriente cuenta)
     {
         _cuentas[id] = cuenta;

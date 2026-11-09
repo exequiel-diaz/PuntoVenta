@@ -6,6 +6,7 @@ using SistemaVenta.Web.Models.Productos;
 using SistemaVenta.Application.UseCases.Stock;
 using Microsoft.AspNetCore.Authorization;
 using SistemaVenta.Web.Security;
+using System.Security.Claims;
 
 namespace SistemaVenta.Web.Controllers
 {
@@ -75,7 +76,6 @@ namespace SistemaVenta.Web.Controllers
 
             return View(productosParaReponer);
         }
-
 
 
         [HttpGet]
@@ -207,7 +207,9 @@ namespace SistemaVenta.Web.Controllers
             await _registrarIngresoStock.EjecutarAsync(
                 model.ProductoId,
                 model.Cantidad,
-                model.Motivo);
+                model.Motivo,
+                ObtenerUsuarioActualId());
+
 
             return RedirectToAction(nameof(Index));
         }
@@ -337,6 +339,7 @@ namespace SistemaVenta.Web.Controllers
                 StockActual = producto.StockActual
             };
 
+
             return View(model);
         }
 
@@ -364,7 +367,8 @@ namespace SistemaVenta.Web.Controllers
                     model.ProductoId,
                     model.Cantidad,
                     model.TipoSalida,
-                    model.Motivo);
+                    model.Motivo,
+                    ObtenerUsuarioActualId());
 
                 TempData["MensajeExito"] =
                     "La salida de stock se registró correctamente.";
@@ -420,10 +424,13 @@ namespace SistemaVenta.Web.Controllers
 
             try
             {
+
                 await _corregirInventario.EjecutarAsync(
                     model.ProductoId,
                     model.StockContado,
-                    model.Motivo);
+                    model.Motivo,
+                    ObtenerUsuarioActualId());
+
 
                 TempData["MensajeExito"] =
                     "El inventario se corrigió correctamente.";
@@ -439,6 +446,22 @@ namespace SistemaVenta.Web.Controllers
             }
         }
 
+
+
+        private int ObtenerUsuarioActualId()
+        {
+            var valor = User.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+            if (!int.TryParse(valor, out var usuarioId) ||
+                usuarioId <= 0)
+            {
+                throw new UnauthorizedAccessException(
+                    "No se pudo identificar al usuario autenticado.");
+            }
+
+            return usuarioId;
+        }
 
     }
 }

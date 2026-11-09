@@ -17,7 +17,10 @@ namespace SistemaVenta.Domain.Entities
         public decimal StockPosterior { get; private set; }
         public string? Motivo { get; private set; }
         public Producto Producto { get; private set; }
-
+        public int? UsuarioId { get; private set; }
+        public Usuario? Usuario { get; private set; }
+        public int? VentaId { get; private set; }
+        public Venta? Venta { get; private set; }
         private MovimientoStock()
         {
             Producto = null!;
@@ -28,7 +31,9 @@ namespace SistemaVenta.Domain.Entities
            decimal cantidad,
            decimal stockAnterior,
            decimal stockPosterior,
-           string? motivo = null)
+           string? motivo = null,
+            int? usuarioId = null,
+            Venta? venta = null)
         {
             if (producto is null)
             {
@@ -66,6 +71,17 @@ namespace SistemaVenta.Domain.Entities
             Motivo = motivo?.Trim();
 
             Fecha = DateTime.UtcNow;
+
+            if (usuarioId.HasValue && usuarioId.Value <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(usuarioId),
+                    "El usuario responsable no es válido.");
+            }
+
+            UsuarioId = usuarioId;
+            Venta = venta;
+
         }
     }
 }

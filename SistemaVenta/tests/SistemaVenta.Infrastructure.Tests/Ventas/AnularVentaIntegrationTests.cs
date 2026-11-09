@@ -113,7 +113,7 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 new TransaccionVentaPostgres(context),
                 new CuentaCorrienteRepository(context));
 
-            await anularVenta.EjecutarAsync(ventaId);
+            await anularVenta.EjecutarAsync(ventaId, vendedor.Id);
 
             // Consultar nuevamente los datos persistidos.
             context.ChangeTracker.Clear();
@@ -299,13 +299,13 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                     new CuentaCorrienteRepository(contextoB));
 
                 // ACT: A anula la venta.
-                await anularA.EjecutarAsync(ventaId);
+                await anularA.EjecutarAsync(ventaId, vendedorId);
 
                 // B había cargado una versión anterior de la venta.
                 // La segunda anulación debe rechazarse.
                 var excepcion =
                     await Assert.ThrowsAsync<InvalidOperationException>(
-                        () => anularB.EjecutarAsync(ventaId));
+                        () => anularB.EjecutarAsync(ventaId, vendedorId));
 
                 Assert.Equal(
                     "Solo se puede anular una venta confirmada.",
@@ -542,7 +542,7 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
                 new TransaccionVentaPostgres(context),
                 new CuentaCorrienteRepository(context));
 
-            await anularVenta.EjecutarAsync(ventaId);
+            await anularVenta.EjecutarAsync(ventaId, vendedor.Id);
 
             // ASSERT: consultar nuevamente PostgreSQL.
             context.ChangeTracker.Clear();
@@ -727,7 +727,7 @@ namespace SistemaVenta.Infrastructure.Tests.Ventas
 
             // La anulación debe ser rechazada.
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => anular.EjecutarAsync(ventaId));
+                () => anular.EjecutarAsync(ventaId, vendedor.Id));
 
             // Consultar los datos realmente persistidos.
             context.ChangeTracker.Clear();

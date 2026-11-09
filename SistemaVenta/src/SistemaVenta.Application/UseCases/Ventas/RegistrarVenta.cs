@@ -212,13 +212,17 @@ namespace SistemaVenta.Application.UseCases.Ventas
 
                 var stockPosterior = item.Producto.StockActual;
 
+
                 var movimiento = new MovimientoStock(
                     producto: item.Producto,
                     tipo: TipoMovimientoStock.Venta,
                     cantidad: item.Cantidad,
                     stockAnterior: stockAnterior,
                     stockPosterior: stockPosterior,
-                    motivo: "Venta");
+                    motivo: "Venta",
+                    usuarioId: usuarioId,
+                    venta: venta);
+
 
                 await _movimientos.AgregarAsync(movimiento);
             }

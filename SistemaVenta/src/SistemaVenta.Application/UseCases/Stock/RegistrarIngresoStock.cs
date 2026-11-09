@@ -23,7 +23,8 @@ namespace SistemaVenta.Application.UseCases.Stock
         public async Task EjecutarAsync(
             int productoId,
             decimal cantidad,
-            string? motivo = null)
+            string? motivo = null,
+            int? usuarioId = null)
         {
             var producto =
                 await _productoRepository.ObtenerPorIdAsync(productoId);
@@ -46,7 +47,8 @@ namespace SistemaVenta.Application.UseCases.Stock
                 cantidad,
                 stockAnterior,
                 stockPosterior,
-                motivo);
+                motivo: motivo,
+                usuarioId: usuarioId);
 
             //await _productoRepository.ActualizarAsync(producto);
             await _movimientoStockRepository.AgregarAsync(movimiento);
