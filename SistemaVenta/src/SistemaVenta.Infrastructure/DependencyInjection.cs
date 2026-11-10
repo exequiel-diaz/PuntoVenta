@@ -99,6 +99,9 @@ namespace SistemaVenta.Infrastructure
                 IInformeVentasRepository,
                 InformeVentasRepository>();
 
+            services.AddScoped<
+                IGeneradorInformeInventarioPdf,
+                GeneradorInformeInventarioPdf>();
 
             return services;
         }

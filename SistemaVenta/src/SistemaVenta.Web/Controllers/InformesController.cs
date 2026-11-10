@@ -21,6 +21,7 @@ public class InformesController : Controller
     private readonly ObtenerInformeInventario _obtenerInventario;
     private readonly ObtenerInformeMovimientosStock _obtenerMovimientos;
     private readonly IGeneradorInformeMovimientosPdf _generadorMovimientosPdf;
+    private readonly IGeneradorInformeInventarioPdf _generadorInventarioPdf;
 
     public InformesController(
         ObtenerInformeVentasPorPeriodo obtenerInformeVentas, 
@@ -29,7 +30,8 @@ public class InformesController : Controller
         ObtenerVentasPorVendedor obtenerVentasPorVendedor,
         ObtenerInformeInventario obtenerInventario,
         ObtenerInformeMovimientosStock obtenerMovimientos,
-        IGeneradorInformeMovimientosPdf generadorMovimientosPdf)
+        IGeneradorInformeMovimientosPdf generadorMovimientosPdf,
+        IGeneradorInformeInventarioPdf generadorInventarioPdf)
     {
         _obtenerInformeVentas = obtenerInformeVentas;
         _obtenerProductosMasVendidos = obtenerProductosMasVendidos;
@@ -38,6 +40,7 @@ public class InformesController : Controller
         _obtenerInventario = obtenerInventario;
         _obtenerMovimientos = obtenerMovimientos;
         _generadorMovimientosPdf = generadorMovimientosPdf;
+        _generadorInventarioPdf = generadorInventarioPdf;
     }
 
 
@@ -368,6 +371,24 @@ public class InformesController : Controller
             "application/pdf",
             nombreArchivo);
     }
+
+
+    [HttpGet]
+    public async Task<IActionResult> DescargarInventarioActualPdf()
+    {
+        var productos = await _obtenerInventario.EjecutarAsync();
+
+        var pdf = _generadorInventarioPdf.Generar(productos);
+
+        var nombreArchivo =
+            $"InventarioActual_{DateTime.UtcNow:yyyyMMdd_HHmmss}.pdf";
+
+        return File(
+            pdf,
+            "application/pdf",
+            nombreArchivo);
+    }
+
 
 
 }
