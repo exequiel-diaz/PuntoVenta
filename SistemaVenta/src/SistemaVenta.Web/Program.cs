@@ -14,10 +14,10 @@ using SistemaVenta.Infrastructure.Initialization;
 using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Security;
 using System.Threading.RateLimiting;
-//using QuestPDF.Infrastructure;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
-//QuestPDF.Settings.License = LicenseType.Community;
+QuestPDF.Settings.License = LicenseType.Community;
 
 
 builder.Services

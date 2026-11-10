@@ -11,14 +11,16 @@ public class CuentasCorrientesController : Controller
 {
     private readonly ListarCuentasCorrientes _listarCuentas;
     private readonly ObtenerDetalleCuentaCorriente _obtenerDetalle;
-
+    private readonly ListarVentasPendientesCuentaCorriente _listarPendientes;
 
     public CuentasCorrientesController(
-        ListarCuentasCorrientes listarCuentas, 
-        ObtenerDetalleCuentaCorriente obtenerDetalle)
+        ListarCuentasCorrientes listarCuentas,
+        ObtenerDetalleCuentaCorriente obtenerDetalle,
+        ListarVentasPendientesCuentaCorriente listarPendientes)
     {
         _listarCuentas = listarCuentas;
         _obtenerDetalle = obtenerDetalle;
+        _listarPendientes = listarPendientes;
     }
 
     [HttpGet]
@@ -40,8 +42,11 @@ public class CuentasCorrientesController : Controller
         if (cuenta is null)
             return NotFound();
 
+        var ventasPendientes =
+            await _listarPendientes.EjecutarAsync(id);
+
+        ViewData["VentasPendientes"] = ventasPendientes;
+
         return View(cuenta);
     }
-
-
 }
