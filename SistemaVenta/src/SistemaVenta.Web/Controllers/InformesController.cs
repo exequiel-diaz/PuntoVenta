@@ -22,6 +22,7 @@ public class InformesController : Controller
     private readonly ObtenerInformeMovimientosStock _obtenerMovimientos;
     private readonly IGeneradorInformeMovimientosPdf _generadorMovimientosPdf;
     private readonly IGeneradorInformeInventarioPdf _generadorInventarioPdf;
+    private readonly ObtenerMejoresClientes _obtenerMejoresClientes;
 
     public InformesController(
         ObtenerInformeVentasPorPeriodo obtenerInformeVentas, 
@@ -31,7 +32,8 @@ public class InformesController : Controller
         ObtenerInformeInventario obtenerInventario,
         ObtenerInformeMovimientosStock obtenerMovimientos,
         IGeneradorInformeMovimientosPdf generadorMovimientosPdf,
-        IGeneradorInformeInventarioPdf generadorInventarioPdf)
+        IGeneradorInformeInventarioPdf generadorInventarioPdf,
+        ObtenerMejoresClientes obtenerMejoresClientes)
     {
         _obtenerInformeVentas = obtenerInformeVentas;
         _obtenerProductosMasVendidos = obtenerProductosMasVendidos;
@@ -41,7 +43,9 @@ public class InformesController : Controller
         _obtenerMovimientos = obtenerMovimientos;
         _generadorMovimientosPdf = generadorMovimientosPdf;
         _generadorInventarioPdf = generadorInventarioPdf;
+        _obtenerMejoresClientes = obtenerMejoresClientes;
     }
+
 
 
     [HttpGet]
@@ -49,43 +53,39 @@ public class InformesController : Controller
         DateTime? fechaDesde,
         DateTime? fechaHasta)
     {
-        var hoy = DateTime.UtcNow.Date;
-
-        var desde = fechaDesde?.Date ?? hoy.AddDays(-30);
-        var hasta = fechaHasta?.Date ?? hoy;
-
-        if (desde > hasta)
-        {
-            ModelState.AddModelError(
-                "",
-                "La fecha inicial no puede ser posterior a la fecha final.");
-
-            return BadRequest(
-                "La fecha inicial no puede ser posterior a la fecha final.");
-        }
-
-        // Interpretamos las fechas elegidas como días de Argentina.
         var zonaArgentina = TimeZoneInfo.FindSystemTimeZoneById(
             "America/Argentina/Buenos_Aires");
 
+        var hoyArgentina = TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.UtcNow,
+            zonaArgentina).Date;
+
+        var desde = fechaDesde?.Date
+            ?? hoyArgentina.AddDays(-30);
+
+        var hasta = fechaHasta?.Date
+            ?? hoyArgentina;
+
+        if (desde > hasta)
+        {
+            return BadRequest(
+                "La fecha inicial no puede ser posterior a la final.");
+        }
+
+        // Las fechas del formulario representan días argentinos.
         var inicioLocal = DateTime.SpecifyKind(
-            desde.Date,
-            DateTimeKind.Unspecified);
+            desde, DateTimeKind.Unspecified);
 
         var finLocalExclusivo = DateTime.SpecifyKind(
-            hasta.Date.AddDays(1),
-            DateTimeKind.Unspecified);
+            hasta.AddDays(1), DateTimeKind.Unspecified);
 
         var inicioUtc = TimeZoneInfo.ConvertTimeToUtc(
-            inicioLocal,
-            zonaArgentina);
+            inicioLocal, zonaArgentina);
 
-        var finUtcExclusivo = TimeZoneInfo.ConvertTimeToUtc(
-            finLocalExclusivo,
-            zonaArgentina);
+        var finUtcInclusivo = TimeZoneInfo.ConvertTimeToUtc(
+            finLocalExclusivo, zonaArgentina).AddTicks(-1);
 
-        var finUtcInclusivo = finUtcExclusivo.AddTicks(-1);
-
+        // Consultas existentes.
         var resumenVentas = await _obtenerInformeVentas
             .EjecutarAsync(inicioUtc, finUtcInclusivo);
 
@@ -95,19 +95,36 @@ public class InformesController : Controller
         var ventasPorVendedor = await _obtenerVentasPorVendedor
             .EjecutarAsync(inicioUtc, finUtcInclusivo);
 
+        // Nuevos rankings del dashboard.
+        var productosDestacados = await _obtenerProductosMasVendidos
+            .EjecutarAsync(
+                inicioUtc,
+                finUtcInclusivo,
+                5,
+                "cantidad");
+
+        var mejoresClientes = await _obtenerMejoresClientes
+            .EjecutarAsync(
+                inicioUtc,
+                finUtcInclusivo,
+                5);
 
         var modelo = new DashboardInformesViewModel
         {
             FechaDesde = desde,
             FechaHasta = hasta,
+
             ResumenVentas = resumenVentas,
             VentasDiarias = ventasDiarias,
-            VentasPorVendedor = ventasPorVendedor
-        };
+            VentasPorVendedor = ventasPorVendedor,
 
+            ProductosDestacados = productosDestacados,
+            MejoresClientes = mejoresClientes
+        };
 
         return View(modelo);
     }
+
 
 
 
@@ -142,37 +159,54 @@ public class InformesController : Controller
 
     [HttpGet]
     public async Task<IActionResult> ProductosMasVendidos(
-        DateTime? fechaDesde,
-        DateTime? fechaHasta,
-        int cantidad = 10)
+    DateTime? fechaDesde,
+    DateTime? fechaHasta,
+    int cantidad = 10,
+    string criterio = "cantidad")
     {
-        var hoy = DateTime.UtcNow.Date;
+        var zona = TimeZoneInfo.FindSystemTimeZoneById(
+            "America/Argentina/Buenos_Aires");
 
-        var desde = fechaDesde ?? hoy.AddDays(-30);
-        var hasta = fechaHasta ?? hoy;
+        var hoyArgentina = TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.UtcNow, zona).Date;
 
-        desde = DateTime.SpecifyKind(
-            desde.Date, DateTimeKind.Utc);
-
-        hasta = DateTime.SpecifyKind(
-            hasta.Date, DateTimeKind.Utc);
+        var desde = fechaDesde?.Date ?? hoyArgentina.AddDays(-30);
+        var hasta = fechaHasta?.Date ?? hoyArgentina;
 
         if (desde > hasta)
-        {
             return BadRequest(
-                "La fecha inicial no puede ser posterior a la fecha final.");
-        }
+                "La fecha inicial no puede ser posterior a la final.");
 
-        if (cantidad <= 0)
-        {
+        if (cantidad is not (5 or 10 or 20 or 50))
             return BadRequest(
-                "La cantidad debe ser mayor que cero.");
-        }
+                "La cantidad debe ser 5, 10, 20 o 50.");
+
+        if (criterio != "cantidad" && criterio != "facturacion")
+            return BadRequest(
+                "Criterio de ordenamiento no válido.");
+
+        var inicioLocal = DateTime.SpecifyKind(
+            desde, DateTimeKind.Unspecified);
+
+        var finLocalExclusivo = DateTime.SpecifyKind(
+            hasta.AddDays(1), DateTimeKind.Unspecified);
+
+        var inicioUtc = TimeZoneInfo.ConvertTimeToUtc(
+            inicioLocal, zona);
+
+        var finUtcInclusivo = TimeZoneInfo.ConvertTimeToUtc(
+            finLocalExclusivo, zona).AddTicks(-1);
 
         var productos = await _obtenerProductosMasVendidos.EjecutarAsync(
-            desde,
-            hasta.AddDays(1).AddTicks(-1),
-            cantidad);
+            inicioUtc,
+            finUtcInclusivo,
+            cantidad,
+            criterio);
+
+        ViewData["FechaDesde"] = desde.ToString("yyyy-MM-dd");
+        ViewData["FechaHasta"] = hasta.ToString("yyyy-MM-dd");
+        ViewData["Cantidad"] = cantidad;
+        ViewData["Criterio"] = criterio;
 
         return View(productos);
     }
@@ -390,5 +424,139 @@ public class InformesController : Controller
     }
 
 
+
+    [HttpGet]
+    public async Task<IActionResult> MejoresClientes(
+        DateTime? fechaDesde,
+        DateTime? fechaHasta,
+        int cantidad = 10)
+    {
+        var zonaArgentina = TimeZoneInfo.FindSystemTimeZoneById(
+            "America/Argentina/Buenos_Aires");
+
+        var hoyArgentina = TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.UtcNow, zonaArgentina).Date;
+
+        var desde = fechaDesde?.Date
+            ?? hoyArgentina.AddDays(-30);
+
+        var hasta = fechaHasta?.Date
+            ?? hoyArgentina;
+
+        if (desde > hasta)
+        {
+            return BadRequest(
+                "La fecha inicial no puede ser posterior a la final.");
+        }
+
+        if (cantidad is not (5 or 10 or 20 or 50))
+        {
+            return BadRequest(
+                "La cantidad debe ser 5, 10, 20 o 50.");
+        }
+
+        var inicioLocal = DateTime.SpecifyKind(
+            desde, DateTimeKind.Unspecified);
+
+        var finLocalExclusivo = DateTime.SpecifyKind(
+            hasta.AddDays(1), DateTimeKind.Unspecified);
+
+        var inicioUtc = TimeZoneInfo.ConvertTimeToUtc(
+            inicioLocal, zonaArgentina);
+
+        var finUtcInclusivo = TimeZoneInfo.ConvertTimeToUtc(
+            finLocalExclusivo, zonaArgentina).AddTicks(-1);
+
+        var clientes = await _obtenerMejoresClientes.EjecutarAsync(
+            inicioUtc,
+            finUtcInclusivo,
+            cantidad);
+
+        ViewData["FechaDesde"] = desde.ToString("yyyy-MM-dd");
+        ViewData["FechaHasta"] = hasta.ToString("yyyy-MM-dd");
+        ViewData["Cantidad"] = cantidad;
+
+        return View(clientes);
+    }
+
+
+
+    [HttpGet]
+    public async Task<IActionResult> RankingVendedores(
+        DateTime? fechaDesde,
+        DateTime? fechaHasta,
+        int cantidad = 10,
+        string criterio = "facturacion")
+    {
+        var zonaArgentina = TimeZoneInfo.FindSystemTimeZoneById(
+            "America/Argentina/Buenos_Aires");
+
+        var hoyArgentina = TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.UtcNow, zonaArgentina).Date;
+
+        var desde = fechaDesde?.Date
+            ?? hoyArgentina.AddDays(-30);
+
+        var hasta = fechaHasta?.Date
+            ?? hoyArgentina;
+
+        if (desde > hasta)
+        {
+            return BadRequest(
+                "La fecha inicial no puede ser posterior a la final.");
+        }
+
+        if (cantidad is not (5 or 10 or 20 or 50))
+        {
+            return BadRequest(
+                "La cantidad debe ser 5, 10, 20 o 50.");
+        }
+
+        if (criterio != "facturacion" &&
+            criterio != "cantidad")
+        {
+            return BadRequest(
+                "Criterio de ordenamiento no válido.");
+        }
+
+        var inicioLocal = DateTime.SpecifyKind(
+            desde, DateTimeKind.Unspecified);
+
+        var finLocalExclusivo = DateTime.SpecifyKind(
+            hasta.AddDays(1), DateTimeKind.Unspecified);
+
+        var inicioUtc = TimeZoneInfo.ConvertTimeToUtc(
+            inicioLocal, zonaArgentina);
+
+        var finUtcInclusivo = TimeZoneInfo.ConvertTimeToUtc(
+            finLocalExclusivo, zonaArgentina).AddTicks(-1);
+
+        var vendedores = await _obtenerVentasPorVendedor
+            .EjecutarAsync(inicioUtc, finUtcInclusivo);
+
+        // Las ventas sin vendedor asignado no participan
+        // del ranking individual de vendedores.
+        var vendedoresIdentificados = vendedores
+            .Where(v => v.VendedorId.HasValue);
+
+        var ranking = criterio == "cantidad"
+            ? vendedoresIdentificados
+                .OrderByDescending(v => v.CantidadVentas)
+                .ThenByDescending(v => v.TotalVendido)
+                .Take(cantidad)
+                .ToList()
+            : vendedoresIdentificados
+                .OrderByDescending(v => v.TotalVendido)
+                .ThenByDescending(v => v.CantidadVentas)
+                .Take(cantidad)
+                .ToList();
+
+        ViewData["FechaDesde"] = desde.ToString("yyyy-MM-dd");
+        ViewData["FechaHasta"] = hasta.ToString("yyyy-MM-dd");
+        ViewData["Cantidad"] = cantidad;
+        ViewData["Criterio"] = criterio;
+
+        return View(ranking);
+    }
 
 }

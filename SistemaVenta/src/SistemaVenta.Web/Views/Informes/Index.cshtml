@@ -225,6 +225,198 @@
         </div>
     </div>
 
+
+    <!-- RANKINGS DESTACADOS -->
+    <h4 class="mt-5 mb-3">Rankings destacados</h4>
+
+    <div class="row g-4 mb-4">
+
+        <!-- PRODUCTOS -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between
+                            align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            Top 5 productos
+                        </h5>
+
+                        <a asp-controller="Informes"
+                           asp-action="ProductosMasVendidos"
+                           asp-route-fechaDesde="@Model.FechaDesde.ToString("yyyy-MM-dd")"
+                           asp-route-fechaHasta="@Model.FechaHasta.ToString("yyyy-MM-dd")"
+                           class="btn btn-sm btn-outline-primary">
+                            Ver todos
+                        </a>
+                    </div>
+
+                    @if (Model.ProductosDestacados.Count == 0)
+                    {
+                        <p class="text-muted">
+                            No hay productos vendidos en este período.
+                        </p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th class="text-end">Unidades</th>
+                                        <th class="text-end">Facturación</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var producto in Model.ProductosDestacados)
+                                    {
+                                        <tr>
+                                            <td>@producto.NombreProducto</td>
+
+                                            <td class="text-end">
+                                                @producto.UnidadesVendidas.ToString("N0", cultura)
+                                            </td>
+
+                                            <td class="text-end">
+                                                @producto.TotalVendido.ToString("C2", cultura)
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+
+                            </table>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+        <!-- CLIENTES -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between
+                            align-items-center mb-3">
+                        <h5 class="card-title mb-0">
+                            Top 5 clientes
+                        </h5>
+
+                        <a asp-controller="Informes"
+                           asp-action="MejoresClientes"
+                           asp-route-fechaDesde="@Model.FechaDesde.ToString("yyyy-MM-dd")"
+                           asp-route-fechaHasta="@Model.FechaHasta.ToString("yyyy-MM-dd")"
+                           class="btn btn-sm btn-outline-primary">
+                            Ver todos
+                        </a>
+                    </div>
+
+                    @if (Model.MejoresClientes.Count == 0)
+                    {
+                        <p class="text-muted">
+                            No hay clientes con ventas confirmadas
+                            en este período.
+                        </p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th class="text-end">Ventas</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var cliente in Model.MejoresClientes)
+                                    {
+                                        <tr>
+                                            <td>@cliente.NombreCliente</td>
+
+                                            <td class="text-end">
+                                                @cliente.CantidadVentas
+                                            </td>
+
+                                            <td class="text-end">
+                                                @cliente.TotalComprado.ToString("C2", cultura)
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+
+                            </table>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- GRÁFICO DE VENDEDORES -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between
+                    align-items-center mb-3">
+
+                <div>
+                    <h5 class="card-title mb-1">
+                        Facturación por vendedor
+                    </h5>
+
+                    <p class="text-muted mb-0">
+                        Comparación de los cinco vendedores
+                        con mayor facturación.
+                    </p>
+                </div>
+
+                <a asp-controller="Informes"
+                   asp-action="RankingVendedores"
+                   asp-route-fechaDesde="@Model.FechaDesde.ToString("yyyy-MM-dd")"
+                   asp-route-fechaHasta="@Model.FechaHasta.ToString("yyyy-MM-dd")"
+                   class="btn btn-sm btn-outline-primary">
+                    Ver ranking
+                </a>
+
+            </div>
+
+            @{
+                var vendedoresGrafico = Model.VentasPorVendedor
+                .Where(v => v.VendedorId.HasValue)
+                .OrderByDescending(v => v.TotalVendido)
+                .Take(5)
+                .ToList();
+            }
+
+            @if (vendedoresGrafico.Count == 0)
+            {
+                <div class="alert alert-info mb-0">
+                    No hay ventas con vendedor asignado
+                    en este período.
+                </div>
+            }
+            else
+            {
+                <div style="position:relative; height:320px;">
+                    <canvas id="graficoVendedores"></canvas>
+                </div>
+            }
+
+        </div>
+    </div>
+
+
     <h4 class="mt-5 mb-3">Informes disponibles</h4>
 
     <div class="row g-4">
@@ -282,6 +474,30 @@
                 <div class="card-body">
 
                     <h5 class="card-title">
+                        Mejores Clientes
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Conocé cuáles son los clientes
+                        con mayor cantidad de unidades
+                        compradas.
+                    </p>
+
+                    <a asp-controller="Informes"
+                       asp-action="MejoresClientes"
+                       class="btn btn-primary">
+                        Ver mejores clientes
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <h5 class="card-title">
                         Inventario actual
                     </h5>
 
@@ -324,6 +540,28 @@
             </div>
         </div>
 
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        Ranking de vendedores
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Compará el rendimiento de los vendedores
+                        por facturación y cantidad de ventas.
+                    </p>
+
+                    <a asp-controller="Informes"
+                       asp-action="RankingVendedores"
+                       class="btn btn-primary">
+                        Ver ranking
+                    </a>
+
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -400,4 +638,79 @@
 
         });
     </script>
+
+
+    <script>
+        const datosVendedores = @Html.Raw(
+                System.Text.Json.JsonSerializer.Serialize(
+                        Model.VentasPorVendedor
+                                .Where(v => v.VendedorId.HasValue)
+                                .OrderByDescending(v => v.TotalVendido)
+                                .Take(5)
+                                .Select(v => new
+                                {
+                                        nombre = v.NombreVendedor,
+                                        total = v.TotalVendido
+                                })
+                )
+        );
+
+    const canvasVendedores =
+        document.getElementById('graficoVendedores');
+
+        if (canvasVendedores && datosVendedores.length > 0) {
+
+            new Chart(canvasVendedores, {
+                type: 'bar',
+
+                data: {
+                    labels: datosVendedores.map(v => v.nombre),
+
+                    datasets: [{
+                        label: 'Facturación',
+                        data: datosVendedores.map(v => v.total),
+                        backgroundColor: '#0d6efd',
+                        borderRadius: 5
+                    }]
+                },
+
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+
+                            ticks: {
+                                callback: function(value) {
+                                    return '$ ' +
+                                        Number(value).toLocaleString('es-AR');
+                                }
+                            }
+                        }
+                    },
+
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return new Intl.NumberFormat('es-AR', {
+                                        style: 'currency',
+                                        currency: 'ARS'
+                                    }).format(context.parsed.x ?? 0);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
 }

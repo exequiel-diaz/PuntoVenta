@@ -12,7 +12,8 @@ namespace SistemaVenta.Application.Interfaces
         Task<List<ProductoMasVendidoDto>> ObtenerProductosMasVendidosAsync(
             DateTime fechaDesde,
             DateTime fechaHasta,
-            int cantidad);
+            int cantidad,
+            string criterio = "cantidad");
 
         Task<List<VentaDiariaDto>> ObtenerVentasDiariasAsync(
             DateTime fechaDesde,
@@ -21,6 +22,12 @@ namespace SistemaVenta.Application.Interfaces
         Task<List<VentaPorVendedorDto>> ObtenerVentasPorVendedorAsync(
             DateTime fechaDesde,
             DateTime fechaHasta);
+
+
+        Task<List<ClienteTopDto>> ObtenerMejoresClientesAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            int cantidad);
 
 
     }

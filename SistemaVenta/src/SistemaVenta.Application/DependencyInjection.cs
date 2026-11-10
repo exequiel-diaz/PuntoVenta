@@ -61,6 +61,7 @@ namespace SistemaVenta.Application
             services.AddScoped<ObtenerProductosMasVendidos>();
             services.AddScoped<ObtenerVentasDiarias>();
             services.AddScoped<ObtenerVentasPorVendedor>();
+            services.AddScoped<ObtenerMejoresClientes>();
 
             // módl de vendedore
             services.AddScoped<ObtenerVendedores>();
@@ -70,6 +71,7 @@ namespace SistemaVenta.Application
             services.AddScoped<EliminarVendedor>();
 
             services.AddScoped<ListarCuentasCorrientes>();
+
 
             return services;
         }

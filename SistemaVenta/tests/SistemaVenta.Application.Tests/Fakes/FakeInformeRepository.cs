@@ -33,11 +33,19 @@ namespace SistemaVenta.Application.Tests.Fakes
         public Task<List<ProductoMasVendidoDto>> ObtenerProductosMasVendidosAsync(
             DateTime fechaDesde,
             DateTime fechaHasta,
-            int cantidad)
+            int cantidad,
+            string criterio = "cantidad")
         {
             throw new NotImplementedException();
         }
 
+        public Task<List<ClienteTopDto>> ObtenerMejoresClientesAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            int cantidad)
+        {
+            return Task.FromResult(new List<ClienteTopDto>());
+        }
 
         public Task<List<VentaPorVendedorDto>> ObtenerVentasPorVendedorAsync(
             DateTime fechaDesde,

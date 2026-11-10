@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using SistemaVenta.Application.DTOs.Informes;
 using SistemaVenta.Application.Interfaces;
+using SistemaVenta.Domain.Entities;
 using SistemaVenta.Domain.Enums;
 
 namespace SistemaVenta.Infrastructure.Persistence.Repositories
@@ -57,9 +58,10 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
         public async Task<List<ProductoMasVendidoDto>> ObtenerProductosMasVendidosAsync(
             DateTime fechaDesde,
             DateTime fechaHasta,
-            int cantidad)
+            int cantidad,
+            string criterio = "cantidad")
         {
-            var productos = await _context.Ventas
+            var consulta = _context.Ventas
                 .AsNoTracking()
                 .Where(v =>
                     v.Estado == EstadoVenta.Confirmada &&
@@ -78,13 +80,15 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
                     UnidadesVendidas = g.Sum(d => d.Cantidad),
                     TotalVendido = g.Sum(d =>
                         d.Cantidad * d.PrecioUnitario)
-                })
-                .OrderByDescending(p => p.UnidadesVendidas)
-                .ThenBy(p => p.NombreProducto)
-                .Take(cantidad)
-                .ToListAsync();
+                });
 
-            return productos;
+            var ordenados = criterio == "facturacion"
+                ? consulta.OrderByDescending(p => p.TotalVendido)
+                    .ThenBy(p => p.NombreProducto)
+                : consulta.OrderByDescending(p => p.UnidadesVendidas)
+                    .ThenBy(p => p.NombreProducto);
+
+            return await ordenados.Take(cantidad).ToListAsync();
         }
 
         public async Task<List<VentaDiariaDto>> ObtenerVentasDiariasAsync(
@@ -179,6 +183,81 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
                 .ToList();
 
             return resultado;
+        }
+
+
+        public async Task<List<ClienteTopDto>> ObtenerMejoresClientesAsync(
+            DateTime fechaDesde,
+            DateTime fechaHasta,
+            int cantidad)
+        {
+            var estadisticas = await _context.Ventas
+                .AsNoTracking()
+                .Where(v =>
+                    v.Estado == EstadoVenta.Confirmada &&
+                    v.ClienteId != null &&
+                    v.Fecha >= fechaDesde &&
+                    v.Fecha <= fechaHasta)
+                .GroupBy(v => v.ClienteId)
+                .Select(g => new
+                {
+                    ClienteId = g.Key,
+                    CantidadVentas = g.Count(),
+                    TotalComprado = g.Sum(v =>
+                        v.Detalles.Sum(d =>
+                            d.Cantidad * d.PrecioUnitario))
+                })
+                .OrderByDescending(x => x.TotalComprado)
+                .ThenBy(x => x.ClienteId)
+                .Take(cantidad)
+                .ToListAsync();
+
+            var ids = estadisticas
+                .Where(e => e.ClienteId.HasValue)
+                .Select(e => e.ClienteId!.Value)
+                .ToList();
+
+            var clientes = await _context.Clientes
+                .AsNoTracking()
+                .Where(c => ids.Contains(c.Id))
+                .ToListAsync();
+
+            var nombres = clientes.ToDictionary(
+                c => c.Id,
+                c => c switch
+                {
+                    ClienteFisico fisico =>
+                        $"{fisico.Nombre} {fisico.Apellido}",
+
+                    ClienteEmpresa empresa =>
+                        empresa.RazonSocial,
+
+                    _ => $"Cliente #{c.Id}"
+                });
+
+            return estadisticas.Select(e =>
+            {
+                var id = e.ClienteId!.Value;
+
+                return new ClienteTopDto
+                {
+                    ClienteId = id,
+
+                    NombreCliente = nombres.TryGetValue(
+                        id, out var nombre)
+                        ? nombre
+                        : $"Cliente #{id}",
+
+                    CantidadVentas = e.CantidadVentas,
+
+                    TotalComprado = e.TotalComprado,
+
+                    TicketPromedio = e.CantidadVentas > 0
+                        ? Math.Round(
+                            e.TotalComprado / e.CantidadVentas, 2)
+                        : 0m
+                };
+            }).ToList();
         }
 
 

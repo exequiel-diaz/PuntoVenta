@@ -11,7 +11,14 @@ namespace SistemaVenta.Web.Models.Informes
         public List<VentaDiariaDto> VentasDiarias { get; set; }
             = new();
 
-        public List<VentaPorVendedorDto> VentasPorVendedor { get; set; } = new();
+        public List<VentaPorVendedorDto> VentasPorVendedor { get; set; }
+            = new();
+
+        public List<ProductoMasVendidoDto> ProductosDestacados { get; set; }
+            = new();
+
+        public List<ClienteTopDto> MejoresClientes { get; set; }
+            = new();
 
         public DateTime FechaDesde { get; set; }
 
