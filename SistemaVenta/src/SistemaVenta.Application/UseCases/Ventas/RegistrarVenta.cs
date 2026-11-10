@@ -177,7 +177,8 @@ namespace SistemaVenta.Application.UseCases.Ventas
                 venta.AgregarDetalle(
                     item.Producto,
                     item.Cantidad,
-                    item.Producto.PrecioVenta);
+                    item.Producto.PrecioVenta,
+                    item.Producto.Costo);
             }
 
 

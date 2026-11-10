@@ -86,5 +86,51 @@ namespace SistemaVenta.Domain.Tests.Entities
 
             Assert.Equal(0m, detalle.Subtotal);
         }
+
+
+        [Fact]
+        public void CrearDetalle_ConCostoHistorico_CalculaGananciaBruta()
+        {
+            var producto = CrearProducto();
+
+            var detalle = new DetalleVenta(
+                producto,
+                cantidad: 2m,
+                precioUnitario: 25000m,
+                costoUnitario: 15000m);
+
+            Assert.Equal(15000m, detalle.CostoUnitario);
+            Assert.Equal(30000m, detalle.CostoTotal);
+            Assert.Equal(20000m, detalle.GananciaBruta);
+        }
+
+        [Fact]
+        public void CrearDetalle_SinCostoHistorico_NoCalculaGanancia()
+        {
+            var producto = CrearProducto();
+
+            var detalle = new DetalleVenta(
+                producto,
+                cantidad: 2m,
+                precioUnitario: 25000m);
+
+            Assert.Null(detalle.CostoUnitario);
+            Assert.Null(detalle.CostoTotal);
+            Assert.Null(detalle.GananciaBruta);
+        }
+
+        [Fact]
+        public void CrearDetalle_ConCostoNegativo_LanzaExcepcion()
+        {
+            var producto = CrearProducto();
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new DetalleVenta(
+                    producto,
+                    cantidad: 1m,
+                    precioUnitario: 25000m,
+                    costoUnitario: -100m));
+        }
+
     }
 }

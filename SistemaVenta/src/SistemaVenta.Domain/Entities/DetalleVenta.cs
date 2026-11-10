@@ -13,7 +13,21 @@ namespace SistemaVenta.Domain.Entities
 
         public decimal PrecioUnitario { get; private set; }
 
+        // Costo registrado al momento de la venta.
+        // Null indica que no existe un costo histórico confiable.
+        public decimal? CostoUnitario { get; private set; }
+
         public decimal Subtotal => Cantidad * PrecioUnitario;
+
+        public decimal? CostoTotal =>
+            CostoUnitario.HasValue
+                ? Cantidad * CostoUnitario.Value
+                : null;
+
+        public decimal? GananciaBruta =>
+            CostoTotal.HasValue
+                ? Subtotal - CostoTotal.Value
+                : null;
 
         public Producto Producto { get; private set; }
 
@@ -25,7 +39,8 @@ namespace SistemaVenta.Domain.Entities
         public DetalleVenta(
             Producto producto,
             decimal cantidad,
-            decimal precioUnitario)
+            decimal precioUnitario,
+            decimal? costoUnitario = null)
         {
             if (producto is null)
             {
@@ -48,10 +63,19 @@ namespace SistemaVenta.Domain.Entities
                     "El precio unitario no puede ser negativo.");
             }
 
+            if (costoUnitario.HasValue &&
+                costoUnitario.Value < 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(costoUnitario),
+                    "El costo unitario no puede ser negativo.");
+            }
+
             Producto = producto;
             ProductoId = producto.Id;
             Cantidad = cantidad;
             PrecioUnitario = precioUnitario;
+            CostoUnitario = costoUnitario;
         }
     }
 }

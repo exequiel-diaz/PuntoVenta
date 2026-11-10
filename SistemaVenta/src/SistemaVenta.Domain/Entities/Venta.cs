@@ -40,10 +40,12 @@ namespace SistemaVenta.Domain.Entities
             Estado = EstadoVenta.Pendiente;
         }
 
+
         public void AgregarDetalle(
             Producto producto,
             decimal cantidad,
-            decimal precioUnitario)
+            decimal precioUnitario,
+            decimal? costoUnitario = null)
         {
             if (Estado != EstadoVenta.Pendiente)
             {
@@ -62,7 +64,6 @@ namespace SistemaVenta.Domain.Entities
                     "No se puede vender un producto inactivo.");
             }
 
-
             if (_detalles.Any(d =>
                 ReferenceEquals(d.Producto, producto) ||
                 (producto.Id > 0 && d.ProductoId == producto.Id)))
@@ -71,14 +72,15 @@ namespace SistemaVenta.Domain.Entities
                     "El producto ya fue agregado a la venta.");
             }
 
-
             var detalle = new DetalleVenta(
                 producto,
                 cantidad,
-                precioUnitario);
+                precioUnitario,
+                costoUnitario);
 
             _detalles.Add(detalle);
         }
+
 
         public void Confirmar()
         {

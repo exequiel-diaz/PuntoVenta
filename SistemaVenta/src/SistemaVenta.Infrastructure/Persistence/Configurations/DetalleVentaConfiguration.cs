@@ -28,8 +28,14 @@ namespace SistemaVenta.Infrastructure.Persistence.Configurations
                 .HasPrecision(18, 2)
                 .IsRequired();
 
-            // El subtotal se calcula automáticamente.
+            builder.Property(d => d.CostoUnitario)
+                .HasPrecision(18, 2)
+                .IsRequired(false);
+
+            // Propiedades calculadas, no persistidas.
             builder.Ignore(d => d.Subtotal);
+            builder.Ignore(d => d.CostoTotal);
+            builder.Ignore(d => d.GananciaBruta);
 
             builder.HasOne(d => d.Producto)
                 .WithMany()
