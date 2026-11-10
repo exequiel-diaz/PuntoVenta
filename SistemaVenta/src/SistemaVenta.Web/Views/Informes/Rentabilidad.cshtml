@@ -1,0 +1,277 @@
+﻿@model SistemaVenta.Application.DTOs.Informes.InformeRentabilidadDto
+
+@{
+    ViewData["Title"] = "Rentabilidad bruta";
+
+    var cultura = System.Globalization.CultureInfo
+        .GetCultureInfo("es-AR");
+
+    var fechaDesde = ViewData["FechaDesde"]?.ToString() ?? "";
+    var fechaHasta = ViewData["FechaHasta"]?.ToString() ?? "";
+
+    var top = ViewData["Top"] is int valor ? valor : 10;
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-2">Rentabilidad bruta</h2>
+
+    <p class="text-muted mb-4">
+        Análisis de ventas confirmadas con costos históricos.
+    </p>
+
+    <form asp-action="Rentabilidad"
+          asp-controller="Informes"
+          method="get"
+          class="card shadow-sm mb-4">
+
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-4">
+                    <label class="form-label">Fecha desde</label>
+                    <input type="date"
+                           name="fechaDesde"
+                           value="@fechaDesde"
+                           class="form-control"
+                           required />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Fecha hasta</label>
+                    <input type="date"
+                           name="fechaHasta"
+                           value="@fechaHasta"
+                           class="form-control"
+                           required />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Mostrar</label>
+                    <select name="top" class="form-select">
+                        @foreach (var opcion in new[] { 5, 10, 20, 50 })
+                        {
+                            if (opcion == top)
+                            {
+                                <option value="@opcion" selected>
+                                    Top @opcion
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@opcion">
+                                    Top @opcion
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        Filtrar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">
+                        Facturación total
+                    </div>
+                    <h4>
+                        @Model.FacturacionTotal.ToString("C2", cultura)
+                    </h4>
+                    <small class="text-muted">
+                        Todas las ventas confirmadas
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">
+                        Facturación analizada
+                    </div>
+                    <h4>
+                        @Model.FacturacionAnalizada.ToString("C2", cultura)
+                    </h4>
+                    <small class="text-muted">
+                        Ventas con costo completo
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">
+                        Costo de mercadería
+                    </div>
+                    <h4>
+                        @Model.CostoMercaderia.ToString("C2", cultura)
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">
+                        Ganancia bruta
+                    </div>
+                    <h4>
+                        @Model.GananciaBruta.ToString("C2", cultura)
+                    </h4>
+                    <small class="text-muted">
+                        Margen: @Model.MargenBruto.ToString("N2", cultura) %
+                    </small>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    @if (Model.VentasSinCosto > 0)
+    {
+        <div class="alert alert-warning">
+            <strong>Datos históricos incompletos.</strong>
+            Hay @Model.VentasSinCosto ventas confirmadas
+            sin información completa de costos.
+            Su facturación está incluida en el total,
+            pero no en el cálculo de ganancia bruta.
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h5 class="card-title mb-3">
+                Cobertura del análisis
+            </h5>
+
+            <p class="mb-1">
+                Ventas confirmadas: <strong>@Model.CantidadVentas</strong>
+            </p>
+
+            <p class="mb-1">
+                Con costo completo:
+                <strong>@Model.VentasConCosto</strong>
+            </p>
+
+            <p class="mb-0">
+                Sin costo completo:
+                <strong>@Model.VentasSinCosto</strong>
+            </p>
+
+        </div>
+    </div>
+
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">
+                Evolución diaria de la rentabilidad
+            </h5>
+
+            @if (Model.VentasConCosto == 0)
+            {
+                <p class="text-muted mb-0">
+                    No hay ventas con costos históricos completos.
+                </p>
+            }
+            else
+            {
+                <div style="position:relative; height:350px;">
+                    <canvas id="graficoEvolucionRentabilidad"></canvas>
+                </div>
+            }
+        </div>
+    </div>
+
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h5 class="card-title mb-3">
+                Productos más rentables
+            </h5>
+
+            @if (Model.Productos.Count == 0)
+            {
+                <div class="alert alert-info mb-0">
+                    No hay productos con información suficiente
+                    para calcular su rentabilidad.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped
+                                      table-hover align-middle">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-end">Unidades</th>
+                                <th class="text-end">Facturación</th>
+                                <th class="text-end">Costo</th>
+                                <th class="text-end">Ganancia</th>
+                                <th class="text-end">Margen</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var producto in Model.Productos)
+                            {
+                                <tr>
+                                    <td>@producto.NombreProducto</td>
+
+                                    <td class="text-end">
+                                        @producto.UnidadesVendidas.ToString("N0", cultura)
+                                    </td>
+
+                                    <td class="text-end">
+                                        @producto.Facturacion.ToString("C2", cultura)
+                                    </td>
+
+                                    <td class="text-end">
+                                        @producto.CostoTotal.ToString("C2", cultura)
+                                    </td>
+
+                                    <td class="text-end fw-semibold">
+                                        @producto.GananciaBruta.ToString("C2", cultura)
+                                    </td>
+
+                                    <td class="text-end">
+                                        @producto.MargenBruto.ToString("N2", cultura) %
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+
+                    </table>
+                </div>
+            }
+
+        </div>
+    </div>
+
+    <a asp-action="Index"
+       asp-controller="Informes"
+       class="btn btn-outline-secondary mb-4">
+        Volver a Informes
+    </a>
+
+</div>

@@ -23,6 +23,8 @@ public class InformesController : Controller
     private readonly IGeneradorInformeMovimientosPdf _generadorMovimientosPdf;
     private readonly IGeneradorInformeInventarioPdf _generadorInventarioPdf;
     private readonly ObtenerMejoresClientes _obtenerMejoresClientes;
+    private readonly ObtenerInformeRentabilidad _obtenerRentabilidad;
+
 
     public InformesController(
         ObtenerInformeVentasPorPeriodo obtenerInformeVentas, 
@@ -33,7 +35,8 @@ public class InformesController : Controller
         ObtenerInformeMovimientosStock obtenerMovimientos,
         IGeneradorInformeMovimientosPdf generadorMovimientosPdf,
         IGeneradorInformeInventarioPdf generadorInventarioPdf,
-        ObtenerMejoresClientes obtenerMejoresClientes)
+        ObtenerMejoresClientes obtenerMejoresClientes,
+        ObtenerInformeRentabilidad obtenerRentabilidad)
     {
         _obtenerInformeVentas = obtenerInformeVentas;
         _obtenerProductosMasVendidos = obtenerProductosMasVendidos;
@@ -44,6 +47,7 @@ public class InformesController : Controller
         _generadorMovimientosPdf = generadorMovimientosPdf;
         _generadorInventarioPdf = generadorInventarioPdf;
         _obtenerMejoresClientes = obtenerMejoresClientes;
+        _obtenerRentabilidad = obtenerRentabilidad;
     }
 
 
@@ -109,6 +113,14 @@ public class InformesController : Controller
                 finUtcInclusivo,
                 5);
 
+
+        // Rentabilidad del período seleccionado.
+        var rentabilidad = await _obtenerRentabilidad.EjecutarAsync(
+            inicioUtc,
+            finUtcInclusivo,
+            5);
+
+
         var modelo = new DashboardInformesViewModel
         {
             FechaDesde = desde,
@@ -119,7 +131,8 @@ public class InformesController : Controller
             VentasPorVendedor = ventasPorVendedor,
 
             ProductosDestacados = productosDestacados,
-            MejoresClientes = mejoresClientes
+            MejoresClientes = mejoresClientes,
+            Rentabilidad = rentabilidad
         };
 
         return View(modelo);
@@ -558,5 +571,54 @@ public class InformesController : Controller
 
         return View(ranking);
     }
+
+
+    [HttpGet]
+    public async Task<IActionResult> Rentabilidad(
+        DateTime? fechaDesde,
+        DateTime? fechaHasta,
+        int top = 10)
+    {
+        var zona = TimeZoneInfo.FindSystemTimeZoneById(
+            "America/Argentina/Buenos_Aires");
+
+        var hoy = TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.UtcNow, zona).Date;
+
+        var desde = fechaDesde?.Date ?? hoy.AddDays(-30);
+        var hasta = fechaHasta?.Date ?? hoy;
+
+        if (desde > hasta)
+            return BadRequest(
+                "La fecha inicial no puede superar la final.");
+
+        if (hasta == DateTime.MaxValue.Date)
+            return BadRequest("La fecha final no es válida.");
+
+        if (top is not (5 or 10 or 20 or 50))
+            return BadRequest("Top no válido.");
+
+        var inicioUtc = TimeZoneInfo.ConvertTimeToUtc(
+            DateTime.SpecifyKind(
+                desde, DateTimeKind.Unspecified),
+            zona);
+
+        var finUtcExclusivo = TimeZoneInfo.ConvertTimeToUtc(
+            DateTime.SpecifyKind(
+                hasta.AddDays(1), DateTimeKind.Unspecified),
+            zona);
+
+        var modelo = await _obtenerRentabilidad.EjecutarAsync(
+            inicioUtc,
+            finUtcExclusivo.AddTicks(-1),
+            top);
+
+        ViewData["FechaDesde"] = desde.ToString("yyyy-MM-dd");
+        ViewData["FechaHasta"] = hasta.ToString("yyyy-MM-dd");
+        ViewData["Top"] = top;
+
+        return View(modelo);
+    }
+
 
 }

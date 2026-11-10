@@ -1,17 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using QuestPDF.Infrastructure;
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Application.UseCases.CuentasCorrientes;
+using SistemaVenta.Application.UseCases.Informes;
+using SistemaVenta.Application.UseCases.Usuarios;
+using SistemaVenta.Application.UseCases.Ventas;
+using SistemaVenta.Infrastructure.Informes;
+using SistemaVenta.Infrastructure.Initialization;
 using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Persistence.Repositories;
 using SistemaVenta.Infrastructure.Repositories;
-using SistemaVenta.Application.UseCases.Ventas;
 using SistemaVenta.Infrastructure.Security;
-using SistemaVenta.Application.UseCases.Usuarios;
-using SistemaVenta.Infrastructure.Initialization;
-using SistemaVenta.Infrastructure.Informes;
-using QuestPDF.Infrastructure;
 
 
 namespace SistemaVenta.Infrastructure
@@ -98,10 +99,12 @@ namespace SistemaVenta.Infrastructure
             services.AddScoped<
                 IInformeVentasRepository,
                 InformeVentasRepository>();
-
             services.AddScoped<
                 IGeneradorInformeInventarioPdf,
                 GeneradorInformeInventarioPdf>();
+            services.AddScoped<
+                IInformeRentabilidadRepository,
+                InformeRentabilidadRepository>();
 
             return services;
         }

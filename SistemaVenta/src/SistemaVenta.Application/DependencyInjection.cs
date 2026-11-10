@@ -23,7 +23,7 @@ namespace SistemaVenta.Application
             services.AddScoped<CorregirInventario>();
             services.AddScoped<ObtenerInformeInventario>();
             services.AddScoped<ObtenerInformeMovimientosStock>();
-
+            services.AddScoped<ObtenerInformeRentabilidad>();
 
             services.AddScoped<ListarProductos>();
             services.AddScoped<CrearProducto>();

@@ -20,6 +20,10 @@ namespace SistemaVenta.Web.Models.Informes
         public List<ClienteTopDto> MejoresClientes { get; set; }
             = new();
 
+
+        public InformeRentabilidadDto Rentabilidad { get; set; }
+            = new();
+
         public DateTime FechaDesde { get; set; }
 
         public DateTime FechaHasta { get; set; }

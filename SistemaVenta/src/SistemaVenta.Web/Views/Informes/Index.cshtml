@@ -226,6 +226,154 @@
     </div>
 
 
+    <!-- RESUMEN DE RENTABILIDAD -->
+    <h4 class="mt-5 mb-3">Rentabilidad del negocio</h4>
+
+    <div class="row g-3 mb-4">
+
+        <!-- FACTURACIÓN ANALIZADA -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">
+                        Facturación analizada
+                    </h6>
+
+                    <h4>
+                        @Model.Rentabilidad.FacturacionAnalizada.ToString("C2", cultura)
+                    </h4>
+
+                    <small class="text-muted">
+                        Ventas con costo histórico completo
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- COSTO -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">
+                        Costo de mercadería
+                    </h6>
+
+                    <h4>
+                        @Model.Rentabilidad.CostoMercaderia.ToString("C2", cultura)
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- GANANCIA -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">
+                        Ganancia bruta
+                    </h6>
+
+                    <h4 class="text-success">
+                        @Model.Rentabilidad.GananciaBruta.ToString("C2", cultura)
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- MARGEN -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">
+                        Margen bruto
+                    </h6>
+
+                    <h4>
+                        @Model.Rentabilidad.MargenBruto.ToString("N2", cultura) %
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    @if (Model.Rentabilidad.VentasSinCosto > 0)
+    {
+        <div class="alert alert-warning">
+            Hay @Model.Rentabilidad.VentasSinCosto ventas
+            sin información completa de costos.
+
+            La ganancia bruta y el margen se calculan
+            únicamente sobre ventas con costo histórico completo.
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between
+                    align-items-center mb-3">
+
+                <h5 class="card-title mb-0">
+                    Facturación, costo y ganancia
+                </h5>
+
+                <a asp-controller="Informes"
+                   asp-action="Rentabilidad"
+                   asp-route-fechaDesde="@Model.FechaDesde.ToString("yyyy-MM-dd")"
+                   asp-route-fechaHasta="@Model.FechaHasta.ToString("yyyy-MM-dd")"
+                   class="btn btn-sm btn-outline-primary">
+                    Ver informe completo
+                </a>
+
+            </div>
+
+            @if (Model.Rentabilidad.VentasConCosto == 0)
+            {
+                <div class="alert alert-info mb-0">
+                    No hay ventas con costos históricos completos
+                    para este período.
+                </div>
+            }
+            else
+            {
+                <div style="position:relative; height:300px;">
+                    <canvas id="graficoRentabilidad"></canvas>
+                </div>
+            }
+
+        </div>
+    </div>
+
+
+    <!-- EVOLUCIÓN DIARIA DE RENTABILIDAD -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h5 class="card-title mb-3">
+                Evolución diaria de la rentabilidad
+            </h5>
+
+            @if (Model.Rentabilidad.VentasConCosto == 0)
+            {
+                <div class="alert alert-info mb-0">
+                    No hay ventas con costos históricos completos
+                    para analizar en este período.
+                </div>
+            }
+            else
+            {
+                <div style="position:relative; height:350px;">
+                    <canvas id="graficoEvolucionRentabilidad"></canvas>
+                </div>
+            }
+
+        </div>
+    </div>
+
+
+
     <!-- RANKINGS DESTACADOS -->
     <h4 class="mt-5 mb-3">Rankings destacados</h4>
 
@@ -426,6 +574,31 @@
                 <div class="card-body">
 
                     <h5 class="card-title">
+                        Rentabilidad bruta
+                    </h5>
+
+                    <p class="card-text text-muted">
+                        Analizá la facturación, el costo de mercadería,
+                        la ganancia bruta y los productos más rentables.
+                    </p>
+
+                    <a asp-controller="Informes"
+                       asp-action="Rentabilidad"
+                       asp-route-fechaDesde="@Model.FechaDesde.ToString("yyyy-MM-dd")"
+                       asp-route-fechaHasta="@Model.FechaHasta.ToString("yyyy-MM-dd")"
+                       class="btn btn-primary">
+                        Ver rentabilidad
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+
+                    <h5 class="card-title">
                         Ventas por período
                     </h5>
 
@@ -572,91 +745,91 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
 
     <script>
-        const ventasDiarias = @Html.Raw(
-                    System.Text.Json.JsonSerializer.Serialize(
-                            Model.VentasDiarias.Select(v => new
-                            {
-                                    fecha = v.Fecha.ToString("dd/MM/yyyy"),
-                                    total = v.TotalVendido
-                            })
-                    )
-            );
+            const ventasDiarias = @Html.Raw(
+                                            System.Text.Json.JsonSerializer.Serialize(
+                                                            Model.VentasDiarias.Select(v => new
+                                                            {
+                                                                        fecha = v.Fecha.ToString("dd/MM/yyyy"),
+                                                                        total = v.TotalVendido
+                                                            })
+                                            )
+                            );
 
     const etiquetas = ventasDiarias.map(v => v.fecha);
     const totales = ventasDiarias.map(v => v.total);
 
-        const canvas = document.getElementById('graficoVentasDiarias');
+            const canvas = document.getElementById('graficoVentasDiarias');
 
-        new Chart(canvas, {
-            type: 'line',
-            data: {
-                labels: etiquetas,
-                datasets: [{
-                    label: 'Total vendido',
-                    data: totales,
-                    borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: true
-                }]
-            },
+            new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: etiquetas,
+                    datasets: [{
+                        label: 'Total vendido',
+                        data: totales,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
 
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return '$ ' + Number(value).toLocaleString('es-AR');
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$ ' + Number(value).toLocaleString('es-AR');
+                            }
                         }
                     }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const importe = context.parsed.y ?? 0;
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const importe = context.parsed.y ?? 0;
 
-                            return 'Total vendido: ' +
-                                new Intl.NumberFormat('es-AR', {
-                                    style: 'currency',
-                                    currency: 'ARS'
-                                }).format(importe);
+                                return 'Total vendido: ' +
+                                    new Intl.NumberFormat('es-AR', {
+                                        style: 'currency',
+                                        currency: 'ARS'
+                                    }).format(importe);
+                            }
                         }
                     }
                 }
             }
-        }
 
-        });
+            });
     </script>
 
 
     <script>
         const datosVendedores = @Html.Raw(
-                System.Text.Json.JsonSerializer.Serialize(
-                        Model.VentasPorVendedor
-                                .Where(v => v.VendedorId.HasValue)
-                                .OrderByDescending(v => v.TotalVendido)
-                                .Take(5)
-                                .Select(v => new
-                                {
-                                        nombre = v.NombreVendedor,
-                                        total = v.TotalVendido
-                                })
-                )
+                        System.Text.Json.JsonSerializer.Serialize(
+                                        Model.VentasPorVendedor
+                                                        .Where(v => v.VendedorId.HasValue)
+                                                        .OrderByDescending(v => v.TotalVendido)
+                                                        .Take(5)
+                                                        .Select(v => new
+                                                        {
+                                                                    nombre = v.NombreVendedor,
+                                                                    total = v.TotalVendido
+                                                        })
+                        )
         );
 
     const canvasVendedores =
-        document.getElementById('graficoVendedores');
+    document.getElementById('graficoVendedores');
 
         if (canvasVendedores && datosVendedores.length > 0) {
 
@@ -704,6 +877,175 @@
                                         style: 'currency',
                                         currency: 'ARS'
                                     }).format(context.parsed.x ?? 0);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+
+    <script>
+        const canvasRentabilidad =
+            document.getElementById('graficoRentabilidad');
+
+        if (canvasRentabilidad) {
+
+            const valoresRentabilidad = [
+                @Model.Rentabilidad.FacturacionAnalizada.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                @Model.Rentabilidad.CostoMercaderia.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                @Model.Rentabilidad.GananciaBruta.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            ];
+
+            new Chart(canvasRentabilidad, {
+                type: 'bar',
+
+                data: {
+                    labels: [
+                        'Facturación analizada',
+                        'Costo de mercadería',
+                        'Ganancia bruta'
+                    ],
+
+                    datasets: [{
+                        label: 'Importe',
+                        data: valoresRentabilidad,
+
+                        backgroundColor: [
+                            '#0d6efd',
+                            '#fd7e14',
+                            '#198754'
+                        ],
+
+                        borderRadius: 6
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$ ' +
+                                        Number(value).toLocaleString('es-AR');
+                                }
+                            }
+                        }
+                    },
+
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return new Intl.NumberFormat('es-AR', {
+                                        style: 'currency',
+                                        currency: 'ARS'
+                                    }).format(context.parsed.y ?? 0);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+
+@{
+        var datosEvolucionRentabilidad =
+            System.Text.Json.JsonSerializer.Serialize(
+                Model.Rentabilidad.EvolucionDiaria.Select(d => new
+                {
+                    fecha = d.Fecha.ToString("dd/MM/yyyy"),
+                    facturacion = d.Facturacion,
+                    costo = d.Costo,
+                    ganancia = d.GananciaBruta
+                }));
+    }
+
+    <script>
+        const canvasEvolucionRentabilidad =
+            document.getElementById('graficoEvolucionRentabilidad');
+
+        if (canvasEvolucionRentabilidad) {
+
+            const evolucionRentabilidad =
+                @Html.Raw(datosEvolucionRentabilidad);
+
+            const formatoMoneda = valor =>
+                new Intl.NumberFormat('es-AR', {
+                    style: 'currency',
+                    currency: 'ARS'
+                }).format(valor);
+
+            new Chart(canvasEvolucionRentabilidad, {
+                type: 'line',
+
+                data: {
+                    labels: evolucionRentabilidad.map(x => x.fecha),
+
+                    datasets: [
+                        {
+                            label: 'Facturación',
+                            data: evolucionRentabilidad.map(x => x.facturacion),
+                            borderColor: '#0d6efd',
+                            backgroundColor: '#0d6efd',
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Costo de mercadería',
+                            data: evolucionRentabilidad.map(x => x.costo),
+                            borderColor: '#fd7e14',
+                            backgroundColor: '#fd7e14',
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Ganancia bruta',
+                            data: evolucionRentabilidad.map(x => x.ganancia),
+                            borderColor: '#198754',
+                            backgroundColor: '#198754',
+                            tension: 0.3
+                        }
+                    ]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' +
+                                        formatoMoneda(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$ ' +
+                                        Number(value).toLocaleString('es-AR');
                                 }
                             }
                         }
