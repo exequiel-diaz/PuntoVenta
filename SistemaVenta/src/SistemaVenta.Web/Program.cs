@@ -19,7 +19,7 @@ using System.Threading.RateLimiting;
 using SistemaVenta.Domain.Constants;
 using SistemaVenta.Web.Security;
 using SistemaVenta.Application.UseCases.ConfiguracionCredito;
-
+using SistemaVenta.Application.UseCases.Dashboard;
 
 var builder = WebApplication.CreateBuilder(args);
 QuestPDF.Settings.License = LicenseType.Community;
@@ -115,6 +115,8 @@ builder.Services.AddScoped<ObtenerPermisosUsuario>();
 builder.Services.AddScoped<ActualizarPermisosUsuario>();
 
 builder.Services.AddScoped<CambiarLimitePredeterminado>();
+
+builder.Services.AddScoped<ObtenerResumenDashboard>();
 
 builder.Services.AddRateLimiter(options =>
 {

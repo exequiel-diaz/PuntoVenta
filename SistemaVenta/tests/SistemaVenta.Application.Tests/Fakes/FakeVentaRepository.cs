@@ -2,6 +2,7 @@
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Domain.Entities;
 using System.Reflection;
+using SistemaVenta.Application.DTOs.Dashboard;
 
 namespace SistemaVenta.Application.Tests.Fakes
 {
@@ -16,6 +17,18 @@ namespace SistemaVenta.Application.Tests.Fakes
             var venta = _ventas.FirstOrDefault(v => v.Id == id);
 
             return Task.FromResult(venta);
+        }
+
+        public Task<IReadOnlyList<ProductoMasVendidoDto>>
+            ObtenerProductosMasVendidosAsync(
+                DateTime desde,
+                DateTime hasta,
+                int cantidad = 5)
+        {
+            IReadOnlyList<ProductoMasVendidoDto> resultado =
+                Array.Empty<ProductoMasVendidoDto>();
+
+            return Task.FromResult(resultado);
         }
 
         public Task<IReadOnlyList<Venta>> ObtenerTodosAsync()

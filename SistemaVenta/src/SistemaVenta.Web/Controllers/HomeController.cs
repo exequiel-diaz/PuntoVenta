@@ -1,32 +1,62 @@
+
 using Microsoft.AspNetCore.Mvc;
+using SistemaVenta.Application.DTOs.Dashboard;
+using SistemaVenta.Application.UseCases.Dashboard;
 using SistemaVenta.Web.Models;
+using SistemaVenta.Web.Security;
 using System.Diagnostics;
 
-namespace SistemaVenta.Web.Controllers
+namespace SistemaVenta.Web.Controllers;
+
+public class HomeController : Controller
 {
-    public class HomeController : Controller
+    private readonly ILogger<HomeController> _logger;
+    private readonly ObtenerResumenDashboard _obtenerResumen;
+
+    public HomeController(
+        ILogger<HomeController> logger,
+        ObtenerResumenDashboard obtenerResumen)
     {
-        private readonly ILogger<HomeController> _logger;
+        _logger = logger;
+        _obtenerResumen = obtenerResumen;
+    }
 
-        public HomeController(ILogger<HomeController> logger)
+    public async Task<IActionResult> Index()
+    {
+        if (!User.IsInRole(Roles.Administrador))
         {
-            _logger = logger;
+            return View(new ResumenDashboardDto());
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+        var zonaHoraria = TimeZoneInfo.FindSystemTimeZoneById(
+            "America/Argentina/Buenos_Aires");
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+        var ahoraLocal = TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.UtcNow,
+            zonaHoraria);
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        var resumen = await _obtenerResumen.EjecutarAsync(
+            ahoraLocal,
+            zonaHoraria);
+
+        return View(resumen);
+    }
+
+    public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    [ResponseCache(
+        Duration = 0,
+        Location = ResponseCacheLocation.None,
+        NoStore = true)]
+    public IActionResult Error()
+    {
+        return View(new ErrorViewModel
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+            RequestId = Activity.Current?.Id
+                ?? HttpContext.TraceIdentifier
+        });
     }
 }

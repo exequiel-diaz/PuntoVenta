@@ -1,162 +1,536 @@
-﻿@{
+﻿@model SistemaVenta.Application.DTOs.Dashboard.ResumenDashboardDto
+
+@using Microsoft.AspNetCore.Authorization
+@using SistemaVenta.Domain.Constants
+@using SistemaVenta.Web.Security
+@using System.Text.Json
+
+@inject IAuthorizationService AuthorizationService
+
+@{
     ViewData["Title"] = "Inicio";
+
+    bool esAdministrador = User.IsInRole(Roles.Administrador);
+
+    bool puedeCrearProducto = (await AuthorizationService
+        .AuthorizeAsync(User, Permisos.CrearProductos)).Succeeded;
+
+    bool puedeAbrirCuenta = (await AuthorizationService
+        .AuthorizeAsync(User, Permisos.AbrirCuentaCorriente)).Succeeded;
+
+    var etiquetas = JsonSerializer.Serialize(
+        Model.VentasUltimosDias.Select(x => x.Dia));
+
+    var valores = JsonSerializer.Serialize(
+        Model.VentasUltimosDias.Select(x => x.Total));
+
+    var nombresProductos = JsonSerializer.Serialize(
+    Model.ProductosMasVendidos.Select(p => p.Nombre));
+
+    var cantidadesProductos = JsonSerializer.Serialize(
+        Model.ProductosMasVendidos.Select(p => p.CantidadVendida));
 }
 
-<div class="container py-4">
+<style>
+    .dashboard-hero {
+        background: linear-gradient(120deg, #152b50, #245ca0);
+        color: white;
+        border-radius: 18px;
+        padding: 32px;
+    }
 
-    <!-- ENCABEZADO -->
+    .dashboard-card {
+        border: 1px solid #e7ebf0;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,.035);
+        transition: transform .2s, box-shadow .2s;
+        height: 100%;
+    }
 
-    <div class="bg-light rounded-3 p-4 p-md-5 mb-4 border">
+        .dashboard-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 22px rgba(0,0,0,.07);
+        }
 
-        <h1 class="display-5 fw-bold mb-3">
-            SistemaVenta
-        </h1>
+    .dashboard-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: -.5px;
+    }
 
-        <p class="lead mb-2">
-            Sistema de gestión para un comercio de artículos
-            de computación.
-        </p>
+    .dashboard-label {
+        color: #6b7280;
+        font-size: .9rem;
+        font-weight: 500;
+    }
 
-        <p class="text-muted mb-4">
-            Administrá productos, categorías, clientes y ventas
-            desde un único lugar.
-        </p>
+    .dashboard-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        background: #edf4ff;
+    }
 
-        <a asp-controller="Ventas"
-           asp-action="Crear"
-           class="btn btn-primary btn-lg">
-            + Registrar nueva venta
-        </a>
+    .dashboard-section {
+        border: 1px solid #e7ebf0;
+        border-radius: 15px;
+        background: white;
+        padding: 24px;
+    }
 
-    </div>
+    .quick-link {
+        display: block;
+        padding: 16px;
+        border: 1px solid #e7ebf0;
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        transition: background .2s;
+    }
 
-    <!-- MÓDULOS PRINCIPALES -->
+        .quick-link:hover {
+            background: #f4f7fc;
+            color: #0d6efd;
+        }
 
-    <h2 class="h4 mb-4">
-        Módulos principales
-    </h2>
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
 
-    <div class="row g-4">
+<div class="container-fluid py-4 px-lg-4">
 
-        <!-- VENTAS -->
+    <!-- BIENVENIDA -->
 
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm">
-
-                <div class="card-body d-flex flex-column">
-
-                    <h5 class="card-title">
-                        Ventas
-                    </h5>
-
-                    <p class="card-text text-muted">
-                        Registrá nuevas ventas, consultá
-                        el historial y emití facturas internas.
-                    </p>
-
-                    <a asp-controller="Ventas"
-                       asp-action="Index"
-                       class="btn btn-outline-primary mt-auto">
-                        Ir a Ventas
-                    </a>
-
+    <div class="dashboard-hero mb-4">
+        <div class="row align-items-center g-3">
+            <div class="col-md-8">
+                <div class="small opacity-75 mb-2">
+                    SISTEMA DE GESTIÓN COMERCIAL
                 </div>
 
+                <h1 class="fw-bold mb-2">
+                    Panel de @(
+                    esAdministrador
+                    ? "administración"
+                    : "ventas")
+                </h1>
+
+                <p class="mb-0 opacity-75">
+                    Gestioná tu comercio de artículos de
+                    computación desde un solo lugar.
+                </p>
+            </div>
+
+            <div class="col-md-4 text-md-end">
+                <a asp-controller="Ventas"
+                   asp-action="Crear"
+                   class="btn btn-light btn-lg fw-semibold">
+                    + Nueva venta
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (esAdministrador)
+    {
+        <!-- INDICADORES -->
+
+        <div class="row g-3 mb-4">
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <div class="dashboard-icon mb-3">💰</div>
+                        <div class="dashboard-label">
+                            Ventas de hoy
+                        </div>
+                        <div class="dashboard-number">
+                            @Model.VentasHoy.ToString("C2")
+                        </div>
+                        <small class="text-muted">
+                            Ventas confirmadas
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <div class="dashboard-icon mb-3">🧾</div>
+                        <div class="dashboard-label">
+                            Operaciones de hoy
+                        </div>
+                        <div class="dashboard-number">
+                            @Model.CantidadVentasHoy
+                        </div>
+                        <small class="text-muted">
+                            Ventas confirmadas
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <div class="dashboard-icon mb-3">📦</div>
+                        <div class="dashboard-label">
+                            Productos activos
+                        </div>
+                        <div class="dashboard-number">
+                            @Model.ProductosActivos
+                        </div>
+                        <small class="text-muted">
+                            En el catálogo
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <div class="dashboard-icon mb-3">⚠️</div>
+                        <div class="dashboard-label">
+                            Alertas de stock
+                        </div>
+                        <div class="dashboard-number">
+                            @(Model.ProductosStockBajo +
+                                                    Model.ProductosSinStock)
+                    </div>
+                    <small class="text-muted">
+                        Productos que requieren atención
+                    </small>
+                </div>
             </div>
         </div>
 
-        <!-- PRODUCTOS -->
+        </div>
 
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm">
+        <!-- GRÁFICO Y ALERTAS -->
 
-                <div class="card-body d-flex flex-column">
+        <div class="row g-4 mb-4">
 
-                    <h5 class="card-title">
-                        Productos
+            <div class="col-lg-8">
+                <div class="dashboard-section h-100">
+
+                    <h5 class="fw-bold mb-1">
+                        Evolución de ventas
                     </h5>
 
-                    <p class="card-text text-muted">
-                        Administrá los artículos de computación,
-                        sus precios y el stock disponible.
+                    <p class="text-muted small mb-4">
+                        Últimos siete días · Ventas confirmadas
                     </p>
+
+                    <div class="chart-container">
+                        <canvas id="graficoVentas"></canvas>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="dashboard-section h-100">
+
+                    <h5 class="fw-bold mb-4">
+                        Estado del inventario
+                    </h5>
+
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Productos activos</span>
+                        <strong>@Model.ProductosActivos</strong>
+                    </div>
+
+                    <hr />
+
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Stock bajo</span>
+                        <span class="badge bg-warning text-dark">
+                            @Model.ProductosStockBajo
+                        </span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Sin stock</span>
+                        <span class="badge bg-danger">
+                            @Model.ProductosSinStock
+                        </span>
+                    </div>
+
+                    <hr />
 
                     <a asp-controller="Productos"
                        asp-action="Index"
-                       class="btn btn-outline-primary mt-auto">
-                        Ir a Productos
+                       class="btn btn-outline-primary w-100 mt-2">
+                        Ver productos
                     </a>
+
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- PRODUCTOS MÁS VENDIDOS -->
+
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+
+                <div class="dashboard-section">
+
+                    <h5 class="fw-bold mb-1">
+                        Productos más vendidos
+                    </h5>
+
+                    <p class="text-muted small mb-4">
+                        Top 5 productos por unidades vendidas
+                        durante los últimos 30 días
+                    </p>
+
+                @if (Model.ProductosMasVendidos.Any())
+                    {
+                        <div class="chart-container"
+                             style="height: 320px;">
+
+                            <canvas id="graficoProductos"></canvas>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-5">
+                            No hay ventas confirmadas
+                            durante los últimos 30 días.
+                        </div>
+                    }
 
                 </div>
 
             </div>
         </div>
 
-        <!-- CATEGORÍAS -->
 
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm">
+        }
 
-                <div class="card-body d-flex flex-column">
+    <!-- ACCESOS RÁPIDOS -->
 
-                    <h5 class="card-title">
-                        Categorías
-                    </h5>
+    <div class="dashboard-section">
 
-                    <p class="card-text text-muted">
-                        Organizá los productos por categorías
-                        para facilitar su administración.
-                    </p>
+        <h5 class="fw-bold mb-3">
+            Accesos rápidos
+        </h5>
 
+        <div class="row g-3">
+
+            <div class="col-sm-6 col-lg-3">
+                <a asp-controller="Ventas"
+                   asp-action="Index"
+                   class="quick-link">
+                    <div class="fs-3 mb-2">🛒</div>
+                    <strong>Ventas</strong>
+                    <div class="text-muted small">
+                        Consultar operaciones
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+                <a asp-controller="Productos"
+                   asp-action="Index"
+                   class="quick-link">
+                    <div class="fs-3 mb-2">💻</div>
+                    <strong>Productos</strong>
+                    <div class="text-muted small">
+                        Consultar inventario
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+                <a asp-controller="Clientes"
+                   asp-action="Index"
+                   class="quick-link">
+                    <div class="fs-3 mb-2">👥</div>
+                    <strong>Clientes</strong>
+                    <div class="text-muted small">
+                        Consultar clientes
+                    </div>
+                </a>
+            </div>
+
+            @if (esAdministrador)
+            {
+                <div class="col-sm-6 col-lg-3">
                     <a asp-controller="Categorias"
                        asp-action="Index"
-                       class="btn btn-outline-primary mt-auto">
-                        Ir a Categorías
+                       class="quick-link">
+                        <div class="fs-3 mb-2">🗂️</div>
+                        <strong>Categorías</strong>
+                        <div class="text-muted small">
+                            Administrar categorías
+                        </div>
                     </a>
-
                 </div>
+            }
 
-            </div>
-        </div>
+            @if (puedeCrearProducto)
+            {
+                <div class="col-sm-6 col-lg-3">
+                    <a asp-controller="Productos"
+                       asp-action="Crear"
+                       class="quick-link">
+                        <div class="fs-3 mb-2">➕</div>
+                        <strong>Nuevo producto</strong>
+                        <div class="text-muted small">
+                            Registrar artículo
+                        </div>
+                    </a>
+                </div>
+            }
 
-        <!-- CLIENTES -->
-
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm">
-
-                <div class="card-body d-flex flex-column">
-
-                    <h5 class="card-title">
-                        Clientes
-                    </h5>
-
-                    <p class="card-text text-muted">
-                        Administrá clientes particulares,
-                        empresas y sus cuentas corrientes.
-                    </p>
-
+            @if (puedeAbrirCuenta)
+            {
+                <div class="col-sm-6 col-lg-3">
                     <a asp-controller="Clientes"
                        asp-action="Index"
-                       class="btn btn-outline-primary mt-auto">
-                        Ir a Clientes
+                       class="quick-link">
+                        <div class="fs-3 mb-2">💳</div>
+                        <strong>Cuentas corrientes</strong>
+                        <div class="text-muted small">
+                            Buscar cliente para abrir cuenta
+                        </div>
                     </a>
-
                 </div>
+            }
 
-            </div>
         </div>
-
-    </div>
-
-    <!-- INFORMACIÓN INFERIOR -->
-
-    <div class="alert alert-info mt-5 mb-0">
-
-        <strong>Información:</strong>
-        Las operaciones de venta actualizan automáticamente
-        el stock de los productos. Las ventas pueden anularse
-        siempre que no tengan una factura emitida.
 
     </div>
 
 </div>
+
+@if (esAdministrador)
+{
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+
+            const canvas = document.getElementById("graficoVentas");
+
+            if (!canvas || typeof Chart === "undefined") {
+                return;
+            }
+
+            const etiquetas = @Html.Raw(etiquetas);
+            const valores = @Html.Raw(valores);
+
+            new Chart(canvas, {
+                type: "bar",
+                data: {
+                    labels: etiquetas,
+                    datasets: [{
+                        label: "Ventas ($)",
+                        data: valores,
+                        backgroundColor: "rgba(37, 99, 235, 0.75)",
+                        borderRadius: 7,
+                        maxBarThickness: 55
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return "$ " +
+                                        context.parsed.y.toLocaleString("es-AR");
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return "$ " +
+                                        value.toLocaleString("es-AR");
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+
+        const canvasProductos =
+            document.getElementById("graficoProductos");
+
+        if (canvasProductos) {
+
+            const nombresProductos = @Html.Raw(nombresProductos);
+            const cantidadesProductos = @Html.Raw(cantidadesProductos);
+
+            new Chart(canvasProductos, {
+                type: "bar",
+                data: {
+                    labels: nombresProductos,
+                    datasets: [{
+                        label: "Unidades vendidas",
+                        data: cantidadesProductos,
+                        backgroundColor: "rgba(16, 185, 129, 0.8)",
+                        borderRadius: 7,
+                        maxBarThickness: 35
+                    }]
+                },
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.x.toLocaleString("es-AR")
+                                        + " unidades";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                autoSkip: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        });
+    </script>
+
+}

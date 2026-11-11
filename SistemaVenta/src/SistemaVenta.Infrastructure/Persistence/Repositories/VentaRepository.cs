@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Domain.Entities;
+using SistemaVenta.Application.DTOs.Dashboard;
+using SistemaVenta.Domain.Enums;
 
 namespace SistemaVenta.Infrastructure.Persistence.Repositories
 {
@@ -69,9 +71,49 @@ namespace SistemaVenta.Infrastructure.Persistence.Repositories
         }
 
 
+
+        public async Task<IReadOnlyList<ProductoMasVendidoDto>>
+            ObtenerProductosMasVendidosAsync(
+                DateTime desde,
+                DateTime hasta,
+                int cantidad = 5)
+        {
+            if (desde >= hasta)
+                throw new ArgumentException(
+                    "El período de consulta no es válido.");
+
+            if (cantidad <= 0)
+                throw new ArgumentOutOfRangeException(nameof(cantidad));
+
+            return await _context.Ventas
+                .AsNoTracking()
+                .Where(v =>
+                    v.Fecha >= desde &&
+                    v.Fecha < hasta &&
+                    v.Estado == EstadoVenta.Confirmada)
+                .SelectMany(v => v.Detalles)
+                .GroupBy(d => new
+                {
+                    d.ProductoId,
+                    d.Producto.Nombre
+                })
+                .Select(g => new ProductoMasVendidoDto
+                {
+                    ProductoId = g.Key.ProductoId,
+                    Nombre = g.Key.Nombre,
+                    CantidadVendida = g.Sum(d => d.Cantidad)
+                })
+                .OrderByDescending(p => p.CantidadVendida)
+                .ThenBy(p => p.Nombre)
+                .Take(cantidad)
+                .ToListAsync();
+        }
+
+
         public async Task AgregarAsync(Venta venta)
         {
             await _context.Ventas.AddAsync(venta);
         }
+
     }
 }
