@@ -1,8 +1,17 @@
 ﻿@model SistemaVenta.Application.DTOs.CuentasCorrientes.CuentaCorrienteDetalleDto
 @using SistemaVenta.Domain.Enums
+@using Microsoft.AspNetCore.Authorization
+@using SistemaVenta.Domain.Constants
+@using SistemaVenta.Web.Security
+
+@inject IAuthorizationService AuthorizationService
 
 @{
     ViewData["Title"] = "Cuenta corriente";
+    bool esAdministrador = User.IsInRole(Roles.Administrador);
+
+    bool puedeRegistrarCobros = (await AuthorizationService
+        .AuthorizeAsync(User, Permisos.RegistrarCobros)).Succeeded;
 }
 
 <h2 class="mb-4">Cuenta corriente</h2>
@@ -74,185 +83,226 @@
 
 <!-- ACCIONES ADMINISTRATIVAS -->
 
-<div class="card mb-4">
-    <div class="card-header">
-        <strong>Acciones administrativas</strong>
-    </div>
+@if (esAdministrador)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <strong>Acciones administrativas</strong>
+        </div>
 
-    <div class="card-body">
+        <div class="card-body">
 
-        <div class="d-flex flex-wrap gap-2">
+            <div class="d-flex flex-wrap gap-2">
 
-            <!-- MODIFICAR LÍMITE -->
-            @if (Model.Estado != EstadoCuentaCorriente.Cerrada)
+                <!-- MODIFICAR LÍMITE -->
+                @if (Model.Estado != EstadoCuentaCorriente.Cerrada)
+                {
+                    <a asp-controller="CuentaCorriente"
+                       asp-action="ModificarLimite"
+                       asp-route-clienteId="@Model.ClienteId"
+                       class="btn btn-outline-primary">
+                        Modificar límite de deuda
+                    </a>
+                }
+
+
+                <!-- SUSPENDER CUENTA -->
+                @if (Model.Estado == EstadoCuentaCorriente.Activa)
+                {
+                    <form asp-controller="CuentaCorriente"
+                          asp-action="Suspender"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="cuentaId"
+                               value="@Model.Id" />
+
+                        <input type="hidden"
+                               name="clienteId"
+                               value="@Model.ClienteId" />
+
+                        <button type="submit"
+                                class="btn btn-warning"
+                                onclick="return confirm('¿Suspender esta cuenta corriente?');">
+                            Suspender cuenta
+                        </button>
+
+                    </form>
+                }
+
+
+                <!-- ACTIVAR CUENTA -->
+                @if (Model.Estado == EstadoCuentaCorriente.Suspendida)
+                {
+                    <form asp-controller="CuentaCorriente"
+                          asp-action="Activar"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="cuentaId"
+                               value="@Model.Id" />
+
+                        <input type="hidden"
+                               name="clienteId"
+                               value="@Model.ClienteId" />
+
+                        <button type="submit"
+                                class="btn btn-success">
+                            Activar cuenta
+                        </button>
+
+                    </form>
+                }
+
+
+                <!-- CERRAR CUENTA -->
+                @if (Model.Estado != EstadoCuentaCorriente.Cerrada
+                            && Model.SaldoActual == 0)
+                {
+                    <form asp-controller="CuentaCorriente"
+                          asp-action="Cerrar"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="cuentaId"
+                               value="@Model.Id" />
+
+                        <input type="hidden"
+                               name="clienteId"
+                               value="@Model.ClienteId" />
+
+                        <button type="submit"
+                                class="btn btn-outline-danger"
+                                onclick="return confirm('¿Cerrar definitivamente esta cuenta corriente?');">
+                            Cerrar cuenta
+                        </button>
+
+                    </form>
+                }
+
+            </div>
+
+            @if (Model.Estado == EstadoCuentaCorriente.Cerrada)
             {
-                <a asp-controller="CuentaCorriente"
-                   asp-action="ModificarLimite"
-                   asp-route-clienteId="@Model.ClienteId"
-                   class="btn btn-outline-primary">
-                    Modificar límite de deuda
-                </a>
-            }
-
-
-            <!-- SUSPENDER CUENTA -->
-            @if (Model.Estado == EstadoCuentaCorriente.Activa)
-            {
-                <form asp-controller="CuentaCorriente"
-                      asp-action="Suspender"
-                      method="post">
-
-                    @Html.AntiForgeryToken()
-
-                    <input type="hidden"
-                           name="cuentaId"
-                           value="@Model.Id" />
-
-                    <input type="hidden"
-                           name="clienteId"
-                           value="@Model.ClienteId" />
-
-                    <button type="submit"
-                            class="btn btn-warning"
-                            onclick="return confirm('¿Suspender esta cuenta corriente?');">
-                        Suspender cuenta
-                    </button>
-
-                </form>
-            }
-
-
-            <!-- ACTIVAR CUENTA -->
-            @if (Model.Estado == EstadoCuentaCorriente.Suspendida)
-            {
-                <form asp-controller="CuentaCorriente"
-                      asp-action="Activar"
-                      method="post">
-
-                    @Html.AntiForgeryToken()
-
-                    <input type="hidden"
-                           name="cuentaId"
-                           value="@Model.Id" />
-
-                    <input type="hidden"
-                           name="clienteId"
-                           value="@Model.ClienteId" />
-
-                    <button type="submit"
-                            class="btn btn-success">
-                        Activar cuenta
-                    </button>
-
-                </form>
-            }
-
-
-            <!-- CERRAR CUENTA -->
-            @if (Model.Estado != EstadoCuentaCorriente.Cerrada
-                        && Model.SaldoActual == 0)
-            {
-                <form asp-controller="CuentaCorriente"
-                      asp-action="Cerrar"
-                      method="post">
-
-                    @Html.AntiForgeryToken()
-
-                    <input type="hidden"
-                           name="cuentaId"
-                           value="@Model.Id" />
-
-                    <input type="hidden"
-                           name="clienteId"
-                           value="@Model.ClienteId" />
-
-                    <button type="submit"
-                            class="btn btn-outline-danger"
-                            onclick="return confirm('¿Cerrar definitivamente esta cuenta corriente?');">
-                        Cerrar cuenta
-                    </button>
-
-                </form>
+                <p class="text-muted mt-3 mb-0">
+                    Esta cuenta corriente está cerrada.
+                    No se permiten nuevas operaciones.
+                </p>
             }
 
         </div>
-
-        @if (Model.Estado == EstadoCuentaCorriente.Cerrada)
-        {
-            <p class="text-muted mt-3 mb-0">
-                Esta cuenta corriente está cerrada.
-                No se permiten nuevas operaciones.
-            </p>
-        }
-
     </div>
-</div>
 
+}
 
 <!-- REGISTRAR MOVIMIENTOS -->
+@* REGISTRO DE MOVIMIENTOS Y COBROS *@
 
-<div class="card mb-4">
-    <div class="card-header">
-        <strong>Registrar movimientos</strong>
-    </div>
+@if (esAdministrador || puedeRegistrarCobros)
+{
+    <div class="card mb-4">
 
-    <div class="card-body">
+        <div class="card-header">
+            <strong>Movimientos de cuenta corriente</strong>
+        </div>
 
-        <div class="d-flex flex-wrap gap-2">
+        <div class="card-body">
 
-            <!-- REGISTRAR DÉBITO -->
-            @if (Model.Estado == EstadoCuentaCorriente.Activa
-                        && Model.SaldoActual < Model.LimiteDeuda)
+            <div class="d-flex flex-wrap gap-2">
+
+                @* REGISTRAR DÉBITO:
+                   EXCLUSIVO DEL ADMINISTRADOR *@
+
+                @if (esAdministrador &&
+                            Model.Estado == EstadoCuentaCorriente.Activa &&
+                            Model.SaldoActual < Model.LimiteDeuda)
+                {
+                    <a asp-controller="CuentaCorriente"
+                       asp-action="RegistrarMovimiento"
+                       asp-route-clienteId="@Model.ClienteId"
+                       asp-route-tipo="Debito"
+                       class="btn btn-outline-danger">
+
+                        Registrar débito
+
+                    </a>
+                }
+
+                @* REGISTRAR CRÉDITO MANUAL:
+                   EXCLUSIVO DEL ADMINISTRADOR *@
+
+                @if (esAdministrador &&
+                            Model.Estado != EstadoCuentaCorriente.Cerrada &&
+                            Model.SaldoActual > 0)
+                {
+                    <a asp-controller="CuentaCorriente"
+                       asp-action="RegistrarMovimiento"
+                       asp-route-clienteId="@Model.ClienteId"
+                       asp-route-tipo="Credito"
+                       class="btn btn-outline-primary">
+
+                        Registrar crédito manual
+
+                    </a>
+                }
+
+                @* REGISTRAR COBRO:
+                   ADMINISTRADOR O VENDEDOR AUTORIZADO *@
+
+                @if (puedeRegistrarCobros &&
+                            Model.Estado != EstadoCuentaCorriente.Cerrada &&
+                            Model.SaldoActual > 0)
+                {
+                    <a asp-controller="CuentaCorriente"
+                       asp-action="RegistrarCobro"
+                       asp-route-clienteId="@Model.ClienteId"
+                       class="btn btn-success">
+
+                        Registrar cobro
+
+                    </a>
+                }
+
+            </div>
+
+            @if (Model.Estado == EstadoCuentaCorriente.Cerrada)
             {
-                <a asp-controller="CuentaCorriente"
-                   asp-action="RegistrarMovimiento"
-                   asp-route-clienteId="@Model.ClienteId"
-                   asp-route-tipo="Debito"
-                   class="btn btn-outline-danger">
-                    Registrar débito
-                </a>
+                <p class="text-muted mt-3 mb-0">
+                    La cuenta está cerrada.
+                    No se permiten nuevos movimientos.
+                </p>
             }
-
-
-            <!-- REGISTRAR CRÉDITO -->
-            @if (Model.Estado != EstadoCuentaCorriente.Cerrada
-                        && Model.SaldoActual > 0)
+            else if (Model.Estado == EstadoCuentaCorriente.Suspendida)
             {
-                <a asp-controller="CuentaCorriente"
-                   asp-action="RegistrarMovimiento"
-                   asp-route-clienteId="@Model.ClienteId"
-                   asp-route-tipo="Credito"
-                   class="btn btn-outline-success">
-                    Registrar crédito
-                </a>
+                <p class="text-muted mt-3 mb-0">
+                    La cuenta está suspendida.
+                    Solo se permiten pagos de deudas pendientes.
+                </p>
+            }
+            else if (Model.SaldoActual <= 0)
+            {
+                <p class="text-muted mt-3 mb-0">
+                    El cliente no tiene deuda pendiente.
+                </p>
+            }
+            else if (Model.SaldoActual >= Model.LimiteDeuda)
+            {
+                <p class="text-muted mt-3 mb-0">
+                    La cuenta no tiene crédito disponible
+                    para registrar nuevas deudas.
+                    Se pueden registrar cobros.
+                </p>
             }
 
         </div>
-
-        @if (Model.Estado == EstadoCuentaCorriente.Cerrada)
-        {
-            <p class="text-muted mb-0">
-                No se pueden registrar movimientos
-                en una cuenta cerrada.
-            </p>
-        }
-        else if (Model.Estado == EstadoCuentaCorriente.Suspendida)
-        {
-            <p class="text-muted mt-3 mb-0">
-                La cuenta está suspendida.
-                Solo se permite registrar pagos de deudas pendientes.
-            </p>
-        }
-        else if (Model.SaldoActual >= Model.LimiteDeuda)
-        {
-            <p class="text-muted mt-3 mb-0">
-                La cuenta no tiene crédito disponible
-                para registrar nuevas deudas.
-            </p>
-        }
-
     </div>
-</div>
+}
 
 
 <!-- HISTORIAL DE MOVIMIENTOS -->

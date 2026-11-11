@@ -89,7 +89,134 @@ public class CuentaCorrienteController : Controller
         }
     }
 
-    
+
+    [HttpGet]
+    [Authorize(Policy = Permisos.RegistrarCobros)]
+    public async Task<IActionResult> RegistrarCobro(int clienteId)
+    {
+        if (clienteId <= 0)
+            return BadRequest();
+
+        try
+        {
+            var cuenta = await _obtenerCuentaCorriente
+                .EjecutarAsync(clienteId);
+
+            if (cuenta.Estado ==
+                SistemaVenta.Domain.Enums.EstadoCuentaCorriente.Cerrada)
+            {
+                TempData["MensajeError"] =
+                    "No se pueden registrar cobros en una cuenta cerrada.";
+
+                return RedirectToAction(
+                    nameof(Detalle),
+                    new { clienteId });
+            }
+
+            if (cuenta.SaldoActual <= 0)
+            {
+                TempData["MensajeError"] =
+                    "La cuenta no tiene deuda pendiente.";
+
+                return RedirectToAction(
+                    nameof(Detalle),
+                    new { clienteId });
+            }
+
+            var modelo = new RegistrarMovimientoCuentaViewModel
+            {
+                CuentaId = cuenta.Id,
+                ClienteId = cuenta.ClienteId,
+                TipoMovimiento = "Credito"
+            };
+
+            return View(modelo);
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = Permisos.RegistrarCobros)]
+    public async Task<IActionResult> RegistrarCobro(
+        RegistrarMovimientoCuentaViewModel modelo)
+    {
+        // El cobro siempre es un crédito.
+        // No confiamos en el tipo enviado por el navegador.
+        modelo.TipoMovimiento = "Credito";
+
+        ModelState.Remove(nameof(modelo.TipoMovimiento));
+
+        if (!ModelState.IsValid)
+            return View(modelo);
+
+        try
+        {
+            var cuenta = await _obtenerCuentaCorriente
+                .EjecutarAsync(modelo.ClienteId);
+
+            if (cuenta.Id != modelo.CuentaId)
+                return BadRequest();
+
+            if (cuenta.Estado ==
+                SistemaVenta.Domain.Enums.EstadoCuentaCorriente.Cerrada)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "No se pueden registrar cobros en una cuenta cerrada.");
+
+                return View(modelo);
+            }
+
+            if (cuenta.SaldoActual <= 0)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "La cuenta no tiene deuda pendiente.");
+
+                return View(modelo);
+            }
+
+            if (modelo.Importe > cuenta.SaldoActual)
+            {
+                ModelState.AddModelError(
+                    nameof(modelo.Importe),
+                    "El cobro no puede superar la deuda pendiente.");
+
+                return View(modelo);
+            }
+
+            await _registrarCredito.EjecutarAsync(
+                cuenta.Id,
+                modelo.Importe,
+                modelo.Descripcion);
+
+            TempData["MensajeExito"] =
+                "El cobro se registró correctamente.";
+
+            return RedirectToAction(
+                nameof(Detalle),
+                new { clienteId = modelo.ClienteId });
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                ex.Message);
+        }
+
+        return View(modelo);
+    }
+
 
     [HttpGet]
     [Authorize(Roles =Roles.Administrador)]
