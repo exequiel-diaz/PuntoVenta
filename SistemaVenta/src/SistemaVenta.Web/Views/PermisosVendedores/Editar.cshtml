@@ -1,0 +1,122 @@
+﻿@model SistemaVenta.Web.Models.Vendedores.PermisosVendedorViewModel
+@using SistemaVenta.Domain.Constants
+
+@{
+    ViewData["Title"] = "Permisos del vendedor";
+
+    var opciones = new[]
+    {
+        new {
+            Codigo = Permisos.CrearProductos,
+            Nombre = "Crear productos",
+            Descripcion = "Permite registrar productos nuevos."
+        },
+        new {
+            Codigo = Permisos.EditarProductos,
+            Nombre = "Editar productos",
+            Descripcion = "Permite modificar productos y precios."
+        },
+        new {
+            Codigo = Permisos.IngresarStock,
+            Nombre = "Ingresar stock",
+            Descripcion = "Permite registrar ingresos de mercadería."
+        },
+        new {
+            Codigo = Permisos.AbrirCuentaCorriente,
+            Nombre = "Habilitar cuentas corrientes",
+            Descripcion = "Permite abrir cuentas con el límite predeterminado."
+        },
+        new {
+            Codigo = Permisos.RegistrarCobros,
+            Nombre = "Registrar cobros",
+            Descripcion = "Permiso reservado para habilitar el registro de cobros."
+        }
+    };
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Administrar permisos</h2>
+            <p class="text-muted mb-0">
+                Vendedor: <strong>@Model.NombreCompleto</strong>
+            </p>
+        </div>
+
+        <a asp-controller="Vendedores"
+           asp-action="Index"
+           class="btn btn-outline-secondary">
+            Volver
+        </a>
+    </div>
+
+    @if (TempData["MensajeExito"] is string mensaje)
+    {
+        <div class="alert alert-success">
+            @mensaje
+        </div>
+    }
+
+    <form asp-controller="PermisosVendedores"
+          asp-action="Editar"
+          asp-route-id="@Model.UsuarioId"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <input asp-for="UsuarioId" type="hidden" />
+
+        <div asp-validation-summary="All"
+             class="text-danger mb-3"></div>
+
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Permisos disponibles</h5>
+            </div>
+
+            <div class="card-body">
+                <p class="text-muted">
+                    Seleccioná las operaciones que este
+                    vendedor podrá realizar.
+                </p>
+
+                @foreach (var opcion in opciones)
+                {
+                    var seleccionado =
+                    Model.PermisosSeleccionados.Contains(
+                    opcion.Codigo);
+
+                    <div class="form-check border-bottom py-3">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="PermisosSeleccionados"
+                               value="@opcion.Codigo"
+                               id="@opcion.Codigo"
+                               checked="@seleccionado" />
+
+                        <label class="form-check-label"
+                               for="@opcion.Codigo">
+                            <strong>@opcion.Nombre</strong>
+                            <span class="d-block text-muted small">
+                                @opcion.Descripcion
+                            </span>
+                        </label>
+                    </div>
+                }
+            </div>
+
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a asp-controller="Vendedores"
+                   asp-action="Index"
+                   class="btn btn-secondary">
+                    Cancelar
+                </a>
+
+                <button type="submit"
+                        class="btn btn-primary">
+                    Guardar permisos
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

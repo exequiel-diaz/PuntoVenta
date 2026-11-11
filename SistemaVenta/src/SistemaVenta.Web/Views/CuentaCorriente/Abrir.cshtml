@@ -2,11 +2,15 @@
 
 @{
     ViewData["Title"] = "Abrir cuenta corriente";
+
+    bool esAdministrador =
+        ViewBag.EsAdministrador is bool valor && valor;
 }
 
 <h2>Abrir cuenta corriente</h2>
 
 <form asp-action="Abrir" method="post">
+    @Html.AntiForgeryToken()
 
     <div asp-validation-summary="All"
          class="text-danger"></div>
@@ -22,13 +26,34 @@
 
     <div class="mb-3">
         <label asp-for="LimiteDeuda"
-               class="form-label"></label>
+               class="form-label">
+            Límite de crédito
+        </label>
 
-        <input asp-for="LimiteDeuda"
-               class="form-control"
-               type="number"
-               min="0"
-               step="0.01" />
+        @if (esAdministrador)
+        {
+            <input asp-for="LimiteDeuda"
+                   class="form-control"
+                   type="number"
+                   min="0.01"
+                   step="0.01" />
+
+            <div class="form-text">
+                Como administrador, podés modificar
+                el límite inicial de esta cuenta.
+            </div>
+        }
+        else
+        {
+            <input value="@Model.LimiteDeuda.ToString("N2")"
+                   class="form-control"
+                   readonly />
+
+            <div class="form-text">
+                El límite se asigna automáticamente.
+                Solo un administrador puede modificarlo.
+            </div>
+        }
 
         <span asp-validation-for="LimiteDeuda"
               class="text-danger"></span>
@@ -47,12 +72,11 @@
         Abrir cuenta
     </button>
 
-    <a asp-controller="Cliente"
+    <a asp-controller="Clientes"
        asp-action="Index"
        class="btn btn-secondary">
         Cancelar
     </a>
-
 </form>
 
 @section Scripts {

@@ -1,0 +1,91 @@
+﻿@model SistemaVenta.Web.ViewModels.ConfiguracionCredito.ConfiguracionCreditoViewModel
+
+@{
+    ViewData["Title"] = "Configuración de crédito";
+}
+
+<div class="container py-4">
+
+    <h2>Configuración de crédito</h2>
+
+    <p class="text-muted">
+        Administrá el límite de crédito que se asignará
+        automáticamente a las nuevas cuentas corrientes.
+    </p>
+
+    @if (TempData["MensajeExito"] is string mensaje)
+    {
+        <div class="alert alert-success">
+            @mensaje
+        </div>
+    }
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                Límite predeterminado
+            </h5>
+        </div>
+
+        <div class="card-body">
+
+            <form asp-controller="ConfiguracionCredito"
+                  asp-action="Index"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="All"
+                     class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+
+                    <label asp-for="LimitePredeterminado"
+                           class="form-label"></label>
+
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+
+                        <input asp-for="LimitePredeterminado"
+                               type="number"
+                               min="0.01"
+                               step="0.01"
+                               class="form-control" />
+                    </div>
+
+                    <span asp-validation-for="LimitePredeterminado"
+                          class="text-danger"></span>
+
+                    <div class="form-text">
+                        Este importe se aplicará a las nuevas
+                        cuentas corrientes abiertas por vendedores.
+                    </div>
+
+                </div>
+
+                <div class="alert alert-info">
+                    Modificar este valor no cambia el límite
+                    de las cuentas corrientes existentes.
+                </div>
+
+                <button type="submit"
+                        class="btn btn-primary">
+                    Guardar configuración
+                </button>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn btn-secondary">
+                    Volver
+                </a>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

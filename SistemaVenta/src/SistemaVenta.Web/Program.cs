@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
+using QuestPDF.Infrastructure;
 using SistemaVenta.Application;
 using SistemaVenta.Application.Interfaces;
 using SistemaVenta.Application.UseCases.Categorias;
@@ -9,12 +10,16 @@ using SistemaVenta.Application.UseCases.CuentasCorrientes;
 using SistemaVenta.Application.UseCases.DocumentosComerciales;
 using SistemaVenta.Application.UseCases.Facturas;
 using SistemaVenta.Application.UseCases.Pagos;
+using SistemaVenta.Application.UseCases.Usuarios;
 using SistemaVenta.Infrastructure;
 using SistemaVenta.Infrastructure.Initialization;
 using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Security;
 using System.Threading.RateLimiting;
-using QuestPDF.Infrastructure;
+using SistemaVenta.Domain.Constants;
+using SistemaVenta.Web.Security;
+using SistemaVenta.Application.UseCases.ConfiguracionCredito;
+
 
 var builder = WebApplication.CreateBuilder(args);
 QuestPDF.Settings.License = LicenseType.Community;
@@ -44,7 +49,24 @@ builder.Services
             ValidarSesionCookie.ValidarAsync;
     });
 
-builder.Services.AddAuthorization();
+
+builder.Services.AddAuthorization(options =>
+{
+    foreach (var codigo in Permisos.Delegables)
+    {
+        options.AddPolicy(codigo, policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.AddRequirements(
+                new PermisoRequirement(codigo));
+        });
+    }
+});
+
+builder.Services.AddScoped<
+    IAuthorizationHandler,
+    PermisoAuthorizationHandler>();
+
 
 
 // Add services to the container.
@@ -89,6 +111,10 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<EmitirNotaCredito>();
 builder.Services.AddScoped<EmitirNotaDebito>();
 
+builder.Services.AddScoped<ObtenerPermisosUsuario>();
+builder.Services.AddScoped<ActualizarPermisosUsuario>();
+
+builder.Services.AddScoped<CambiarLimitePredeterminado>();
 
 builder.Services.AddRateLimiter(options =>
 {

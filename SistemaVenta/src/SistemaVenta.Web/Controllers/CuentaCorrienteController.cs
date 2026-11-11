@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using SistemaVenta.Application.UseCases.CuentasCorrientes;
 using SistemaVenta.Web.Security;
 using SistemaVenta.Web.ViewModels.CuentasCorrientes;
+using SistemaVenta.Domain.Constants;
+using SistemaVenta.Application.Interfaces;
+using System.Security.Claims;
 
 namespace SistemaVenta.Web.Controllers;
 
@@ -17,6 +20,7 @@ public class CuentaCorrienteController : Controller
     private readonly CerrarCuentaCorriente _cerrarCuenta;
     private readonly RegistrarDebitoCuentaCorriente _registrarDebito;
     private readonly RegistrarCreditoCuentaCorriente _registrarCredito;
+    private readonly IConfiguracionCreditoRepository _configuracionCredito;
 
     public CuentaCorrienteController(
         ObtenerCuentaCorriente obtenerCuentaCorriente, 
@@ -26,7 +30,8 @@ public class CuentaCorrienteController : Controller
         ActivarCuentaCorriente activarCuenta,
         SuspenderCuentaCorriente suspenderCuenta,
         RegistrarDebitoCuentaCorriente registrarDebito,
-        RegistrarCreditoCuentaCorriente registrarCredito)
+        RegistrarCreditoCuentaCorriente registrarCredito,
+        IConfiguracionCreditoRepository configuracionCredito)
     {
         _obtenerCuentaCorriente = obtenerCuentaCorriente;
         _abrirCuentaCorriente = abrirCuentaCorriente;
@@ -36,6 +41,7 @@ public class CuentaCorrienteController : Controller
         _suspenderCuenta = suspenderCuenta;
         _registrarCredito = registrarCredito;
         _registrarDebito = registrarDebito;
+        _configuracionCredito = configuracionCredito;
     }
 
     [HttpGet]
@@ -83,57 +89,7 @@ public class CuentaCorrienteController : Controller
         }
     }
 
-    [HttpGet]
-    public IActionResult Abrir(int clienteId)
-    {
-        if (clienteId <= 0)
-            return BadRequest();
-
-        var modelo = new AbrirCuentaCorrienteViewModel
-        {
-            ClienteId = clienteId
-        };
-
-        return View(modelo);
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Abrir(
-        AbrirCuentaCorrienteViewModel modelo)
-    {
-        if (!ModelState.IsValid)
-            return View(modelo);
-
-        try
-        {
-            await _abrirCuentaCorriente.EjecutarAsync(
-                modelo.ClienteId,
-                modelo.LimiteDeuda,
-                modelo.Observaciones);
-
-            return RedirectToAction(
-                nameof(Detalle),
-                new { clienteId = modelo.ClienteId });
-        }
-        catch (InvalidOperationException ex)
-        {
-            ModelState.AddModelError(
-                string.Empty,
-                ex.Message);
-
-            return View(modelo);
-        }
-        catch (ArgumentException ex)
-        {
-            ModelState.AddModelError(
-                string.Empty,
-                ex.Message);
-
-            return View(modelo);
-        }
-    }
-
+    
 
     [HttpGet]
     [Authorize(Roles =Roles.Administrador)]
@@ -208,6 +164,7 @@ public class CuentaCorrienteController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles =Roles.Administrador)]
     public async Task<IActionResult> Suspender(
         int cuentaId,
         int clienteId)
@@ -245,6 +202,7 @@ public class CuentaCorrienteController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Administrador)]
     public async Task<IActionResult> Activar(
         int cuentaId,
         int clienteId)
@@ -282,6 +240,7 @@ public class CuentaCorrienteController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Administrador)]
     public async Task<IActionResult> Cerrar(
         int cuentaId,
         int clienteId)
@@ -318,6 +277,7 @@ public class CuentaCorrienteController : Controller
 
 
     [HttpGet]
+    [Authorize(Roles = Roles.Administrador)]
     public async Task<IActionResult> RegistrarMovimiento(
         int clienteId,
         string tipo)
@@ -352,6 +312,7 @@ public class CuentaCorrienteController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = Roles.Administrador)]
     public async Task<IActionResult> RegistrarMovimiento(
         RegistrarMovimientoCuentaViewModel modelo)
     {
@@ -406,6 +367,79 @@ public class CuentaCorrienteController : Controller
             ModelState.AddModelError(string.Empty, ex.Message);
             return View(modelo);
         }
+    }
+
+
+
+    [HttpGet]
+    [Authorize(Policy = Permisos.AbrirCuentaCorriente)]
+    public async Task<IActionResult> Abrir(int clienteId)
+    {
+        if (clienteId <= 0)
+            return BadRequest();
+
+        var limite = await _configuracionCredito
+            .ObtenerLimitePredeterminadoAsync();
+
+        var modelo = new AbrirCuentaCorrienteViewModel
+        {
+            ClienteId = clienteId,
+            LimiteDeuda = limite
+        };
+
+        ViewBag.EsAdministrador =
+            User.IsInRole(Roles.Administrador);
+
+        return View(modelo);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = Permisos.AbrirCuentaCorriente)]
+    public async Task<IActionResult> Abrir(
+        AbrirCuentaCorrienteViewModel modelo)
+    {
+        bool esAdministrador =
+            User.IsInRole(Roles.Administrador);
+
+        ViewBag.EsAdministrador = esAdministrador;
+
+        // Para vendedores, ignoramos siempre el
+        // importe recibido desde el navegador.
+        if (!esAdministrador)
+        {
+            modelo.LimiteDeuda = await _configuracionCredito
+                .ObtenerLimitePredeterminadoAsync();
+
+            ModelState.Remove(nameof(modelo.LimiteDeuda));
+        }
+
+        if (!ModelState.IsValid)
+            return View(modelo);
+
+        try
+        {
+            await _abrirCuentaCorriente.EjecutarAsync(
+                modelo.ClienteId,
+                modelo.LimiteDeuda,
+                modelo.Observaciones);
+
+            return RedirectToAction(
+                nameof(Detalle),
+                new { clienteId = modelo.ClienteId });
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError(
+                string.Empty, ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            ModelState.AddModelError(
+                string.Empty, ex.Message);
+        }
+
+        return View(modelo);
     }
 
 

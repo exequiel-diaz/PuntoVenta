@@ -1,19 +1,34 @@
 ﻿@model IReadOnlyList<SistemaVenta.Application.DTOs.Productos.ProductoListadoDto>
 
 @using SistemaVenta.Web.Security
+@using SistemaVenta.Domain.Constants
+@using Microsoft.AspNetCore.Authorization
 
+@inject IAuthorizationService AuthorizationService
 
 @{
     ViewData["Title"] = "Productos";
 
     bool esAdministrador = User.IsInRole(Roles.Administrador);
 
+    // Consultamos los permisos una sola vez.
+    // Las mismas políticas protegen las acciones
+    // correspondientes en ProductosController.
+
+    bool puedeCrear = (await AuthorizationService
+        .AuthorizeAsync(User, Permisos.CrearProductos)).Succeeded;
+
+    bool puedeEditar = (await AuthorizationService
+        .AuthorizeAsync(User, Permisos.EditarProductos)).Succeeded;
+
+    bool puedeIngresarStock = (await AuthorizationService
+        .AuthorizeAsync(User, Permisos.IngresarStock)).Succeeded;
+
     int productosParaReponer = Model.Count(p =>
         p.Estado == "Activo" &&
         (p.EstadoStock == "StockBajo" ||
          p.EstadoStock == "SinStock"));
 }
-
 
 <h1>Productos</h1>
 
@@ -31,50 +46,62 @@
     </div>
 }
 
+@* BOTONES SUPERIORES *@
 
-@if (esAdministrador)
+@if (puedeCrear || esAdministrador)
 {
-    <div class="mb-3">
+    <div class="mb-3 d-flex flex-wrap gap-2">
 
-        <a asp-action="Crear"
-           class="btn btn-primary">
-            Nuevo producto
-        </a>
+        @if (puedeCrear)
+        {
+            <a asp-controller="Productos"
+               asp-action="Crear"
+               class="btn btn-primary">
+                Nuevo producto
+            </a>
+        }
 
-        <a asp-action="StockBajo"
-           class="btn btn-outline-warning">
+        @if (esAdministrador)
+        {
+            <a asp-controller="Productos"
+               asp-action="StockBajo"
+               class="btn btn-outline-warning">
 
-            Alertas de stock
+                Alertas de stock
 
-            @if (productosParaReponer > 0)
-            {
-                <span class="badge bg-danger ms-1">
-                    @productosParaReponer
-                </span>
-            }
+                @if (productosParaReponer > 0)
+                {
+                    <span class="badge bg-danger ms-1">
+                        @productosParaReponer
+                    </span>
+                }
+            </a>
+        }
 
+    </div>
+}
+
+@* ALERTA DE STOCK: SOLO ADMINISTRADOR *@
+
+@if (esAdministrador && productosParaReponer > 0)
+{
+    <div class="alert alert-warning">
+
+        <strong>Atención:</strong>
+
+        Hay @productosParaReponer producto(s)
+        que necesitan reposición.
+
+        <a asp-controller="Productos"
+           asp-action="StockBajo"
+           class="alert-link">
+            Ver productos
         </a>
 
     </div>
-
-    @if (productosParaReponer > 0)
-    {
-        <div class="alert alert-warning">
-
-            <strong>Atención:</strong>
-
-            Hay @productosParaReponer producto(s)
-            que necesitan reposición.
-
-            <a asp-action="StockBajo"
-               class="alert-link">
-                Ver productos
-            </a>
-
-        </div>
-    }
 }
 
+@* BUSCADOR DE PRODUCTOS *@
 
 <div class="mb-3">
     <label for="buscadorProductos" class="form-label">
@@ -88,144 +115,230 @@
            autocomplete="off" />
 </div>
 
-<table class="table" id="tablaProductos">
-    <thead>
-        <tr>
-            <th>Código</th>
-            <th>Producto</th>
-            <th>Categoría</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
+@* TABLA DE PRODUCTOS *@
 
-    <tbody>
-        @foreach (var producto in Model)
-        {
+<div class="table-responsive">
+
+    <table class="table table-hover align-middle"
+           id="tablaProductos">
+
+        <thead>
             <tr>
-                <td>@producto.CodigoInterno</td>
-                <td>@producto.Nombre</td>
-                <td>@producto.Categoria</td>
-                <td>@producto.PrecioVenta.ToString("N2")</td>
-                <td>@producto.StockActual</td>
-                <td>@producto.Estado</td>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
 
-                <td>
-                    @if (esAdministrador)
-                    {
+        <tbody>
 
-                        <a asp-controller="Productos"
-                           asp-action="CodigoBarras"
-                           asp-route-id="@producto.Id"
-                           class="btn btn-sm btn-outline-dark mb-1">
+            @foreach (var producto in Model)
+            {
+                <tr>
+                    <td>@producto.CodigoInterno</td>
 
-                            Código de barras
+                    <td>@producto.Nombre</td>
 
-                        </a>
+                    <td>@producto.Categoria</td>
+
+                    <td>
+                        @producto.PrecioVenta.ToString("N2")
+                    </td>
+
+                    <td>@producto.StockActual</td>
+
+                    <td>@producto.Estado</td>
+
+                    <td>
+
+                        @* CÓDIGO DE BARRAS:
+                           SOLO ADMINISTRADOR *@
+
+                        @if (esAdministrador)
+                        {
+                            <a asp-controller="Productos"
+                               asp-action="CodigoBarras"
+                               asp-route-id="@producto.Id"
+                               class="btn btn-sm btn-outline-dark mb-1">
+
+                                Código de barras
+
+                            </a>
+                        }
+
+                        @* OPERACIONES SOBRE STOCK *@
 
                         @if (producto.Estado == "Activo")
                         {
-                            <a asp-action="IngresarStock"
-                               asp-route-id="@producto.Id"
-                               class="btn btn-sm btn-outline-primary">
-                                Ingresar stock
-                            </a>
+                            @* INGRESAR STOCK:
+                               ADMINISTRADOR O VENDEDOR
+                               CON PERMISO *@
 
+                            @if (puedeIngresarStock)
+                            {
+                                <a asp-controller="Productos"
+                                   asp-action="IngresarStock"
+                                   asp-route-id="@producto.Id"
+                                   class="btn btn-sm btn-outline-primary mb-1">
 
-                            <a asp-action="RegistrarSalida"
-                               asp-route-id="@producto.Id"
-                               class="btn btn-sm btn-outline-danger">
-                                Registrar salida
-                            </a>
+                                    Ingresar stock
 
-                            <a asp-action="CorregirStock"
-                               asp-route-id="@producto.Id"
-                               class="btn btn-sm btn-outline-warning">
-                                Corregir inventario
-                            </a>
+                                </a>
+                            }
 
+                            @* OPERACIONES EXCLUSIVAS
+                               DEL ADMINISTRADOR *@
+
+                            @if (esAdministrador)
+                            {
+                                <a asp-controller="Productos"
+                                   asp-action="RegistrarSalida"
+                                   asp-route-id="@producto.Id"
+                                   class="btn btn-sm btn-outline-danger mb-1">
+
+                                    Registrar salida
+
+                                </a>
+
+                                <a asp-controller="Productos"
+                                   asp-action="CorregirStock"
+                                   asp-route-id="@producto.Id"
+                                   class="btn btn-sm btn-outline-warning mb-1">
+
+                                    Corregir inventario
+
+                                </a>
+                            }
                         }
 
-                        <a asp-action="Editar"
-                           asp-route-id="@producto.Id"
-                           class="btn btn-sm btn-outline-secondary">
-                            Editar
-                        </a>
+                        @* EDITAR PRODUCTO:
+                           ADMINISTRADOR O VENDEDOR
+                           CON PERMISO *@
 
-                        @if (producto.Estado == "Activo")
+                        @if (puedeEditar)
                         {
-                            <form asp-action="Desactivar"
-                                  asp-route-id="@producto.Id"
+                            <a asp-controller="Productos"
+                               asp-action="Editar"
+                               asp-route-id="@producto.Id"
+                               class="btn btn-sm btn-outline-secondary mb-1">
+
+                                Editar
+
+                            </a>
+                        }
+
+                        @* ACTIVAR, DESACTIVAR Y ELIMINAR:
+                           SOLO ADMINISTRADOR *@
+
+                        @if (esAdministrador)
+                        {
+                            @if (producto.Estado == "Activo")
+                            {
+                                <form asp-controller="Productos"
+                                      asp-action="Desactivar"
+                                      asp-route-id="@producto.Id"
+                                      method="post"
+                                      class="d-inline">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-warning mb-1">
+
+                                        Desactivar
+
+                                    </button>
+
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-controller="Productos"
+                                      asp-action="Activar"
+                                      asp-route-id="@producto.Id"
+                                      method="post"
+                                      class="d-inline">
+
+                                    @Html.AntiForgeryToken()
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-success mb-1">
+
+                                        Activar
+
+                                    </button>
+
+                                </form>
+                            }
+
+                            <form asp-controller="Productos"
+                                  asp-action="Eliminar"
                                   method="post"
-                                  class="d-inline">
+                                  class="d-inline"
+                                  onsubmit="return confirm('¿Estás seguro de que querés eliminar este producto? Esta acción no se puede deshacer.');">
 
                                 @Html.AntiForgeryToken()
 
-                                <button type="submit"
-                                        class="btn btn-sm btn-outline-warning">
-                                    Desactivar
-                                </button>
-                            </form>
-                        }
-                        else
-                        {
-                            <form asp-action="Activar"
-                                  asp-route-id="@producto.Id"
-                                  method="post"
-                                  class="d-inline">
-
-                                @Html.AntiForgeryToken()
+                                <input type="hidden"
+                                       name="id"
+                                       value="@producto.Id" />
 
                                 <button type="submit"
-                                        class="btn btn-sm btn-outline-success">
-                                    Activar
+                                        class="btn btn-sm btn-outline-danger mb-1">
+
+                                    Eliminar
+
                                 </button>
+
                             </form>
                         }
 
-                        <form asp-action="Eliminar"
-                              method="post"
-                              class="d-inline"
-                              onsubmit="return confirm('¿Estás seguro de que querés eliminar este producto? Esta acción no se puede deshacer.');">
+                    </td>
+                </tr>
+            }
 
-                            @Html.AntiForgeryToken()
+            @* MENSAJE CUANDO NO HAY RESULTADOS *@
 
-                            <input type="hidden"
-                                   name="id"
-                                   value="@producto.Id" />
+            <tr id="sinResultados"
+                style="display: none;">
 
-                            <button type="submit"
-                                    class="btn btn-sm btn-outline-danger">
-                                Eliminar
-                            </button>
-                        </form>
-                    }
+                <td colspan="7"
+                    class="text-center text-muted py-4">
+
+                    No se encontraron productos
+                    que coincidan con la búsqueda.
+
                 </td>
             </tr>
-        }
-    
-    
-        <tr id="sinResultados" style="display: none;">
-            <td colspan="7" class="text-center text-muted py-4">
-                No se encontraron productos que coincidan con la búsqueda.
-            </td>
-        </tr>
-    </tbody>
-</table>
 
+        </tbody>
+    </table>
+
+</div>
 
 @section Scripts {
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
 
-            const buscador = document.getElementById("buscadorProductos");
-            const tabla = document.getElementById("tablaProductos");
-            const filas = tabla.querySelectorAll("tbody tr:not(#sinResultados)");
-            const sinResultados = document.getElementById("sinResultados");
+            const buscador =
+                document.getElementById("buscadorProductos");
 
-            buscador.addEventListener("input", function () {
+            const tabla =
+                document.getElementById("tablaProductos");
+
+            const filas = tabla.querySelectorAll(
+                "tbody tr:not(#sinResultados)"
+            );
+
+            const sinResultados =
+                document.getElementById("sinResultados");
+
+            function filtrarProductos() {
 
                 const texto = buscador.value
                     .trim()
@@ -235,16 +348,22 @@
 
                 filas.forEach(function (fila) {
 
-                    const codigo = fila.cells[0].textContent.toLocaleLowerCase();
-                    const nombre = fila.cells[1].textContent.toLocaleLowerCase();
-                    const categoria = fila.cells[2].textContent.toLocaleLowerCase();
+                    const codigo = fila.cells[0]
+                        .textContent.toLocaleLowerCase();
+
+                    const nombre = fila.cells[1]
+                        .textContent.toLocaleLowerCase();
+
+                    const categoria = fila.cells[2]
+                        .textContent.toLocaleLowerCase();
 
                     const coincide =
                         codigo.includes(texto) ||
                         nombre.includes(texto) ||
                         categoria.includes(texto);
 
-                    fila.style.display = coincide ? "" : "none";
+                    fila.style.display =
+                        coincide ? "" : "none";
 
                     if (coincide) {
                         encontrados++;
@@ -253,8 +372,18 @@
 
                 sinResultados.style.display =
                     encontrados === 0 ? "" : "none";
-            });
+            }
+
+            buscador.addEventListener(
+                "input",
+                filtrarProductos
+            );
+
+            // También controla el caso
+            // de una lista inicialmente vacía.
+            filtrarProductos();
+
         });
     </script>
-}
 
+}

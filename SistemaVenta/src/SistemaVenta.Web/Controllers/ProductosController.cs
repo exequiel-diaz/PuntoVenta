@@ -7,6 +7,7 @@ using SistemaVenta.Application.UseCases.Stock;
 using Microsoft.AspNetCore.Authorization;
 using SistemaVenta.Web.Security;
 using System.Security.Claims;
+using SistemaVenta.Domain.Constants;
 
 namespace SistemaVenta.Web.Controllers
 {
@@ -79,7 +80,7 @@ namespace SistemaVenta.Web.Controllers
 
 
         [HttpGet]
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy =Permisos.CrearProductos)]
         public async Task<IActionResult> Crear()
         {
             var model = new CrearProductoViewModel();
@@ -92,7 +93,7 @@ namespace SistemaVenta.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy = Permisos.CrearProductos)]
         public async Task<IActionResult> Crear(
             CrearProductoViewModel model)
         {
@@ -161,7 +162,7 @@ namespace SistemaVenta.Web.Controllers
         
 
         [HttpGet]
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy = Permisos.IngresarStock)]
         public async Task<IActionResult> IngresarStock(int id)
         {
             var producto = await _obtenerProducto.EjecutarAsync(id);
@@ -180,7 +181,7 @@ namespace SistemaVenta.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy = Permisos.IngresarStock)]
         public async Task<IActionResult> IngresarStock(
             IngresarStockViewModel model)
         {
@@ -215,7 +216,7 @@ namespace SistemaVenta.Web.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy = Permisos.EditarProductos)]
         public async Task<IActionResult> Editar(int id)
         {
             var producto = await _obtenerProducto.EjecutarAsync(id);
@@ -242,7 +243,7 @@ namespace SistemaVenta.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = Roles.Administrador)]
+        [Authorize(Policy = Permisos.EditarProductos)]
         public async Task<IActionResult> Editar(
         EditarProductoViewModel model)
         {

@@ -20,6 +20,12 @@ namespace SistemaVenta.Infrastructure.Persistence
         public DbSet<MovimientoStock> MovimientosStock =>
             Set<MovimientoStock>();
 
+        public DbSet<PermisoUsuario> PermisosUsuario
+            => Set<PermisoUsuario>();
+
+        public DbSet<ConfiguracionCredito> ConfiguracionesCredito
+            => Set<ConfiguracionCredito>();
+
         public DbSet<Cliente> Clientes => Set<Cliente>();
 
         public DbSet<CuentaCorriente> CuentasCorrientes

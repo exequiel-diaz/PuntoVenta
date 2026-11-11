@@ -150,6 +150,30 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.UseTphMappingStrategy();
                 });
 
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.ConfiguracionCredito", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("LimitePredeterminado")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConfiguracionesCredito", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            LimitePredeterminado = 100000m
+                        });
+                });
+
             modelBuilder.Entity("SistemaVenta.Domain.Entities.CuentaCorriente", b =>
                 {
                     b.Property<int>("Id")
@@ -406,6 +430,30 @@ namespace SistemaVenta.Infrastructure.Migrations
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("Pagos", (string)null);
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.PermisoUsuario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodigoPermiso")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId", "CodigoPermiso")
+                        .IsUnique();
+
+                    b.ToTable("permisos_usuario", (string)null);
                 });
 
             modelBuilder.Entity("SistemaVenta.Domain.Entities.Producto", b =>
@@ -862,6 +910,15 @@ namespace SistemaVenta.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SistemaVenta.Domain.Entities.PermisoUsuario", b =>
+                {
+                    b.HasOne("SistemaVenta.Domain.Entities.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

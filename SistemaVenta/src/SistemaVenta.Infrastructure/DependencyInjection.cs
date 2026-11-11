@@ -13,6 +13,7 @@ using SistemaVenta.Infrastructure.Persistence;
 using SistemaVenta.Infrastructure.Persistence.Repositories;
 using SistemaVenta.Infrastructure.Repositories;
 using SistemaVenta.Infrastructure.Security;
+using System.Security.Claims;
 
 
 namespace SistemaVenta.Infrastructure
@@ -105,6 +106,14 @@ namespace SistemaVenta.Infrastructure
             services.AddScoped<
                 IInformeRentabilidadRepository,
                 InformeRentabilidadRepository>();
+            services.AddScoped<
+                IConfiguracionCreditoRepository,
+                ConfiguracionCreditoRepository>();
+
+            services.AddScoped<
+                IPermisoUsuarioRepository,
+                PermisoUsuarioRepository>();
+
 
             return services;
         }
